@@ -28,12 +28,12 @@ Every chain-keyed file — `tokens.json`, `commitments.json` — is keyed by cha
 
 ## Entries
 
-An entry carries its key, its kind point, and a `_metadata` object naming what the kind belongs to. The commitment covers `logic_ref`, `label_ref` and `kind_point` only, so `_metadata` is free to carry whatever a reviewer needs and never moves the commitment. `version` is the version of the circuit crate that owns `logic_ref`, read from the resolved dependency graph, so bumping a pin cannot leave a stale version behind. `type` is `Padding`, `ERC20`, or `GenericCall`.
+An entry carries its key, its kind point, and a `_metadata` object naming what the kind belongs to. The commitment covers `logic_ref`, `label_ref` and `kind_point` only, so `_metadata` is free to carry whatever a reviewer needs and never moves the commitment. `version` is the version of the circuit crate that owns `logic_ref`, read from the resolved dependency graph, so bumping a pin cannot leave a stale version behind. `type` names the resource the kind belongs to: `PaddingResource`, `ERC20Resource`, or `GenericCallResource`.
 
 ```json
 {
   "_metadata": {
-    "type": "ERC20",
+    "type": "ERC20Resource",
     "version": "2.0.0",
     "name": "WETH",
     "token": "0x4200000000000000000000000000000000000006",
@@ -52,7 +52,7 @@ Aliases are never authored. A circuit release is recorded once, globally, as a s
 ```json
 {
   "successions": [
-    { "type": "ERC20", "alias": "3.0.0", "of": "2.0.0" }
+    { "type": "ERC20Resource", "alias": "3.0.0", "of": "2.0.0" }
   ]
 }
 ```
@@ -62,7 +62,7 @@ The generator carries every kind the predecessor owns to its successor — one a
 ```json
 {
   "_metadata": {
-    "type": "ERC20",
+    "type": "ERC20Resource",
     "version": "3.0.0",
     "name": "WETH",
     "token": "0x4200000000000000000000000000000000000006",

@@ -1,7 +1,7 @@
 [
   {
     "_metadata": {
-      "type": "Padding",
+      "type": "PaddingResource",
       "version": "2.0.0-rc.4"
     },
     "logic_ref": "034c170fc2045f5e257110eb369e57ea5dc72d6dd83dab69746afc2bec6e1847",
@@ -10,7 +10,7 @@
   },
   {
     "_metadata": {
-      "type": "ERC20",
+      "type": "ERC20Resource",
       "version": "2.0.0",
       "name": "WETH",
       "token": "0x4200000000000000000000000000000000000006",
@@ -22,7 +22,7 @@
   },
   {
     "_metadata": {
-      "type": "ERC20",
+      "type": "ERC20Resource",
       "version": "2.0.0",
       "name": "XAN",
       "token": "0xADb9D61D8DC3Bc932b3D31053FB268204A7dFF8c",
@@ -34,7 +34,7 @@
   },
   {
     "_metadata": {
-      "type": "ERC20",
+      "type": "ERC20Resource",
       "version": "2.0.0",
       "name": "USDT",
       "token": "0x323e78f944A9a1FcF3a10efcC5319DBb0bB6e673",
@@ -46,7 +46,7 @@
   },
   {
     "_metadata": {
-      "type": "ERC20",
+      "type": "ERC20Resource",
       "version": "2.0.0",
       "name": "EURC",
       "token": "0x808456652fdb597867f38412077A9182bf77359F",
@@ -58,7 +58,7 @@
   },
   {
     "_metadata": {
-      "type": "ERC20",
+      "type": "ERC20Resource",
       "version": "2.0.0",
       "name": "USDC",
       "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
@@ -70,7 +70,7 @@
   },
   {
     "_metadata": {
-      "type": "GenericCall",
+      "type": "GenericCallResource",
       "version": "1.0.0",
       "forwarder": "0x92Dfab3b59f3C92dba8fa6d73106d0d729d3ad57"
     },

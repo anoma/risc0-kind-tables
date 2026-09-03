@@ -27,13 +27,14 @@ pub struct Entry {
 #[serde(tag = "type")]
 pub enum Metadata {
     /// The padding kind, whose logic ships with the resource machine.
+    #[serde(rename = "PaddingResource")]
     Padding {
         version: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         status: Option<Status>,
     },
     /// One supported token behind an ERC20 forwarder.
-    #[serde(rename = "ERC20")]
+    #[serde(rename = "ERC20Resource")]
     Erc20 {
         version: String,
         name: String,
@@ -47,6 +48,7 @@ pub enum Metadata {
         alias_of: Option<AliasOf>,
     },
     /// The arbitrary-call kind behind a generic call forwarder.
+    #[serde(rename = "GenericCallResource")]
     GenericCall {
         version: String,
         #[serde(with = "checksummed")]

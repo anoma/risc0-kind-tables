@@ -20,8 +20,9 @@ use std::process::Command;
 /// nothing is ever made fungible with them.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
 enum Circuit {
-    #[serde(rename = "ERC20")]
+    #[serde(rename = "ERC20Resource")]
     Erc20,
+    #[serde(rename = "GenericCallResource")]
     GenericCall,
 }
 

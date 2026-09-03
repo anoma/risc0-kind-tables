@@ -1,7 +1,7 @@
 [
   {
     "_metadata": {
-      "type": "Padding",
+      "type": "PaddingResource",
       "version": "2.0.0-rc.4"
     },
     "logic_ref": "034c170fc2045f5e257110eb369e57ea5dc72d6dd83dab69746afc2bec6e1847",
@@ -10,7 +10,7 @@
   },
   {
     "_metadata": {
-      "type": "ERC20",
+      "type": "ERC20Resource",
       "version": "2.0.0",
       "name": "EURC",
       "token": "0x08210F9170F89Ab7658F0B5E3fF39b0E03C594D4",
@@ -22,7 +22,7 @@
   },
   {
     "_metadata": {
-      "type": "ERC20",
+      "type": "ERC20Resource",
       "version": "2.0.0",
       "name": "USDC",
       "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
@@ -34,7 +34,7 @@
   },
   {
     "_metadata": {
-      "type": "ERC20",
+      "type": "ERC20Resource",
       "version": "2.0.0",
       "name": "WETH",
       "token": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
@@ -46,7 +46,7 @@
   },
   {
     "_metadata": {
-      "type": "ERC20",
+      "type": "ERC20Resource",
       "version": "2.0.0",
       "name": "USDT",
       "token": "0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0",
@@ -58,7 +58,7 @@
   },
   {
     "_metadata": {
-      "type": "ERC20",
+      "type": "ERC20Resource",
       "version": "2.0.0",
       "name": "XAN",
       "token": "0xCEDbEA37C8872c4171259Cdfd5255CB8923Cf8e7",
@@ -70,7 +70,7 @@
   },
   {
     "_metadata": {
-      "type": "GenericCall",
+      "type": "GenericCallResource",
       "version": "1.0.0",
       "forwarder": "0x0B1EfEec748cC77e9c3ad46997B1E1E97803e0D2"
     },
