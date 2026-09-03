@@ -1,10 +1,9 @@
-//! Regenerates `data/generated/` from the authored inputs (`tokens.json`, `aliases.json`) and the pinned
+//! Regenerates `data/generated/` from the authored inputs (`tokens.json`, `successions.json`, `vulnerabilities.json`) and the pinned
 //! dependencies (circuit IDs, forwarder and protocol adapter deployment records). CI reruns this and fails on
 //! any diff, so the committed artifacts always match the pins.
 
-use alloy::primitives::Address;
 use anoma_generic_call_forwarder_bindings::addresses::Environment as GenericCallEnvironment;
-use anoma_kind_tables::{AliasOf, Entry, Metadata, commitment, kind, tokens};
+use anoma_kind_tables::{AliasOf, Entry, Metadata, Status, commitment, kind, tokens};
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
 use anomapay_erc20_forwarder_bindings::addresses::Environment as Erc20Environment;
 use anyhow::{Context, Result, bail};
@@ -17,10 +16,41 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-/// One chain's authored section. The `_comment` naming the chain is review context and is not deserialized.
+/// The circuits a kind can belong to. Padding is absent: its resources are ephemeral and zero-quantity, so
+/// nothing is ever made fungible with them.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+enum Circuit {
+    #[serde(rename = "ERC20")]
+    Erc20,
+    GenericCall,
+}
+
+/// The authored successions: one circuit version's kinds carry to its successor, on every chain that has
+/// entries for it.
 #[derive(Deserialize)]
-struct ChainAliases {
-    aliases: Vec<Alias>,
+struct Successions {
+    successions: Vec<Succession>,
+}
+
+#[derive(Clone, Deserialize)]
+struct Succession {
+    #[serde(rename = "type")]
+    circuit: Circuit,
+    alias: String,
+    of: String,
+}
+
+/// The circuit versions recorded as compromised.
+#[derive(Deserialize)]
+struct Vulnerabilities {
+    vulnerable: Vec<Vulnerable>,
+}
+
+#[derive(Deserialize)]
+struct Vulnerable {
+    #[serde(rename = "type")]
+    circuit: Circuit,
+    version: String,
 }
 
 /// One row of `commitments.json`: the chain it belongs to, named for review, and the table commitment.
@@ -29,16 +59,6 @@ struct ChainCommitment {
     #[serde(rename = "_comment")]
     comment: String,
     commitment: String,
-}
-
-/// One aliasing decision: the token's kind under the `alias` circuit version takes the point it has under
-/// `of`, so resources of both versions are one kind. Both versions must be pinned here, which is what makes
-/// the circuit IDs derivable rather than authored.
-#[derive(Deserialize)]
-struct Alias {
-    token: Address,
-    alias: String,
-    of: String,
 }
 
 fn digest(bytes: &[u8]) -> Digest {
@@ -73,13 +93,18 @@ fn entry(metadata: Metadata, logic_ref: Digest, label_ref: Digest) -> Result<Ent
     })
 }
 
-/// The transfer circuits whose kinds can be derived, by crate version. A new circuit release joins this map
-/// as a renamed dependency, so `aliases.json` can only name a version whose ID is compiled in.
-fn transfer_circuits(versions: &Versions) -> BTreeMap<&str, Digest> {
-    BTreeMap::from([(
-        versions.transfer.as_str(),
-        digest(transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
-    )])
+/// The logic ref of a circuit version, or `None` if this generator does not pin it. A circuit release joins
+/// as a renamed dependency and one more arm, so a succession can only name a version whose ID is compiled in.
+fn logic_ref(circuit: Circuit, version: &str, versions: &Versions) -> Option<Digest> {
+    match circuit {
+        Circuit::Erc20 if version == versions.transfer => {
+            Some(digest(transfer_library::TOKEN_TRANSFER_ID.as_bytes()))
+        }
+        Circuit::GenericCall if version == versions.generic_call => Some(digest(
+            anoma_generic_call_library::GENERIC_CALL_ID.as_bytes(),
+        )),
+        _ => None,
+    }
 }
 
 /// The circuit versions behind the logic refs.
@@ -149,19 +174,71 @@ fn versions() -> Result<Versions> {
     })
 }
 
+/// The successor's metadata: the predecessor's identity under the new version, pointing back at it.
+fn succeeded(
+    metadata: &Metadata,
+    version: &str,
+    status: Option<Status>,
+    alias_of: AliasOf,
+) -> Metadata {
+    match metadata {
+        Metadata::Erc20 {
+            name,
+            token,
+            forwarder,
+            ..
+        } => Metadata::Erc20 {
+            version: version.to_string(),
+            name: name.clone(),
+            token: *token,
+            forwarder: *forwarder,
+            status,
+            alias_of: Some(alias_of),
+        },
+        Metadata::GenericCall { forwarder, .. } => Metadata::GenericCall {
+            version: version.to_string(),
+            forwarder: *forwarder,
+            status,
+            alias_of: Some(alias_of),
+        },
+        Metadata::Padding { .. } => metadata.clone(),
+    }
+}
+
 fn chain_entries(
     environment: Environment,
     chain: alloy_chains::NamedChain,
-    aliases: &[Alias],
+    successions: &[Succession],
+    vulnerable: &[Vulnerable],
     versions: &Versions,
 ) -> Result<Vec<Entry>> {
     let padding_logic = digest(anoma_rm_risc0::constants::PADDING_LOGIC_VK.as_bytes());
     let transfer_logic = digest(transfer_library::TOKEN_TRANSFER_ID.as_bytes());
     let generic_call_logic = digest(anoma_generic_call_library::GENERIC_CALL_ID.as_bytes());
 
+    let is_vulnerable = |circuit: Circuit, version: &str| {
+        vulnerable
+            .iter()
+            .any(|marked| marked.circuit == circuit && marked.version == version)
+    };
+    // Active is the absence of both a mark and a succession moving past the version.
+    let status = |circuit: Circuit, version: &str| -> Option<Status> {
+        if is_vulnerable(circuit, version) {
+            Some(Status::Vulnerable)
+        } else if successions
+            .iter()
+            .any(|succession| succession.circuit == circuit && succession.of == version)
+        {
+            Some(Status::Deprecated)
+        } else {
+            None
+        }
+    };
+
     let mut entries = vec![entry(
         Metadata::Padding {
             version: versions.padding.clone(),
+            status: None,
         },
         padding_logic,
         Digest::default(),
@@ -177,6 +254,7 @@ fn chain_entries(
             Metadata::GenericCall {
                 version: versions.generic_call.clone(),
                 forwarder,
+                status: status(Circuit::GenericCall, &versions.generic_call),
                 alias_of: None,
             },
             generic_call_logic,
@@ -185,11 +263,10 @@ fn chain_entries(
     }
 
     let supported = tokens::on(chain);
-    let erc20_forwarder = anomapay_erc20_forwarder_bindings::addresses::erc20_forwarder_address(
+    match anomapay_erc20_forwarder_bindings::addresses::erc20_forwarder_address(
         erc20_environment(environment),
         &chain,
-    );
-    match erc20_forwarder {
+    ) {
         Some(forwarder) => {
             for token in supported {
                 entries.push(entry(
@@ -198,6 +275,7 @@ fn chain_entries(
                         name: token.symbol.clone(),
                         token: token.address,
                         forwarder,
+                        status: status(Circuit::Erc20, &versions.transfer),
                         alias_of: None,
                     },
                     transfer_logic,
@@ -212,61 +290,47 @@ fn chain_entries(
         ),
     }
 
-    let circuits = transfer_circuits(versions);
-    for alias in aliases {
-        let forwarder = erc20_forwarder
-            .with_context(|| format!("{chain}: an alias is recorded but no ERC20 forwarder is"))?;
-        let token = supported
-            .iter()
-            .find(|token| token.address == alias.token)
-            .with_context(|| format!("{chain}: aliased token {} is not supported", alias.token))?;
-        let circuit = |version: &str| -> Result<Digest> {
-            circuits.get(version).copied().with_context(|| {
-                format!("{chain}: transfer circuit {version} is not pinned by this generator")
+    // A succession carries every kind of its predecessor to its successor, so no token and no chain is left
+    // behind by omission. The successor takes the predecessor's point and never the reverse: see ADR-0008.
+    for succession in successions {
+        let Succession {
+            circuit, alias, of, ..
+        } = succession;
+        for version in [of, alias] {
+            if is_vulnerable(*circuit, version) {
+                bail!("succession {of} -> {alias}: {version} is recorded as vulnerable");
+            }
+        }
+        let resolve = |version: &str| -> Result<Digest> {
+            logic_ref(*circuit, version, versions).with_context(|| {
+                format!("succession {of} -> {alias}: {version} is not pinned by this generator")
             })
         };
-        let logic_ref = circuit(&alias.alias)?;
-        let of_logic_ref = circuit(&alias.of)?;
-        let label_ref = sha256(&[forwarder.as_slice(), alias.token.as_slice()].concat());
+        let (of_logic, alias_logic) = (resolve(of)?, resolve(alias)?);
+        let status = status(*circuit, alias);
 
-        let Some(canonical) = entries
+        let carried: Vec<Entry> = entries
             .iter()
-            .find(|e| (e.logic_ref, e.label_ref) == (of_logic_ref, label_ref) && e.is_canonical())
-        else {
-            bail!(
-                "{chain}: {} under transfer circuit {} is not a canonical entry of this table",
-                token.symbol,
-                alias.of
-            );
-        };
-        let point = canonical.kind_point.clone();
-
-        if entries
-            .iter()
-            .any(|e| (e.logic_ref, e.label_ref) == (logic_ref, label_ref))
-        {
-            bail!(
-                "{chain}: {} under transfer circuit {} already has an entry",
-                token.symbol,
-                alias.alias
-            );
-        }
-        entries.push(Entry {
-            metadata: Some(Metadata::Erc20 {
-                version: alias.alias.clone(),
-                name: token.symbol.clone(),
-                token: alias.token,
-                forwarder,
-                alias_of: Some(AliasOf {
-                    version: alias.of.clone(),
-                    logic_ref: of_logic_ref,
-                    label_ref,
+            .filter(|entry| entry.logic_ref == of_logic && entry.is_canonical())
+            .map(|canonical| Entry {
+                metadata: canonical.metadata.as_ref().map(|metadata| {
+                    succeeded(
+                        metadata,
+                        alias,
+                        status,
+                        AliasOf {
+                            version: of.clone(),
+                            logic_ref: of_logic,
+                            label_ref: canonical.label_ref,
+                        },
+                    )
                 }),
-            }),
-            kind_point: point,
-            logic_ref,
-            label_ref,
-        });
+                kind_point: canonical.kind_point.clone(),
+                logic_ref: alias_logic,
+                label_ref: canonical.label_ref,
+            })
+            .collect();
+        entries.extend(carried);
     }
 
     entries.sort_by_key(Entry::key);
@@ -281,9 +345,12 @@ fn chain_entries(
 
 fn main() -> Result<()> {
     let data = Path::new(env!("CARGO_MANIFEST_DIR")).join("data");
-    let aliases: BTreeMap<u64, ChainAliases> =
-        serde_json::from_str(&fs::read_to_string(data.join("aliases.json"))?)
-            .context("aliases.json")?;
+    let successions: Successions =
+        serde_json::from_str(&fs::read_to_string(data.join("successions.json"))?)
+            .context("successions.json")?;
+    let vulnerabilities: Vulnerabilities =
+        serde_json::from_str(&fs::read_to_string(data.join("vulnerabilities.json"))?)
+            .context("vulnerabilities.json")?;
 
     let versions = versions()?;
 
@@ -305,9 +372,8 @@ fn main() -> Result<()> {
             let entries = chain_entries(
                 environment,
                 chain,
-                aliases
-                    .get(&(chain as u64))
-                    .map_or(&[], |section| section.aliases.as_slice()),
+                &successions.successions,
+                &vulnerabilities.vulnerable,
                 &versions,
             )?;
             commitments.insert(

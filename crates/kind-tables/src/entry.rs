@@ -27,7 +27,11 @@ pub struct Entry {
 #[serde(tag = "type")]
 pub enum Metadata {
     /// The padding kind, whose logic ships with the resource machine.
-    Padding { version: String },
+    Padding {
+        version: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        status: Option<Status>,
+    },
     /// One supported token behind an ERC20 forwarder.
     #[serde(rename = "ERC20")]
     Erc20 {
@@ -38,6 +42,8 @@ pub enum Metadata {
         #[serde(with = "checksummed")]
         forwarder: Address,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        status: Option<Status>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         alias_of: Option<AliasOf>,
     },
     /// The arbitrary-call kind behind a generic call forwarder.
@@ -46,8 +52,32 @@ pub enum Metadata {
         #[serde(with = "checksummed")]
         forwarder: Address,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        status: Option<Status>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         alias_of: Option<AliasOf>,
     },
+}
+
+impl Metadata {
+    /// Where the entry's circuit version sits in its lifecycle.
+    pub fn status(&self) -> Option<Status> {
+        match self {
+            Self::Padding { status, .. }
+            | Self::Erc20 { status, .. }
+            | Self::GenericCall { status, .. } => *status,
+        }
+    }
+}
+
+/// Where a circuit version sits in its lifecycle. An active version carries none: it is neither superseded
+/// nor compromised.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Status {
+    /// A succession has moved past this version. Its resources stay fungible.
+    Deprecated,
+    /// Recorded as compromised. No succession may name it, and its keys may be re-pointed.
+    Vulnerable,
 }
 
 /// The canonical entry an alias takes its point from. The two keys name one kind, so resources of both
@@ -144,6 +174,7 @@ mod tests {
             name: "WETH".into(),
             token: Address::with_last_byte(6),
             forwarder: Address::with_last_byte(7),
+            status: None,
             alias_of: None,
         }
     }
