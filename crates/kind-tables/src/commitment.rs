@@ -26,7 +26,7 @@ mod tests {
         let logic_ref = Digest::from([seed as u32; 8]);
         let label_ref = Digest::default();
         Entry {
-            comment: None,
+            metadata: None,
             kind_point: kind::point(&logic_ref, &label_ref).unwrap(),
             logic_ref,
             label_ref,

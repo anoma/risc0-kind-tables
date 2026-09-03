@@ -3,16 +3,18 @@
 //! any diff, so the committed artifacts always match the pins.
 
 use anoma_generic_call_forwarder_bindings::addresses::Environment as GenericCallEnvironment;
-use anoma_kind_tables::{Entry, commitment, kind, tokens};
+use anoma_kind_tables::{AliasOf, Entry, Metadata, commitment, kind, tokens};
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
 use anomapay_erc20_forwarder_bindings::addresses::Environment as Erc20Environment;
 use anyhow::{Context, Result, bail};
 use risc0_zkvm::Digest;
 use risc0_zkvm::sha::{Impl, Sha256};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 
 /// One chain's authored section. The `_comment` naming the chain is review context and is not deserialized.
 #[derive(Deserialize)]
@@ -29,10 +31,11 @@ struct ChainCommitment {
 }
 
 /// One aliasing decision: the `alias` key takes the point of the canonical `of` key, making the two kinds one.
+/// The author writes the alias's own identity; the generator fills in the canonical key it points at.
 #[derive(Deserialize)]
 struct Alias {
-    #[serde(rename = "_comment", default)]
-    comment: Option<String>,
+    #[serde(rename = "_metadata", default)]
+    metadata: Option<Metadata>,
     alias: Key,
     of: Key,
 }
@@ -76,12 +79,79 @@ fn generic_call_environment(environment: Environment) -> GenericCallEnvironment 
     }
 }
 
-fn entry(comment: String, logic_ref: Digest, label_ref: Digest) -> Result<Entry> {
+fn entry(metadata: Metadata, logic_ref: Digest, label_ref: Digest) -> Result<Entry> {
     Ok(Entry {
-        comment: Some(comment),
+        metadata: Some(metadata),
         kind_point: kind::point(&logic_ref, &label_ref)?,
         logic_ref,
         label_ref,
+    })
+}
+
+/// The circuit versions behind the logic refs.
+struct Versions {
+    padding: String,
+    transfer: String,
+    generic_call: String,
+}
+
+/// Reads the circuit versions from the resolved dependency graph, so bumping a pin cannot leave a stale
+/// version in the metadata.
+fn versions() -> Result<Versions> {
+    let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".into());
+    let output = Command::new(cargo)
+        .args([
+            "metadata",
+            "--format-version",
+            "1",
+            "--locked",
+            "--all-features",
+        ])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .context("failed to run cargo metadata")?;
+    if !output.status.success() {
+        bail!(
+            "cargo metadata: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    let metadata: Value =
+        serde_json::from_slice(&output.stdout).context("cargo metadata output")?;
+
+    let version_by_id: BTreeMap<&str, &str> = metadata["packages"]
+        .as_array()
+        .context("cargo metadata reported no packages")?
+        .iter()
+        .filter_map(|package| Some((package["id"].as_str()?, package["version"].as_str()?)))
+        .collect();
+
+    let node = metadata["resolve"]["nodes"]
+        .as_array()
+        .context("cargo metadata reported no resolve graph")?
+        .iter()
+        .find(|node| {
+            node["id"]
+                .as_str()
+                .is_some_and(|id| id.contains("anoma-kind-tables"))
+        })
+        .context("this package is missing from the resolve graph")?;
+
+    let version_of = |lib: &str| -> Result<String> {
+        node["deps"]
+            .as_array()
+            .context("the resolve node carries no dependencies")?
+            .iter()
+            .find(|dep| dep["name"].as_str() == Some(lib))
+            .and_then(|dep| version_by_id.get(dep["pkg"].as_str()?).copied())
+            .map(str::to_string)
+            .with_context(|| format!("{lib} is not a resolved dependency"))
+    };
+
+    Ok(Versions {
+        padding: version_of("anoma_rm_risc0")?,
+        transfer: version_of("transfer_library")?,
+        generic_call: version_of("anoma_generic_call_library")?,
     })
 }
 
@@ -89,13 +159,16 @@ fn chain_entries(
     environment: Environment,
     chain: alloy_chains::NamedChain,
     aliases: &[Alias],
+    versions: &Versions,
 ) -> Result<Vec<Entry>> {
     let padding_logic = digest(anoma_rm_risc0::constants::PADDING_LOGIC_VK.as_bytes());
     let transfer_logic = digest(transfer_library::TOKEN_TRANSFER_ID.as_bytes());
     let generic_call_logic = digest(anoma_generic_call_library::GENERIC_CALL_ID.as_bytes());
 
     let mut entries = vec![entry(
-        "padding (trivial logic)".into(),
+        Metadata::Padding {
+            version: versions.padding.clone(),
+        },
         padding_logic,
         Digest::default(),
     )?];
@@ -107,7 +180,11 @@ fn chain_entries(
         )
     {
         entries.push(entry(
-            format!("generic call via forwarder {forwarder}"),
+            Metadata::GenericCall {
+                version: versions.generic_call.clone(),
+                forwarder,
+                alias_of: None,
+            },
             generic_call_logic,
             sha256(forwarder.as_slice()),
         )?);
@@ -121,10 +198,13 @@ fn chain_entries(
         Some(forwarder) => {
             for token in supported {
                 entries.push(entry(
-                    format!(
-                        "{} {} via ERC20 forwarder {forwarder}",
-                        token.symbol, token.address
-                    ),
+                    Metadata::Erc20 {
+                        version: versions.transfer.clone(),
+                        name: token.symbol.clone(),
+                        token: token.address,
+                        forwarder,
+                        alias_of: None,
+                    },
                     transfer_logic,
                     sha256(&[forwarder.as_slice(), token.address.as_slice()].concat()),
                 )?);
@@ -140,17 +220,25 @@ fn chain_entries(
     for alias in aliases {
         let (logic_ref, label_ref) = alias.alias.parse()?;
         let of = alias.of.parse()?;
-        let Some(canonical) = entries
-            .iter()
-            .find(|e| (e.logic_ref, e.label_ref) == of && e.is_canonical())
-        else {
-            bail!(
-                "{chain}: alias target ({}, {}) is not a canonical entry of this table",
-                alias.of.logic_ref,
-                alias.of.label_ref
-            );
+        let (point, canonical_version) = {
+            let Some(canonical) = entries
+                .iter()
+                .find(|e| (e.logic_ref, e.label_ref) == of && e.is_canonical())
+            else {
+                bail!(
+                    "{chain}: alias target ({}, {}) is not a canonical entry of this table",
+                    alias.of.logic_ref,
+                    alias.of.label_ref
+                );
+            };
+            let version = canonical
+                .metadata
+                .as_ref()
+                .with_context(|| format!("{chain}: the alias target carries no metadata"))?
+                .version()
+                .to_string();
+            (canonical.kind_point.clone(), version)
         };
-        let point = canonical.kind_point.clone();
         if entries
             .iter()
             .any(|e| (e.logic_ref, e.label_ref) == (logic_ref, label_ref))
@@ -162,7 +250,13 @@ fn chain_entries(
             );
         }
         entries.push(Entry {
-            comment: alias.comment.clone(),
+            metadata: alias.metadata.clone().map(|metadata| {
+                metadata.aliased_to(AliasOf {
+                    version: canonical_version,
+                    logic_ref: of.0,
+                    label_ref: of.1,
+                })
+            }),
             kind_point: point,
             logic_ref,
             label_ref,
@@ -184,6 +278,8 @@ fn main() -> Result<()> {
     let aliases: BTreeMap<u64, ChainAliases> =
         serde_json::from_str(&fs::read_to_string(data.join("aliases.json"))?)
             .context("aliases.json")?;
+
+    let versions = versions()?;
 
     for (environment, name) in [
         (Environment::Staging, "staging"),
@@ -208,6 +304,7 @@ fn main() -> Result<()> {
                 aliases
                     .get(&(chain as u64))
                     .map_or(&[], |section| section.aliases.as_slice()),
+                &versions,
             )?;
             fs::write(
                 out.join(format!("{}.json", chain as u64)),

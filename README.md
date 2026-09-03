@@ -25,6 +25,47 @@ docs/adr/                      the decisions behind this layout
 
 Every chain-keyed file — `tokens.json`, `aliases.json`, `commitments.json` — is keyed by chain ID, as the forwarder and protocol adapter deployment records they are generated from are, and each section carries the chain name in a `_comment` the loaders ignore. A generated table is named for the chain ID it belongs to and is otherwise `anoma-rm-risc0`'s kind table schema, so `init_kind_table_from_file` reads one unchanged.
 
+## Entries
+
+An entry carries its key, its kind point, and a `_metadata` object naming what the kind belongs to. The commitment covers `logic_ref`, `label_ref` and `kind_point` only, so `_metadata` is free to carry whatever a reviewer needs and never moves the commitment. `version` is the version of the circuit crate that owns `logic_ref`, read from the resolved dependency graph, so bumping a pin cannot leave a stale version behind. `type` is `Padding`, `ERC20`, or `GenericCall`.
+
+```json
+{
+  "_metadata": {
+    "type": "ERC20",
+    "version": "2.0.0",
+    "name": "WETH",
+    "token": "0x4200000000000000000000000000000000000006",
+    "forwarder": "0xE54182d915dE447deFc4A17Ec1D4E0dc627551F7"
+  },
+  "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
+  "label_ref": "55008fad9bfccef776960bfca715e365cfba843cfb947190fafc69e4d9fac674",
+  "kind_point": "04545c399026b2d1ec31c63488d9b4cc58807611997d66b3dea4a144332c5a0e6a2bd246b7d721cd335199c17bfc17706aa8fee9decb6042d516d6a6ae88bb4d72"
+}
+```
+
+An aliased entry names a newer circuit version in `logic_ref` but takes the `kind_point` of the entry named in `alias_of`, so resources of both versions share one kind and stay fungible. The author writes the alias's own identity in `data/aliases.json`; the generator fills in `alias_of` and copies the point. `label_ref` is unchanged when the same forwarder holds the same token, so only `logic_ref` distinguishes the two rows.
+
+```json
+{
+  "_metadata": {
+    "type": "ERC20",
+    "version": "3.0.0",
+    "name": "WETH",
+    "token": "0x4200000000000000000000000000000000000006",
+    "forwarder": "0xE54182d915dE447deFc4A17Ec1D4E0dc627551F7",
+    "alias_of": {
+      "version": "2.0.0",
+      "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
+      "label_ref": "55008fad9bfccef776960bfca715e365cfba843cfb947190fafc69e4d9fac674"
+    }
+  },
+  "logic_ref": "<the transfer circuit ID of version 3.0.0>",
+  "label_ref": "55008fad9bfccef776960bfca715e365cfba843cfb947190fafc69e4d9fac674",
+  "kind_point": "04545c399026b2d1ec31c63488d9b4cc58807611997d66b3dea4a144332c5a0e6a2bd246b7d721cd335199c17bfc17706aa8fee9decb6042d516d6a6ae88bb4d72"
+}
+```
+
 ## Workflows
 
 Add a token: edit `data/tokens.json`, run `just generate`, commit both. The token validation test checks the contract reports the recorded identity on every pull request and push.
