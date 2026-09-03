@@ -2,6 +2,7 @@
 //! dependencies (circuit IDs, forwarder and protocol adapter deployment records). CI reruns this and fails on
 //! any diff, so the committed artifacts always match the pins.
 
+use alloy::primitives::Address;
 use anoma_generic_call_forwarder_bindings::addresses::Environment as GenericCallEnvironment;
 use anoma_kind_tables::{AliasOf, Entry, Metadata, commitment, kind, tokens};
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
@@ -30,30 +31,14 @@ struct ChainCommitment {
     commitment: String,
 }
 
-/// One aliasing decision: the `alias` key takes the point of the canonical `of` key, making the two kinds one.
-/// The author writes the alias's own identity; the generator fills in the canonical key it points at.
+/// One aliasing decision: the token's kind under the `alias` circuit version takes the point it has under
+/// `of`, so resources of both versions are one kind. Both versions must be pinned here, which is what makes
+/// the circuit IDs derivable rather than authored.
 #[derive(Deserialize)]
 struct Alias {
-    #[serde(rename = "_metadata", default)]
-    metadata: Option<Metadata>,
-    alias: Key,
-    of: Key,
-}
-
-#[derive(Deserialize)]
-struct Key {
-    logic_ref: String,
-    label_ref: String,
-}
-
-impl Key {
-    fn parse(&self) -> Result<(Digest, Digest)> {
-        use hex::FromHex;
-        Ok((
-            Digest::from_hex(&self.logic_ref).context("invalid logic_ref")?,
-            Digest::from_hex(&self.label_ref).context("invalid label_ref")?,
-        ))
-    }
+    token: Address,
+    alias: String,
+    of: String,
 }
 
 fn digest(bytes: &[u8]) -> Digest {
@@ -86,6 +71,15 @@ fn entry(metadata: Metadata, logic_ref: Digest, label_ref: Digest) -> Result<Ent
         logic_ref,
         label_ref,
     })
+}
+
+/// The transfer circuits whose kinds can be derived, by crate version. A new circuit release joins this map
+/// as a renamed dependency, so `aliases.json` can only name a version whose ID is compiled in.
+fn transfer_circuits(versions: &Versions) -> BTreeMap<&str, Digest> {
+    BTreeMap::from([(
+        versions.transfer.as_str(),
+        digest(transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
+    )])
 }
 
 /// The circuit versions behind the logic refs.
@@ -191,10 +185,11 @@ fn chain_entries(
     }
 
     let supported = tokens::on(chain);
-    match anomapay_erc20_forwarder_bindings::addresses::erc20_forwarder_address(
+    let erc20_forwarder = anomapay_erc20_forwarder_bindings::addresses::erc20_forwarder_address(
         erc20_environment(environment),
         &chain,
-    ) {
+    );
+    match erc20_forwarder {
         Some(forwarder) => {
             for token in supported {
                 entries.push(entry(
@@ -217,45 +212,56 @@ fn chain_entries(
         ),
     }
 
+    let circuits = transfer_circuits(versions);
     for alias in aliases {
-        let (logic_ref, label_ref) = alias.alias.parse()?;
-        let of = alias.of.parse()?;
-        let (point, canonical_version) = {
-            let Some(canonical) = entries
-                .iter()
-                .find(|e| (e.logic_ref, e.label_ref) == of && e.is_canonical())
-            else {
-                bail!(
-                    "{chain}: alias target ({}, {}) is not a canonical entry of this table",
-                    alias.of.logic_ref,
-                    alias.of.label_ref
-                );
-            };
-            let version = canonical
-                .metadata
-                .as_ref()
-                .with_context(|| format!("{chain}: the alias target carries no metadata"))?
-                .version()
-                .to_string();
-            (canonical.kind_point.clone(), version)
+        let forwarder = erc20_forwarder
+            .with_context(|| format!("{chain}: an alias is recorded but no ERC20 forwarder is"))?;
+        let token = supported
+            .iter()
+            .find(|token| token.address == alias.token)
+            .with_context(|| format!("{chain}: aliased token {} is not supported", alias.token))?;
+        let circuit = |version: &str| -> Result<Digest> {
+            circuits.get(version).copied().with_context(|| {
+                format!("{chain}: transfer circuit {version} is not pinned by this generator")
+            })
         };
+        let logic_ref = circuit(&alias.alias)?;
+        let of_logic_ref = circuit(&alias.of)?;
+        let label_ref = sha256(&[forwarder.as_slice(), alias.token.as_slice()].concat());
+
+        let Some(canonical) = entries
+            .iter()
+            .find(|e| (e.logic_ref, e.label_ref) == (of_logic_ref, label_ref) && e.is_canonical())
+        else {
+            bail!(
+                "{chain}: {} under transfer circuit {} is not a canonical entry of this table",
+                token.symbol,
+                alias.of
+            );
+        };
+        let point = canonical.kind_point.clone();
+
         if entries
             .iter()
             .any(|e| (e.logic_ref, e.label_ref) == (logic_ref, label_ref))
         {
             bail!(
-                "{chain}: alias key ({}, {}) collides with an existing entry",
-                alias.alias.logic_ref,
-                alias.alias.label_ref
+                "{chain}: {} under transfer circuit {} already has an entry",
+                token.symbol,
+                alias.alias
             );
         }
         entries.push(Entry {
-            metadata: alias.metadata.clone().map(|metadata| {
-                metadata.aliased_to(AliasOf {
-                    version: canonical_version,
-                    logic_ref: of.0,
-                    label_ref: of.1,
-                })
+            metadata: Some(Metadata::Erc20 {
+                version: alias.alias.clone(),
+                name: token.symbol.clone(),
+                token: alias.token,
+                forwarder,
+                alias_of: Some(AliasOf {
+                    version: alias.of.clone(),
+                    logic_ref: of_logic_ref,
+                    label_ref,
+                }),
             }),
             kind_point: point,
             logic_ref,
@@ -281,21 +287,19 @@ fn main() -> Result<()> {
 
     let versions = versions()?;
 
+    // Everything is generated before anything is written: a rejected alias must not leave the tree without
+    // the tables the crate embeds.
+    let mut generated = Vec::new();
     for (environment, name) in [
         (Environment::Staging, "staging"),
         (Environment::Production, "production"),
     ] {
-        let out = data.join("generated").join(name);
-        if out.exists() {
-            fs::remove_dir_all(&out)?;
-        }
-        fs::create_dir_all(&out)?;
-
         let mut chains: Vec<_> = protocol_adapter_deployments_map(environment)
             .into_keys()
             .collect();
         chains.sort();
 
+        let mut files = Vec::new();
         let mut commitments = BTreeMap::new();
         for chain in chains {
             let entries = chain_entries(
@@ -306,10 +310,6 @@ fn main() -> Result<()> {
                     .map_or(&[], |section| section.aliases.as_slice()),
                 &versions,
             )?;
-            fs::write(
-                out.join(format!("{}.json", chain as u64)),
-                serde_json::to_string_pretty(&entries)? + "\n",
-            )?;
             commitments.insert(
                 chain as u64,
                 ChainCommitment {
@@ -317,12 +317,28 @@ fn main() -> Result<()> {
                     commitment: hex::encode(commitment::of(&entries).as_bytes()),
                 },
             );
+            files.push((
+                format!("{}.json", chain as u64),
+                serde_json::to_string_pretty(&entries)? + "\n",
+            ));
         }
-        fs::write(
-            out.join("commitments.json"),
+        files.push((
+            "commitments.json".to_string(),
             serde_json::to_string_pretty(&commitments)? + "\n",
-        )?;
-        println!("{name}: {} chains", commitments.len());
+        ));
+        generated.push((name, files, commitments.len()));
+    }
+
+    for (name, files, chains) in generated {
+        let out = data.join("generated").join(name);
+        if out.exists() {
+            fs::remove_dir_all(&out)?;
+        }
+        fs::create_dir_all(&out)?;
+        for (file, contents) in files {
+            fs::write(out.join(file), contents)?;
+        }
+        println!("{name}: {chains} chains");
     }
     Ok(())
 }

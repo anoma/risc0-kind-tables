@@ -50,44 +50,6 @@ pub enum Metadata {
     },
 }
 
-impl Metadata {
-    /// The version of the circuit that owns the entry's `logic_ref`.
-    pub fn version(&self) -> &str {
-        match self {
-            Self::Padding { version }
-            | Self::Erc20 { version, .. }
-            | Self::GenericCall { version, .. } => version,
-        }
-    }
-
-    /// Records the canonical entry this one takes its point from. Padding is never aliased.
-    pub fn aliased_to(self, canonical: AliasOf) -> Self {
-        match self {
-            Self::Erc20 {
-                version,
-                name,
-                token,
-                forwarder,
-                ..
-            } => Self::Erc20 {
-                version,
-                name,
-                token,
-                forwarder,
-                alias_of: Some(canonical),
-            },
-            Self::GenericCall {
-                version, forwarder, ..
-            } => Self::GenericCall {
-                version,
-                forwarder,
-                alias_of: Some(canonical),
-            },
-            padding => padding,
-        }
-    }
-}
-
 /// The canonical entry an alias takes its point from. The two keys name one kind, so resources of both
 /// versions are fungible — the migration path between circuit versions.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -204,20 +166,6 @@ mod tests {
         entry.metadata = Some(erc20_metadata());
         let json = serde_json::to_string(&entry).unwrap();
         assert_eq!(serde_json::from_str::<Entry>(&json).unwrap(), entry);
-    }
-
-    #[test]
-    fn aliased_to_records_the_canonical_key() {
-        let canonical = AliasOf {
-            version: "2.0.0".into(),
-            logic_ref: Digest::from([1u32; 8]),
-            label_ref: Digest::from([2u32; 8]),
-        };
-        let Metadata::Erc20 { alias_of, .. } = erc20_metadata().aliased_to(canonical.clone())
-        else {
-            panic!("aliasing an ERC20 entry keeps it an ERC20 entry");
-        };
-        assert_eq!(alias_of, Some(canonical));
     }
 
     #[test]

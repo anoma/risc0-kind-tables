@@ -44,7 +44,22 @@ An entry carries its key, its kind point, and a `_metadata` object naming what t
 }
 ```
 
-An aliased entry names a newer circuit version in `logic_ref` but takes the `kind_point` of the entry named in `alias_of`, so resources of both versions share one kind and stay fungible. The author writes the alias's own identity in `data/aliases.json`; the generator fills in `alias_of` and copies the point. `label_ref` is unchanged when the same forwarder holds the same token, so only `logic_ref` distinguishes the two rows.
+An aliased entry names a newer circuit version in `logic_ref` but takes the `kind_point` of the entry named in `alias_of`, so resources of both versions share one kind and stay fungible. `label_ref` is unchanged when the same forwarder holds the same token, so only `logic_ref` distinguishes the two rows.
+
+An alias is authored as a token and two circuit versions — never as a ref:
+
+```json
+{
+  "84532": {
+    "_comment": "base-sepolia",
+    "aliases": [
+      { "token": "0x4200000000000000000000000000000000000006", "alias": "3.0.0", "of": "2.0.0" }
+    ]
+  }
+}
+```
+
+The generator derives both circuit IDs from the pinned crates, derives the label from the chain's recorded ERC20 forwarder, and fills in `_metadata` and `alias_of`. A version it does not pin fails the run, so an alias can never name a kind that cannot be derived here, and it generates:
 
 ```json
 {
@@ -70,7 +85,7 @@ An aliased entry names a newer circuit version in `logic_ref` but takes the `kin
 
 Add a token: edit `data/tokens.json`, run `just generate`, commit both. The token validation test checks the contract reports the recorded identity on every pull request and push.
 
-Add an alias: edit `data/aliases.json`, run `just generate`, review the alias in the generated diff — an alias makes two kinds fungible, so it carries the weight of a mint authorization.
+Add an alias: pin the circuit release as a renamed dependency and add it to `transfer_circuits` in the generator, edit `data/aliases.json`, run `just generate`, review the alias in the generated diff — an alias makes two kinds fungible, so it carries the weight of a mint authorization. It also moves that chain's commitment, so it needs a `setKindTableCommitment` update before transactions built against the new table verify.
 
 Update the deployed commitments: after a merge into `next`, install each chain's commitment from `data/generated/<environment>/commitments.json` with the protocol adapter repo's `contracts-*-kind-table-*` recipes. The promotion pull request into `staging` or `main` then proves every protocol adapter of that environment stores what this source generates.
 
