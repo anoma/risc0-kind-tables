@@ -30,8 +30,19 @@ An entry whose kind is the one the key hashes to. It changes nothing about what 
 _Avoid_: normal entry, plain entry
 
 **Alias**:
-An entry whose kind is *not* the one its key hashes to, so that two keys name one kind and their resources become fungible. The migration path from one resource logic version to its successor, and the only entry a reviewer must read.
+An entry whose kind is *not* the one its key hashes to, so that two keys name one kind and their resources become fungible. Generated from a succession, never authored row by row, and the only entry a reviewer must read.
 _Avoid_: override, remap, redirect
+
+**Succession**:
+The authored decision that one circuit version's kinds carry to its successor. Stated once, globally, and fanned out into one alias per label that circuit owns on every chain — so a token or a chain cannot be left behind by omission.
+_Avoid_: upgrade, bump, migration (the migration is what a succession enables, not the record of it)
+
+**Anchor**:
+The circuit version whose canonical kind every successor's alias resolves to. A resource's kind is fixed when it is created, so re-pointing a key strands the resources created under it: a succession adds rows pointing back at the anchor and never moves it.
+
+**Vulnerable version**:
+A circuit version recorded as compromised. No succession may name it on either side, so fungibility is never extended to or from its resources, and its keys are the one exemption from the anchor rule — they may be deliberately re-pointed, which freezes those resources, honest holders included.
+_Avoid_: deprecated (a deprecated version is one a succession has moved past, and stays fungible)
 
 **Kind table commitment**:
 The digest a protocol adapter stores and every compliance proof reproduces, covering every entry and their order. The value this repo exists to publish.

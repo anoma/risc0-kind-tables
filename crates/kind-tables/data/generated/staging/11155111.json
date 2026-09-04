@@ -1,42 +1,79 @@
 [
   {
-    "_comment": "padding (trivial logic)",
+    "_metadata": {
+      "type": "PaddingResource",
+      "version": "2.0.0-rc.4"
+    },
     "logic_ref": "034c170fc2045f5e257110eb369e57ea5dc72d6dd83dab69746afc2bec6e1847",
     "label_ref": "0000000000000000000000000000000000000000000000000000000000000000",
     "kind_point": "04f26d28c79607587b4d2ea0dce801dfe997358e247605bc0ab669073d59253e5bc45b50d149da0a68d3976671f1f23cfbeaefa6bbd56feb89b1fd0c64eaba6f58"
   },
   {
-    "_comment": "EURC 0x08210F9170F89Ab7658F0B5E3fF39b0E03C594D4 via ERC20 forwarder 0x997FA4eDA52748eA313f429B61223faBBca49C9b",
+    "_metadata": {
+      "type": "ERC20Resource",
+      "version": "2.0.0",
+      "name": "EURC",
+      "token": "0x08210F9170F89Ab7658F0B5E3fF39b0E03C594D4",
+      "forwarder": "0x997FA4eDA52748eA313f429B61223faBBca49C9b"
+    },
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
     "label_ref": "1e28eba4af99cfcb975ed52beaca678ce1aad0abb9539a65522f1f2328cea762",
     "kind_point": "04913b9c855d2ec782d11fe6ae260cfe7c1e494a1853fb92d68e529fc4db9da92ddaf758fb8bc23256f212714a39146f3ebe6d75350c3bf6f294e91de5333d1cd4"
   },
   {
-    "_comment": "USDC 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 via ERC20 forwarder 0x997FA4eDA52748eA313f429B61223faBBca49C9b",
+    "_metadata": {
+      "type": "ERC20Resource",
+      "version": "2.0.0",
+      "name": "USDC",
+      "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+      "forwarder": "0x997FA4eDA52748eA313f429B61223faBBca49C9b"
+    },
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
     "label_ref": "4f0d4716a606a59bb031ccf1482d66e467c8ecfd41cb774f234a4b8e9ce58d50",
     "kind_point": "04e87f954f231b2d7128635f343baded1e00e68d6ed7b4d0e655871e435b816ff82f8449a403fa5de5e00102e86c4d45e806313e09356cd548afe6a9d3fbca9736"
   },
   {
-    "_comment": "WETH 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9 via ERC20 forwarder 0x997FA4eDA52748eA313f429B61223faBBca49C9b",
+    "_metadata": {
+      "type": "ERC20Resource",
+      "version": "2.0.0",
+      "name": "WETH",
+      "token": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+      "forwarder": "0x997FA4eDA52748eA313f429B61223faBBca49C9b"
+    },
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
     "label_ref": "98da3bc7c342d6060a2247f0dc1339903aaa59c9638881d6f0ed9fe1f0cf2ceb",
     "kind_point": "04dfeb42ec77ad1d88ce42f57c348643e0cf275af61b86e165c730deedc1546561f5010c420d0857675b84499805adf8ffcc798a18ac81951408be87383a3856ea"
   },
   {
-    "_comment": "USDT 0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0 via ERC20 forwarder 0x997FA4eDA52748eA313f429B61223faBBca49C9b",
+    "_metadata": {
+      "type": "ERC20Resource",
+      "version": "2.0.0",
+      "name": "USDT",
+      "token": "0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0",
+      "forwarder": "0x997FA4eDA52748eA313f429B61223faBBca49C9b"
+    },
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
     "label_ref": "c15a2502d12309796d0f7d0b55c6d86dd80c85d6b89f47d64f3c43fc5dd6220c",
     "kind_point": "0410e30742ac8a733f11865e497a92eefd6b96283fc1e529747bcb54e31a5428ae3df66f4e93de754a3fbe4764410465bedb09d3f06d289594b6f6adbcabcf58bf"
   },
   {
-    "_comment": "XAN 0xCEDbEA37C8872c4171259Cdfd5255CB8923Cf8e7 via ERC20 forwarder 0x997FA4eDA52748eA313f429B61223faBBca49C9b",
+    "_metadata": {
+      "type": "ERC20Resource",
+      "version": "2.0.0",
+      "name": "XAN",
+      "token": "0xCEDbEA37C8872c4171259Cdfd5255CB8923Cf8e7",
+      "forwarder": "0x997FA4eDA52748eA313f429B61223faBBca49C9b"
+    },
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
     "label_ref": "e7314b5e36f735926bdcec0b17a73745f9afb0c7fda4643abf6d58a206cd8e5a",
     "kind_point": "0483a409c12e3870c1a973b28390b56d9b46e130840edf7d4af5f5184ca74afd1b3f085f859536475e6101ca8bbfec704b50d4565f3aef40c82435ebe72749f6bf"
   },
   {
-    "_comment": "generic call via forwarder 0x0B1EfEec748cC77e9c3ad46997B1E1E97803e0D2",
+    "_metadata": {
+      "type": "GenericCallResource",
+      "version": "1.0.0",
+      "forwarder": "0x0B1EfEec748cC77e9c3ad46997B1E1E97803e0D2"
+    },
     "logic_ref": "de1d88738d93b2c67bcd7d2515e22a093bbf7f08ecd88ab24030c301a416621a",
     "label_ref": "267a86ec0175dcd3f9280aff9f8558bc43e81f5043b2ea6af1a66408d4814479",
     "kind_point": "046b646153d96ae1d5e8c00b4e4856a9bc83052a2fdba1c6867b8ef8ea27026a8c737259b1a09b0fbb0d2763e2c71cdea4188fdc663c2a121361069dd95f3b769d"
