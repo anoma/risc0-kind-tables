@@ -149,74 +149,128 @@ environment_module!(production);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::chain::Chain;
     use crate::entry::Metadata;
     use crate::kind;
     use alloy_chains::NamedChain;
     use anomapay_erc20_forwarder_bindings::addresses::{Environment, erc20_forwarder_address};
 
-    /// No kind point is authored. An ERC20 entry is assigned its fungibility domain's kind point — the kind of the
+    /// The alias rules of a fungibility domain, checked on one member: it is assigned the domain's kind point,
+    /// its version is listed, it is active if and only if it has no `alias_of`, and an `alias_of` names the
+    /// active version under the current forwarder's label.
+    fn check_member(
+        context: &str,
+        entry: &Entry,
+        domain: &[u8],
+        active: &crate::circuits::CircuitVersion,
+        active_label: Digest,
+        listed: bool,
+        status: crate::circuits::Status,
+    ) {
+        assert_eq!(
+            entry.kind_point, domain,
+            "{context}: a member is not assigned its fungibility domain's kind point"
+        );
+        assert!(listed, "{context}: a member of an unlisted version");
+        let alias_of = entry.metadata.as_ref().and_then(Metadata::alias_of);
+        assert_eq!(
+            status == crate::circuits::Status::Active,
+            alias_of.is_none(),
+            "{context}: a member is active if and only if it has no alias_of"
+        );
+        match alias_of {
+            None => {
+                assert!(
+                    !entry.is_alias(),
+                    "{context}: an entry without alias_of is an alias"
+                );
+                assert_eq!(
+                    (entry.logic_ref, entry.label_ref),
+                    (active.logic_ref, active_label),
+                    "{context}: only the active version under the current forwarder has no alias_of"
+                );
+            }
+            Some(alias_of) => {
+                assert!(
+                    entry.is_alias(),
+                    "{context}: an entry with alias_of is not an alias"
+                );
+                assert_eq!(
+                    (&alias_of.version, alias_of.logic_ref, alias_of.label_ref),
+                    (&active.version, active.logic_ref, active_label),
+                    "{context}: alias_of does not name the active version under the current forwarder"
+                );
+            }
+        }
+    }
+
+    /// No kind point is authored. A token entry is assigned its fungibility domain's kind point — the kind of the
     /// active version under the label of the chain's current forwarder — and every alias says so in `alias_of`.
-    /// Every other entry is assigned its own kind. This reads the embedded tables only.
+    /// Every other entry is assigned its own kind. This reads the embedded tables only; the ERC20 forwarder comes
+    /// from the forwarder bindings, the SPL token forwarder from the entries themselves, since the library carries
+    /// no Solana deployment record (the generator and the integration tests check it against the cluster).
     #[test]
-    fn erc20_entries_share_their_fungibility_domains_kind_point() {
+    fn token_entries_share_their_fungibility_domains_kind_point() {
         for (module, environment, tables) in [
             ("staging", Environment::Staging, staging::tables()),
             ("production", Environment::Production, production::tables()),
         ] {
             for (chain, table) in tables {
-                let evm_chain =
-                    NamedChain::try_from(chain).expect("every recorded chain is an EVM chain");
-                let current = erc20_forwarder_address(environment, &evm_chain);
+                let context = format!("{module} {chain}");
+                let known =
+                    Chain::try_from(chain).unwrap_or_else(|error| panic!("{context}: {error}"));
                 for entry in &table.entries {
-                    let Some(Metadata::Erc20 { token, status, .. }) = &entry.metadata else {
-                        assert!(
-                            !entry.is_alias(),
-                            "{module} {chain}: an entry outside every fungibility domain is not assigned its own kind"
-                        );
-                        continue;
-                    };
-                    let current = current.unwrap_or_else(|| {
-                        panic!("{module} {chain}: an ERC20 entry but no forwarder recorded")
-                    });
-                    let active = crate::circuits::erc20_active();
-                    let active_label = kind::erc20_label_ref(&current, token);
-                    let domain =
-                        kind::point(&active.logic_ref, &active_label).expect("a kind derives");
-                    assert_eq!(
-                        entry.kind_point, domain,
-                        "{module} {chain}: an ERC20 entry is not assigned its fungibility domain's kind point"
-                    );
-                    assert!(
-                        crate::circuits::erc20_version(&entry.logic_ref).is_some(),
-                        "{module} {chain}: an ERC20 entry of an unlisted version"
-                    );
-                    let alias_of = entry.metadata.as_ref().and_then(Metadata::alias_of);
-                    assert_eq!(
-                        *status == crate::circuits::Status::Active,
-                        alias_of.is_none(),
-                        "{module} {chain}: a member is active if and only if it has no alias_of"
-                    );
-                    match alias_of {
-                        None => {
-                            assert!(
-                                !entry.is_alias(),
-                                "{module} {chain}: an entry without alias_of is an alias"
-                            );
-                            assert_eq!(
-                                (entry.logic_ref, entry.label_ref),
-                                (active.logic_ref, active_label),
-                                "{module} {chain}: only the active version under the current forwarder has no alias_of"
+                    match &entry.metadata {
+                        Some(Metadata::Erc20 { token, status, .. }) => {
+                            let Chain::Evm(named) = known else {
+                                panic!("{context}: an ERC20 entry on a Solana cluster");
+                            };
+                            let current = erc20_forwarder_address(environment, &named)
+                                .unwrap_or_else(|| {
+                                    panic!("{context}: an ERC20 entry but no forwarder recorded")
+                                });
+                            let active = crate::circuits::erc20_active();
+                            let active_label = kind::erc20_label_ref(&current, token);
+                            let domain = kind::point(&active.logic_ref, &active_label)
+                                .expect("a kind derives");
+                            check_member(
+                                &context,
+                                entry,
+                                &domain,
+                                active,
+                                active_label,
+                                crate::circuits::erc20_version(&entry.logic_ref).is_some(),
+                                *status,
                             );
                         }
-                        Some(alias_of) => {
+                        Some(Metadata::SplToken {
+                            mint,
+                            forwarder,
+                            status,
+                            ..
+                        }) => {
                             assert!(
-                                entry.is_alias(),
-                                "{module} {chain}: an entry with alias_of is not an alias"
+                                matches!(known, Chain::Solana(_)),
+                                "{context}: an SPL token entry on an EVM chain"
                             );
-                            assert_eq!(
-                                (&alias_of.version, alias_of.logic_ref, alias_of.label_ref),
-                                (&active.version, active.logic_ref, active_label),
-                                "{module} {chain}: alias_of does not name the active version under the current forwarder"
+                            let active = crate::circuits::spl_token_active();
+                            let active_label = kind::spl_token_label_ref(forwarder, mint);
+                            let domain = kind::point(&active.logic_ref, &active_label)
+                                .expect("a kind derives");
+                            check_member(
+                                &context,
+                                entry,
+                                &domain,
+                                active,
+                                active_label,
+                                crate::circuits::spl_token_version(&entry.logic_ref).is_some(),
+                                *status,
+                            );
+                        }
+                        Some(Metadata::GenericCall { .. }) | None => {
+                            assert!(
+                                !entry.is_alias(),
+                                "{context}: an entry outside every fungibility domain is not assigned its own kind"
                             );
                         }
                     }

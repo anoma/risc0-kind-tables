@@ -3,8 +3,7 @@
 //! gives every other listed version an exit by conversion. Runs only on a pull request into `staging` or
 //! `main`, selected as the freshness gate is; elsewhere it skips.
 
-use alloy_chains::NamedChain;
-use anoma_risc0_kind_tables::{circuits, table};
+use anoma_risc0_kind_tables::{Chain, circuits, table};
 use anoma_risc0_kind_tables_integration_test::provider;
 use anomapay_erc20_forwarder_bindings::addresses::{Environment, erc20_forwarder_address};
 use anomapay_erc20_forwarder_bindings::contract::erc20_forwarder;
@@ -34,7 +33,10 @@ async fn the_promoted_forwarders_accept_a_listed_circuit_version() -> Result<()>
     };
 
     for chain in chains {
-        let evm_chain = NamedChain::try_from(&chain)?;
+        // A Solana cluster's forwarder is checked by the Solana exit gate.
+        let Chain::Evm(evm_chain) = Chain::try_from(&chain)? else {
+            continue;
+        };
         if erc20_forwarder_address(environment, &evm_chain).is_none() {
             continue; // No ERC20 fungibility domain on this chain.
         }

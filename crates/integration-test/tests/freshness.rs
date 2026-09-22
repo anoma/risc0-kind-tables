@@ -5,7 +5,7 @@
 
 use anoma_pa_evm_bindings::addresses::Environment;
 use anoma_pa_evm_bindings::contract::protocol_adapter;
-use anoma_risc0_kind_tables::{Caip2ChainId, table};
+use anoma_risc0_kind_tables::{Caip2ChainId, Chain, table};
 use anoma_risc0_kind_tables_integration_test::provider;
 use anyhow::{Context, Result, ensure};
 use risc0_zkvm::Digest;
@@ -37,6 +37,10 @@ async fn the_promoted_environment_stores_the_generated_commitments() -> Result<(
     };
 
     for (chain, expected) in commitments(environment) {
+        // A Solana cluster's adapter is checked by the Solana freshness gate.
+        let Chain::Evm(_) = Chain::try_from(chain)? else {
+            continue;
+        };
         let provider = provider(chain)?;
         let adapter = protocol_adapter(&provider, environment)
             .await
