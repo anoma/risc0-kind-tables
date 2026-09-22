@@ -15,12 +15,16 @@ alloy = { workspace = true }
 alloy-chains = { workspace = true }
 anoma-generic-call-forwarder-bindings = { workspace = true }
 anoma-pa-evm-bindings = { workspace = true }
-anoma-risc0-kind-tables = { workspace = true, features = ["arm"] }
+anoma-pa-solana-client = { workspace = true }
+anoma-risc0-kind-tables = { workspace = true, features = ["arm", "solana-deployments"] }
 anoma-rm-risc0 = { workspace = true }
 anomapay-erc20-forwarder-bindings = { workspace = true }
 anyhow = { workspace = true }
+base64 = { workspace = true }
 hex = { workspace = true }
+reqwest = { workspace = true }
 risc0-zkvm = { workspace = true }
 serde_json = { workspace = true }
+solana-program = { workspace = true }
 tokio = { workspace = true }
 transfer_witness = { workspace = true }
