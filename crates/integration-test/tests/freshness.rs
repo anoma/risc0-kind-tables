@@ -53,8 +53,9 @@ async fn the_promoted_environment_stores_the_generated_commitments() -> Result<(
                 Digest::try_from(stored.as_slice()).context("a commitment is 32 bytes")?
             }
             Chain::Solana(cluster) => {
-                let adapter = deployments::solana_adapter(cluster)
-                    .with_context(|| format!("no protocol adapter recorded on {chain}"))?;
+                let adapter = deployments::solana_deployment(cluster)
+                    .with_context(|| format!("no protocol adapter recorded on {chain}"))?
+                    .adapter;
                 solana_rpc(cluster)
                     .adapter_kind_table_commitment(&adapter)
                     .await?

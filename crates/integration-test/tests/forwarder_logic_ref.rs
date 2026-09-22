@@ -58,9 +58,10 @@ async fn the_promoted_forwarders_accept_a_listed_circuit_version() -> Result<()>
                 );
             }
             Chain::Solana(cluster) => {
-                let Some(forwarder) = deployments::solana_forwarder(cluster) else {
+                let Some(deployment) = deployments::solana_deployment(cluster) else {
                     continue; // No SPL token fungibility domain on this cluster.
                 };
+                let forwarder = deployment.forwarder;
                 let accepted = solana_rpc(cluster)
                     .forwarder_logic_ref(&forwarder)
                     .await?
