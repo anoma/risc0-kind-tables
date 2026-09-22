@@ -46,7 +46,7 @@ impl fmt::Debug for SolanaAddress {
 
 impl Serialize for SolanaAddress {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&self.to_string())
+        serializer.collect_str(self)
     }
 }
 

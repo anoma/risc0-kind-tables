@@ -15,11 +15,17 @@ pub fn provider(chain: &Caip2ChainId) -> Result<DynProvider> {
     Ok(ProviderBuilder::new().connect_http(url).erased())
 }
 
-pub use anoma_risc0_kind_tables::deployments::solana_forwarder;
 use anoma_risc0_kind_tables::{SolanaAddress, SolanaCluster};
 use base64::Engine;
+use risc0_zkvm::Digest;
 use risc0_zkvm::sha::{Impl, Sha256};
 use serde_json::{Value, json};
+use solana_program::program_pack::Pack;
+use solana_program::pubkey::Pubkey;
+use std::sync::LazyLock;
+
+/// One HTTP client for every cluster: the TLS setup and the connection pool are built once per process.
+static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 /// The RPC endpoint of a Solana cluster: `SOLANA_RPC_URL_DEVNET` / `SOLANA_RPC_URL_MAINNET_BETA` when set, else
 /// the cluster's public endpoint.
@@ -33,59 +39,37 @@ pub fn solana_rpc(cluster: SolanaCluster) -> SolanaRpc {
     };
     SolanaRpc {
         url: std::env::var(variable).unwrap_or_else(|_| public.to_string()),
-        client: reqwest::Client::new(),
     }
 }
 
 /// A JSON-RPC connection to one cluster, with the few reads the gates need.
 pub struct SolanaRpc {
     url: String,
-    client: reqwest::Client,
 }
 
-/// An SPL token mint account, as the token validation reads it.
-pub struct Mint {
-    pub decimals: u8,
-}
-
-/// The SPL token forwarder's config account, as the exit gate reads it.
-pub struct ForwarderConfig {
-    pub logic_ref: [u8; 32],
-}
-
-/// The SPL Token program, the only owner a supported mint may have.
-const SPL_TOKEN_PROGRAM: &str = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
-/// The Anchor discriminator of the forwarder's `Config` account: the first eight bytes of
-/// `sha256("account:Config")`.
-fn config_discriminator() -> [u8; 8] {
-    let digest = Impl::hash_bytes(b"account:Config");
-    digest.as_bytes()[..8].try_into().expect("eight bytes")
-}
-/// The forwarder's config PDA, as the client derives it.
-fn config_address(forwarder: &SolanaAddress) -> SolanaAddress {
-    let program = solana_program::pubkey::Pubkey::new_from_array(*forwarder.as_bytes());
-    let (address, _) = anoma_pa_solana_client::derive_forwarder_config_pda(&program);
-    SolanaAddress::new(address.to_bytes())
+fn pubkey(address: &SolanaAddress) -> Pubkey {
+    Pubkey::new_from_array(*address.as_bytes())
 }
 
 impl SolanaRpc {
     async fn call(&self, method: &str, params: Value) -> Result<Value> {
-        let response: Value = self
-            .client
+        let Value::Object(mut response) = CLIENT
             .post(&self.url)
             .json(&json!({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}))
             .send()
             .await
             .with_context(|| format!("{method} on {}", self.url))?
-            .json()
+            .json::<Value>()
             .await
-            .with_context(|| format!("{method} on {}: not JSON", self.url))?;
+            .with_context(|| format!("{method} on {}: not JSON", self.url))?
+        else {
+            anyhow::bail!("{method} on {}: not a JSON-RPC response", self.url);
+        };
         if let Some(error) = response.get("error") {
             anyhow::bail!("{method} on {}: {error}", self.url);
         }
         response
-            .get("result")
-            .cloned()
+            .remove("result")
             .with_context(|| format!("{method} on {}: no result", self.url))
     }
 
@@ -122,44 +106,57 @@ impl SolanaRpc {
         Ok(Some((owner, data)))
     }
 
-    /// The SPL token mint at the address: an 82-byte account owned by the SPL Token program, whose byte 44 is
-    /// the decimals (after the 36-byte optional mint authority and the 8-byte supply).
-    pub async fn mint(&self, address: &SolanaAddress) -> Result<Option<Mint>> {
+    /// The decimals of the SPL token mint at the address, or `None` when no account is there.
+    pub async fn mint_decimals(&self, address: &SolanaAddress) -> Result<Option<u8>> {
         let Some((owner, data)) = self.account(address).await? else {
             return Ok(None);
         };
         ensure!(
-            owner == SPL_TOKEN_PROGRAM,
+            owner == spl_token::id().to_string(),
             "{address}: owned by {owner}, not the SPL Token program"
         );
-        ensure!(
-            data.len() == 82,
-            "{address}: {} bytes, not an SPL token mint",
-            data.len()
-        );
-        Ok(Some(Mint { decimals: data[44] }))
+        let mint = spl_token::state::Mint::unpack(&data)
+            .with_context(|| format!("{address}: not an SPL token mint"))?;
+        Ok(Some(mint.decimals))
     }
 
-    /// The forwarder's config: its `Config` account (Anchor discriminator, adapter program id, logic ref,
-    /// emergency committee, emergency caller, bump), or `None` when the forwarder is not initialized.
-    pub async fn forwarder_config(
-        &self,
-        forwarder: &SolanaAddress,
-    ) -> Result<Option<ForwarderConfig>> {
-        let address = config_address(forwarder);
-        let Some((owner, data)) = self.account(&address).await? else {
+    /// The logic ref the SPL token forwarder's config accepts, or `None` when the forwarder is not initialized.
+    /// The config is the forwarder's `Config` account: the Anchor discriminator, the adapter program id, the
+    /// logic ref, the emergency committee, the emergency caller and the bump.
+    pub async fn forwarder_logic_ref(&self, forwarder: &SolanaAddress) -> Result<Option<Digest>> {
+        let (config, _) = anoma_pa_solana_client::derive_forwarder_config_pda(&pubkey(forwarder));
+        let config = SolanaAddress::new(config.to_bytes());
+        let Some((owner, data)) = self.account(&config).await? else {
             return Ok(None);
         };
         ensure!(
             owner == forwarder.to_string(),
-            "{address}: owned by {owner}, not the forwarder {forwarder}"
+            "{config}: owned by {owner}, not the forwarder {forwarder}"
         );
         ensure!(
-            data.len() == 8 + 32 + 32 + 32 + 32 + 1 && data[..8] == config_discriminator(),
-            "{address}: not a forwarder Config account"
+            data.len() == 8 + 32 + 32 + 32 + 32 + 1
+                && data[..8] == Impl::hash_bytes(b"account:Config").as_bytes()[..8],
+            "{config}: not a forwarder Config account"
         );
-        Ok(Some(ForwarderConfig {
-            logic_ref: data[40..72].try_into().expect("32 bytes"),
-        }))
+        Ok(Some(Digest::try_from(&data[40..72]).expect("32 bytes")))
+    }
+
+    /// The kind-table commitment the protocol adapter stores, or `None` when it is not initialized.
+    pub async fn adapter_kind_table_commitment(
+        &self,
+        adapter: &SolanaAddress,
+    ) -> Result<Option<Digest>> {
+        let (state, _) = anoma_pa_solana_client::derive_pa_state_pda(&pubkey(adapter));
+        let state = SolanaAddress::new(state.to_bytes());
+        let Some((owner, data)) = self.account(&state).await? else {
+            return Ok(None);
+        };
+        ensure!(
+            owner == adapter.to_string(),
+            "{state}: owned by {owner}, not the adapter {adapter}"
+        );
+        let decoded = anoma_pa_solana_client::decode_pa_state(&data)
+            .map_err(|error| anyhow::anyhow!("{state}: {error:?}"))?;
+        Ok(Some(Digest::from(decoded.kind_table_commitment)))
     }
 }

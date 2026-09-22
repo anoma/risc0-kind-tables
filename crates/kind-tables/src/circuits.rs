@@ -43,34 +43,42 @@ static FILE: LazyLock<File> = LazyLock::new(|| {
     serde_json::from_str(include_str!("../data/circuit-versions.json"))
         .expect("circuit-versions.json: invalid JSON")
 });
-static ERC20: LazyLock<&'static Vec<CircuitVersion>> = LazyLock::new(|| &FILE.erc20);
-static SPL_TOKEN: LazyLock<&'static Vec<CircuitVersion>> = LazyLock::new(|| &FILE.spl_token);
 
 /// The listed ERC20 circuit versions, in file order.
 pub fn erc20() -> &'static [CircuitVersion] {
-    &ERC20
+    &FILE.erc20
 }
 
-/// The listed SPL token circuit versions (the AnomaPay Solana transfer circuit), in file order. The same rules
-/// as the ERC20 list: every listed version is a member of every SPL token fungibility domain, exactly one is
-/// active, and nothing is removed.
+/// The listed SPL token circuit versions (the AnomaPay Solana transfer circuit), in file order, under the same
+/// rules as the ERC20 list.
 pub fn spl_token() -> &'static [CircuitVersion] {
-    &SPL_TOKEN
+    &FILE.spl_token
+}
+
+/// The active ERC20 circuit version. Its kind under the current forwarder's label is the kind point of every
+/// ERC20 fungibility domain. `check_erc20` says why there is exactly one.
+pub fn erc20_active() -> &'static CircuitVersion {
+    active(erc20(), "ERC20")
 }
 
 /// The active SPL token circuit version; `check_spl_token` says why there is exactly one.
 pub fn spl_token_active() -> &'static CircuitVersion {
-    SPL_TOKEN
-        .iter()
-        .find(|circuit| circuit.status == Status::Active)
-        .expect("circuit-versions.json lists no active SPL token circuit version")
+    active(spl_token(), "SPL token")
+}
+
+/// The listed ERC20 version a logic ref belongs to, if any.
+pub fn erc20_version(logic_ref: &Digest) -> Option<&'static CircuitVersion> {
+    version(erc20(), logic_ref)
 }
 
 /// The listed SPL token version a logic ref belongs to, if any.
 pub fn spl_token_version(logic_ref: &Digest) -> Option<&'static CircuitVersion> {
-    SPL_TOKEN
-        .iter()
-        .find(|circuit| circuit.logic_ref == *logic_ref)
+    version(spl_token(), logic_ref)
+}
+
+/// `check` over the ERC20 list.
+pub fn check_erc20() -> Result<(), String> {
+    check(erc20())
 }
 
 /// `check` over the SPL token list.
@@ -78,27 +86,27 @@ pub fn check_spl_token() -> Result<(), String> {
     check(spl_token())
 }
 
-/// The active ERC20 circuit version. Its kind under the current forwarder's label is the kind point of every
-/// ERC20 fungibility domain. `check_erc20` says why there is exactly one.
-pub fn erc20_active() -> &'static CircuitVersion {
-    ERC20
+fn active(versions: &'static [CircuitVersion], resource: &str) -> &'static CircuitVersion {
+    versions
         .iter()
         .find(|circuit| circuit.status == Status::Active)
-        .expect("circuit-versions.json lists no active ERC20 circuit version")
+        .unwrap_or_else(|| {
+            panic!("circuit-versions.json lists no active {resource} circuit version")
+        })
 }
 
-/// The listed version a logic ref belongs to, if any.
-pub fn erc20_version(logic_ref: &Digest) -> Option<&'static CircuitVersion> {
-    ERC20.iter().find(|circuit| circuit.logic_ref == *logic_ref)
+fn version(
+    versions: &'static [CircuitVersion],
+    logic_ref: &Digest,
+) -> Option<&'static CircuitVersion> {
+    versions
+        .iter()
+        .find(|circuit| circuit.logic_ref == *logic_ref)
 }
 
 /// Checks the list: every version and logic ref once, exactly one active version, and the active version is
 /// the highest listed. The last rule rules out making an old version active again, which is never the plan: a
 /// broken release is refused at the protocol adapter and replaced by a higher one.
-pub fn check_erc20() -> Result<(), String> {
-    check(erc20())
-}
-
 fn check(versions: &[CircuitVersion]) -> Result<(), String> {
     let mut seen_versions = std::collections::BTreeSet::new();
     let mut seen_refs = std::collections::BTreeSet::new();

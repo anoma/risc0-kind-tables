@@ -45,7 +45,7 @@ pub enum ChainTokens {
 /// One chain's authored section. The `_comment` naming the chain is review context and is not deserialized.
 #[derive(Deserialize)]
 struct Section {
-    tokens: Vec<serde_json::Value>,
+    tokens: serde_json::Value,
 }
 
 static TOKENS: LazyLock<BTreeMap<Caip2ChainId, ChainTokens>> = LazyLock::new(|| {
@@ -66,12 +66,8 @@ static TOKENS: LazyLock<BTreeMap<Caip2ChainId, ChainTokens>> = LazyLock::new(|| 
 });
 
 /// Deserializes a chain's tokens as the type its chain kind lists, failing loudly on a token of the other shape.
-fn typed<T: serde::de::DeserializeOwned>(chain: Chain, tokens: Vec<serde_json::Value>) -> Vec<T> {
-    tokens
-        .into_iter()
-        .map(serde_json::from_value)
-        .collect::<Result<Vec<_>, _>>()
-        .unwrap_or_else(|error| panic!("tokens.json: {chain}: {error}"))
+fn typed<T: serde::de::DeserializeOwned>(chain: Chain, tokens: serde_json::Value) -> Vec<T> {
+    serde_json::from_value(tokens).unwrap_or_else(|error| panic!("tokens.json: {chain}: {error}"))
 }
 
 /// All supported tokens, per chain.
@@ -91,7 +87,8 @@ pub fn on(chain: impl Into<Caip2ChainId>) -> &'static [Token] {
 pub fn spl_on(cluster: SolanaCluster) -> &'static [SplToken] {
     match TOKENS.get(&cluster.into()) {
         Some(ChainTokens::Spl(tokens)) => tokens,
-        Some(ChainTokens::Erc20(_)) | None => &[],
+        None => &[],
+        Some(ChainTokens::Erc20(_)) => unreachable!("a Solana cluster lists SPL token mints"),
     }
 }
 

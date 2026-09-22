@@ -155,18 +155,18 @@ mod tests {
     use alloy_chains::NamedChain;
     use anomapay_erc20_forwarder_bindings::addresses::{Environment, erc20_forwarder_address};
 
-    /// The alias rules of a fungibility domain, checked on one member: it is assigned the domain's kind point,
-    /// its version is listed, it is active if and only if it has no `alias_of`, and an `alias_of` names the
-    /// active version under the current forwarder's label.
+    /// The alias rules of a fungibility domain, checked on one member: it is assigned the domain's kind point
+    /// (the kind of the active version under the current forwarder's label), its version is listed, it is active
+    /// if and only if it has no `alias_of`, and an `alias_of` names the active version under that label.
     fn check_member(
         context: &str,
         entry: &Entry,
-        domain: &[u8],
         active: &crate::circuits::CircuitVersion,
         active_label: Digest,
         listed: bool,
         status: crate::circuits::Status,
     ) {
+        let domain = kind::point(&active.logic_ref, &active_label).expect("a kind derives");
         assert_eq!(
             entry.kind_point, domain,
             "{context}: a member is not assigned its fungibility domain's kind point"
@@ -219,29 +219,22 @@ mod tests {
                 let context = format!("{module} {chain}");
                 let known =
                     Chain::try_from(chain).unwrap_or_else(|error| panic!("{context}: {error}"));
+                let erc20_forwarder = match known {
+                    Chain::Evm(named) => erc20_forwarder_address(environment, &named),
+                    Chain::Solana(_) => None,
+                };
                 for entry in &table.entries {
-                    match &entry.metadata {
+                    let (active, active_label, listed, status) = match &entry.metadata {
                         Some(Metadata::Erc20 { token, status, .. }) => {
-                            let Chain::Evm(named) = known else {
-                                panic!("{context}: an ERC20 entry on a Solana cluster");
-                            };
-                            let current = erc20_forwarder_address(environment, &named)
-                                .unwrap_or_else(|| {
-                                    panic!("{context}: an ERC20 entry but no forwarder recorded")
-                                });
-                            let active = crate::circuits::erc20_active();
-                            let active_label = kind::erc20_label_ref(&current, token);
-                            let domain = kind::point(&active.logic_ref, &active_label)
-                                .expect("a kind derives");
-                            check_member(
-                                &context,
-                                entry,
-                                &domain,
-                                active,
-                                active_label,
+                            let forwarder = erc20_forwarder.unwrap_or_else(|| {
+                                panic!("{context}: an ERC20 entry but no ERC20 forwarder recorded")
+                            });
+                            (
+                                crate::circuits::erc20_active(),
+                                kind::erc20_label_ref(&forwarder, token),
                                 crate::circuits::erc20_version(&entry.logic_ref).is_some(),
                                 *status,
-                            );
+                            )
                         }
                         Some(Metadata::SplToken {
                             mint,
@@ -253,27 +246,22 @@ mod tests {
                                 matches!(known, Chain::Solana(_)),
                                 "{context}: an SPL token entry on an EVM chain"
                             );
-                            let active = crate::circuits::spl_token_active();
-                            let active_label = kind::spl_token_label_ref(forwarder, mint);
-                            let domain = kind::point(&active.logic_ref, &active_label)
-                                .expect("a kind derives");
-                            check_member(
-                                &context,
-                                entry,
-                                &domain,
-                                active,
-                                active_label,
+                            (
+                                crate::circuits::spl_token_active(),
+                                kind::spl_token_label_ref(forwarder, mint),
                                 crate::circuits::spl_token_version(&entry.logic_ref).is_some(),
                                 *status,
-                            );
+                            )
                         }
                         Some(Metadata::GenericCall { .. }) | None => {
                             assert!(
                                 !entry.is_alias(),
                                 "{context}: an entry outside every fungibility domain is not assigned its own kind"
                             );
+                            continue;
                         }
-                    }
+                    };
+                    check_member(&context, entry, active, active_label, listed, status);
                 }
             }
         }

@@ -41,5 +41,6 @@ anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-clien
 base64 = "0.22.1"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 solana-program = "2.1"
+spl-token = { version = "8.0", features = ["no-entrypoint"] }
 
 anoma-risc0-kind-tables = { path = "crates/kind-tables" }
