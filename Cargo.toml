@@ -23,6 +23,7 @@ anoma-rm-risc0 = { version = "=2.0.0-rc.6", default-features = false, features =
 ] }
 anomapay-erc20-forwarder-bindings = "3.0.0-rc.10"
 anyhow = "1.0.104"
+bs58 = "0.5.1"
 dotenvy = "0.15.7"
 hex = "0.4.3"
 k256 = { version = "0.13.3", features = ["arithmetic", "hash2curve"] }

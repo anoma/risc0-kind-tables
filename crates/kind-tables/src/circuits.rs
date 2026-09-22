@@ -35,17 +35,47 @@ pub struct CircuitVersion {
 struct File {
     #[serde(rename = "ERC20Resource")]
     erc20: Vec<CircuitVersion>,
+    #[serde(rename = "SPLTokenResource")]
+    spl_token: Vec<CircuitVersion>,
 }
 
-static ERC20: LazyLock<Vec<CircuitVersion>> = LazyLock::new(|| {
-    let file: File = serde_json::from_str(include_str!("../data/circuit-versions.json"))
-        .expect("circuit-versions.json: invalid JSON");
-    file.erc20
+static FILE: LazyLock<File> = LazyLock::new(|| {
+    serde_json::from_str(include_str!("../data/circuit-versions.json"))
+        .expect("circuit-versions.json: invalid JSON")
 });
+static ERC20: LazyLock<&'static Vec<CircuitVersion>> = LazyLock::new(|| &FILE.erc20);
+static SPL_TOKEN: LazyLock<&'static Vec<CircuitVersion>> = LazyLock::new(|| &FILE.spl_token);
 
 /// The listed ERC20 circuit versions, in file order.
 pub fn erc20() -> &'static [CircuitVersion] {
     &ERC20
+}
+
+/// The listed SPL token circuit versions (the AnomaPay Solana transfer circuit), in file order. The same rules
+/// as the ERC20 list: every listed version is a member of every SPL token fungibility domain, exactly one is
+/// active, and nothing is removed.
+pub fn spl_token() -> &'static [CircuitVersion] {
+    &SPL_TOKEN
+}
+
+/// The active SPL token circuit version; `check_spl_token` says why there is exactly one.
+pub fn spl_token_active() -> &'static CircuitVersion {
+    SPL_TOKEN
+        .iter()
+        .find(|circuit| circuit.status == Status::Active)
+        .expect("circuit-versions.json lists no active SPL token circuit version")
+}
+
+/// The listed SPL token version a logic ref belongs to, if any.
+pub fn spl_token_version(logic_ref: &Digest) -> Option<&'static CircuitVersion> {
+    SPL_TOKEN
+        .iter()
+        .find(|circuit| circuit.logic_ref == *logic_ref)
+}
+
+/// `check` over the SPL token list.
+pub fn check_spl_token() -> Result<(), String> {
+    check(spl_token())
 }
 
 /// The active ERC20 circuit version. Its kind under the current forwarder's label is the kind point of every
@@ -66,7 +96,10 @@ pub fn erc20_version(logic_ref: &Digest) -> Option<&'static CircuitVersion> {
 /// the highest listed. The last rule rules out making an old version active again, which is never the plan: a
 /// broken release is refused at the protocol adapter and replaced by a higher one.
 pub fn check_erc20() -> Result<(), String> {
-    let versions = erc20();
+    check(erc20())
+}
+
+fn check(versions: &[CircuitVersion]) -> Result<(), String> {
     let mut seen_versions = std::collections::BTreeSet::new();
     let mut seen_refs = std::collections::BTreeSet::new();
     let mut parsed = Vec::new();
@@ -113,5 +146,13 @@ mod tests {
     fn the_embedded_list_passes_its_own_checks() {
         check_erc20().unwrap();
         assert_eq!(erc20_active().status, Status::Active);
+    }
+
+    #[test]
+    fn the_embedded_spl_token_list_passes_its_own_checks() {
+        check_spl_token().unwrap();
+        let active = spl_token_active();
+        assert_eq!(active.status, Status::Active);
+        assert_eq!(spl_token_version(&active.logic_ref), Some(active));
     }
 }

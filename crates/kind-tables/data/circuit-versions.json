@@ -6,5 +6,13 @@
       "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
       "status": "active"
     }
+  ],
+  "_comment_spl_token": "The AnomaPay Solana transfer circuit versions, under the same rules. Its label is sha256(forwarder program id ‖ mint).",
+  "SPLTokenResource": [
+    {
+      "version": "2.0.0-rc.1",
+      "logic_ref": "dc1c0b4a70de90eec07ac4596172775c4d9ea2981e251dfab1fa862249042d91",
+      "status": "active"
+    }
   ]
 }

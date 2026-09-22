@@ -4,6 +4,7 @@ pub mod commitment;
 pub mod entry;
 pub mod error;
 pub mod kind;
+pub mod solana;
 pub mod table;
 pub mod tokens;
 

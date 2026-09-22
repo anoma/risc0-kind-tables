@@ -1101,6 +1101,7 @@ dependencies = [
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings",
  "anyhow",
+ "bs58",
  "hex",
  "k256",
  "risc0-zkvm",
