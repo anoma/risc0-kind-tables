@@ -27,9 +27,6 @@ pub struct Entry {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Metadata {
-    /// The padding kind, whose logic ships with the resource machine.
-    #[serde(rename = "PaddingResource")]
-    Padding { version: String },
     /// One supported token behind an ERC20 forwarder. `forwarder` is the address inside this kind's label. On
     /// a V1 member it is the V1 forwarder, whose tokens move to the current one.
     #[serde(rename = "ERC20Resource")]
@@ -61,7 +58,7 @@ impl Metadata {
     pub fn alias_of(&self) -> Option<&AliasOf> {
         match self {
             Self::Erc20 { alias_of, .. } => alias_of.as_ref(),
-            Self::Padding { .. } | Self::GenericCall { .. } => None,
+            Self::GenericCall { .. } => None,
         }
     }
 }
@@ -87,8 +84,8 @@ impl Entry {
     }
 
     /// Whether the entry is assigned another kind as its kind point, not its own, so that the table is the only
-    /// place it can come from. Padding, generic call and the active version under the current forwarder's label
-    /// are not.
+    /// place it can come from. Generic call and the active version under the current forwarder's label are
+    /// not.
     pub fn is_alias(&self) -> bool {
         !kind::point(&self.logic_ref, &self.label_ref).is_ok_and(|point| point == self.kind_point)
     }

@@ -5,7 +5,7 @@
 use anoma_risc0_kind_tables::table::{production, staging};
 use anoma_risc0_kind_tables::{Entry, Metadata, Table};
 use anoma_rm_risc0::Digest;
-use anoma_rm_risc0::compliance::{ComplianceWitness, KindTableEntry};
+use anoma_rm_risc0::compliance::{self, KindTableEntry};
 use anoma_rm_risc0::nullifier_key::NullifierKey;
 use anoma_rm_risc0::resource::{ConsumedResourceWitness, Resource};
 use transfer_witness::calculate_label_ref;
@@ -60,7 +60,7 @@ fn delta(consumed: Kind, created: Kind, table: &[KindTableEntry]) -> ([u32; 8], 
     let nullifier = consumed.nullifier(&nf_key).expect("a nullifier derives");
     let nonce = Resource::derive_nonce_from_nullifiers(0, &[nullifier]).expect("a nonce derives");
     let created = resource(created, nonce);
-    let mut witness = ComplianceWitness::from_resources(
+    let mut witness = compliance::from_resources(
         vec![ConsumedResourceWitness::from_resource(consumed, nf_key)],
         vec![created],
         table.to_vec(),
@@ -68,7 +68,7 @@ fn delta(consumed: Kind, created: Kind, table: &[KindTableEntry]) -> ([u32; 8], 
     let mut rcv = [0; 32];
     rcv[31] = 1;
     witness.rcv = rcv.to_vec();
-    let instance = witness.constrain().expect("the unit is compliant");
+    let instance = compliance::constrain(&witness).expect("the unit is compliant");
     (instance.delta_x, instance.delta_y)
 }
 

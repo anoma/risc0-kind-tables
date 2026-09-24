@@ -6,7 +6,7 @@ use alloy_chains::NamedChain;
 use anoma_risc0_kind_tables::Table;
 use anoma_risc0_kind_tables::table::{production, staging};
 use anoma_rm_risc0::Digest;
-use anoma_rm_risc0::compliance::{ComplianceWitness, KindTableEntry};
+use anoma_rm_risc0::compliance::{self, KindTableEntry};
 use anoma_rm_risc0::constants::{init_kind_table_from_file, kind_table_hash};
 use anoma_rm_risc0::nullifier_key::NullifierKey;
 use anoma_rm_risc0::resource::{ConsumedResourceWitness, Resource};
@@ -37,14 +37,14 @@ fn unit_commitment(table: Vec<KindTableEntry>) -> Digest {
         nonce: Resource::derive_nonce_from_nullifiers(0, &[nullifier]).expect("a nonce derives"),
         ..consumed
     };
-    ComplianceWitness::from_resources(
+    let witness = compliance::from_resources(
         vec![ConsumedResourceWitness::from_resource(consumed, nf_key)],
         vec![created],
         table,
-    )
-    .constrain()
-    .expect("the unit is compliant")
-    .kind_table_commitment
+    );
+    compliance::constrain(&witness)
+        .expect("the unit is compliant")
+        .kind_table_commitment
 }
 
 #[test]

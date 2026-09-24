@@ -3,7 +3,7 @@ resolver = "3"
 members = ["crates/kind-tables", "crates/integration-test"]
 
 [workspace.package]
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.3"
 keywords = ["anoma", "kind-table", "protocol-adapter"]
 authors = ["Anoma Foundation"]
 license = "MIT"
@@ -14,13 +14,14 @@ edition = "2024"
 [workspace.dependencies]
 alloy = { version = "2.3.0", features = ["full"] }
 alloy-chains = "0.2.36"
-anoma-generic-call-forwarder-bindings = "2.0.0-rc.2"
-anoma-generic-call-library = "3.0.0-rc.2"
-anoma-pa-evm-bindings = "3.0.0-rc.8"
-anoma-rm-risc0 = { version = "2.0.0-rc.5", default-features = false, features = [
+anoma-generic-call-forwarder-bindings = "2.0.0-rc.3"
+# The circuit crates are pinned exactly: another build has another logic ref, and so another kind.
+anoma-generic-call-library = "=3.0.0-rc.2"
+anoma-pa-evm-bindings = "3.0.0-rc.10"
+anoma-rm-risc0 = { version = "=2.0.0-rc.6", default-features = false, features = [
   "transaction",
 ] }
-anomapay-erc20-forwarder-bindings = "3.0.0-rc.9"
+anomapay-erc20-forwarder-bindings = "3.0.0-rc.10"
 anyhow = "1.0.104"
 dotenvy = "0.15.7"
 hex = "0.4.3"
@@ -31,7 +32,7 @@ serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 thiserror = "2.0.19"
 tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros"] }
-transfer_library = "3.0.0-rc.2"
-transfer_witness = "3.0.0-rc.2"
+transfer_library = "=3.0.0-rc.2"
+transfer_witness = "=3.0.0-rc.2"
 
 anoma-risc0-kind-tables = { path = "crates/kind-tables" }

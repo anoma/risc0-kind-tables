@@ -1,5 +1,5 @@
 //! Regenerates `data/generated/` from the authored inputs (`tokens.json`, `circuit-versions.json`) and the
-//! pinned dependencies (the padding and generic-call logic refs, the forwarder and protocol adapter deployment
+//! pinned dependencies (the generic-call logic ref, the forwarder and protocol adapter deployment
 //! records). CI reruns this and fails on any diff, so the committed artifacts always match the pins.
 
 use alloy::primitives::Address;
@@ -115,9 +115,8 @@ fn member(
     }
 }
 
-/// The circuit versions behind the padding and generic-call logic refs, and of the pinned ERC20 crates.
+/// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 crates.
 struct Versions {
-    padding: String,
     transfer: String,
     generic_call: String,
 }
@@ -176,7 +175,6 @@ fn versions() -> Result<Versions> {
     };
 
     Ok(Versions {
-        padding: version_of("anoma_rm_risc0")?,
         transfer: version_of("transfer_library")?,
         generic_call: version_of("anoma_generic_call_library")?,
     })
@@ -218,13 +216,10 @@ fn chain_entries(
     chain: NamedChain,
     versions: &Versions,
 ) -> Result<Vec<Entry>> {
-    let mut entries = vec![derived(
-        Metadata::Padding {
-            version: versions.padding.clone(),
-        },
-        digest(anoma_rm_risc0::constants::PADDING_LOGIC_VK.as_bytes()),
-        Digest::default(),
-    )?];
+    // The padding kind is not listed: the compliance circuit derives it by hash to curve, which is the point
+    // this table would assign it anyway, and listing it would tie every commitment to the resource machine's
+    // version.
+    let mut entries = Vec::new();
 
     if let Some(forwarder) =
         anoma_generic_call_forwarder_bindings::addresses::generic_call_forwarder_address(
