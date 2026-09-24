@@ -1,4 +1,4 @@
-use alloy_chains::NamedChain;
+use crate::chain::Chain;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -18,5 +18,5 @@ pub enum Error {
     #[error("unknown chain name: {0}")]
     UnknownChain(String),
     #[error("no table recorded for {0}")]
-    UnrecordedChain(NamedChain),
+    UnrecordedChain(Chain),
 }

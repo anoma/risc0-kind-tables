@@ -7,7 +7,8 @@ use alloy_chains::NamedChain;
 use anoma_generic_call_forwarder_bindings::addresses::Environment as GenericCallEnvironment;
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
 use anoma_risc0_kind_tables::{
-    AliasOf, CircuitVersion, Entry, Metadata, Status, circuits, commitment, kind, tokens,
+    AliasOf, Chain, CircuitVersion, Entry, Metadata, SolanaAddress, SolanaCluster, Status,
+    circuits, commitment, deployments, kind, tokens,
 };
 use anomapay_erc20_forwarder_bindings::addresses::Environment as Erc20Environment;
 use anyhow::{Context, Result, bail, ensure};
@@ -119,6 +120,36 @@ fn member(
 struct Versions {
     transfer: String,
     generic_call: String,
+    spl_transfer: String,
+}
+
+/// A member of an SPL token mint's fungibility domain: one Solana circuit version under the forwarder
+/// program's label, assigned the domain's kind point, with the same alias rules as `member`.
+fn spl_member(
+    circuit: &CircuitVersion,
+    token: &tokens::SplToken,
+    forwarder: SolanaAddress,
+    domain_point: &[u8],
+    alias_of: Option<AliasOf>,
+) -> Entry {
+    let status = if alias_of.is_none() {
+        Status::Active
+    } else {
+        Status::Deprecated
+    };
+    Entry {
+        metadata: Some(Metadata::SplToken {
+            version: circuit.version.clone(),
+            name: token.symbol.clone(),
+            mint: token.mint,
+            forwarder,
+            status,
+            alias_of,
+        }),
+        logic_ref: circuit.logic_ref,
+        label_ref: kind::spl_token_label_ref(&forwarder, &token.mint),
+        kind_point: domain_point.to_vec(),
+    }
 }
 
 /// Reads the circuit versions from the resolved dependency graph, so bumping a pin cannot leave a stale
@@ -177,6 +208,7 @@ fn versions() -> Result<Versions> {
     Ok(Versions {
         transfer: version_of("transfer_library")?,
         generic_call: version_of("anoma_generic_call_library")?,
+        spl_transfer: version_of("anomapay_solana_transfer_library")?,
     })
 }
 
@@ -190,25 +222,88 @@ fn pinned_erc20_circuits(versions: &Versions) -> Vec<(String, Digest)> {
     )]
 }
 
-/// The list must pass its own checks, and every pinned ERC20 crate must be listed with the logic ref it
+/// The SPL token circuit crates this generator pins, as `pinned_erc20_circuits` for the Solana transfer circuit.
+fn pinned_spl_token_circuits(versions: &Versions) -> Vec<(String, Digest)> {
+    vec![(
+        versions.spl_transfer.clone(),
+        digest(anomapay_solana_transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
+    )]
+}
+
+/// Each list must pass its own checks, and every pinned circuit crate must be listed with the logic ref it
 /// compiles to. Raising a pin without listing the release stops here, and so does a mistyped logic ref.
 fn check_circuit_versions(versions: &Versions) -> Result<()> {
-    circuits::check_erc20().map_err(|error| anyhow::anyhow!("circuit-versions.json: {error}"))?;
-    for (version, compiled) in pinned_erc20_circuits(versions) {
-        let listed = circuits::erc20()
-            .iter()
-            .find(|circuit| circuit.version == version)
-            .with_context(|| {
-                format!("an ERC20 circuit crate at {version} is pinned, but circuit-versions.json does not list it")
-            })?;
-        ensure!(
-            listed.logic_ref == compiled,
-            "circuit-versions.json records {version} with logic ref {}, but the pinned crate compiles to {}",
-            hex(&listed.logic_ref),
-            hex(&compiled)
-        );
+    for (resource, check, listed, pinned) in [
+        (
+            "ERC20Resource",
+            circuits::check_erc20 as fn() -> std::result::Result<(), String>,
+            circuits::erc20(),
+            pinned_erc20_circuits(versions),
+        ),
+        (
+            "SPLTokenResource",
+            circuits::check_spl_token,
+            circuits::spl_token(),
+            pinned_spl_token_circuits(versions),
+        ),
+    ] {
+        check().map_err(|error| anyhow::anyhow!("circuit-versions.json: {resource}: {error}"))?;
+        for (version, compiled) in pinned {
+            let listed = listed
+                .iter()
+                .find(|circuit| circuit.version == version)
+                .with_context(|| {
+                    format!("a {resource} circuit crate at {version} is pinned, but circuit-versions.json does not list it")
+                })?;
+            ensure!(
+                listed.logic_ref == compiled,
+                "circuit-versions.json records {resource} {version} with logic ref {}, but the pinned crate compiles to {}",
+                hex(&listed.logic_ref),
+                hex(&compiled)
+            );
+        }
     }
     Ok(())
+}
+
+/// The Solana cluster an environment records, with the forwarder program its table is built for. Devnet is
+/// staging; mainnet-beta is production, once anoma-pa-solana-client records a V2 deployment there.
+fn solana_forwarder(environment: Environment) -> Option<(SolanaCluster, SolanaAddress)> {
+    let cluster = match environment {
+        Environment::Staging => SolanaCluster::Devnet,
+        Environment::Production => SolanaCluster::MainnetBeta,
+    };
+    deployments::solana_deployment(cluster).map(|deployment| (cluster, deployment.forwarder))
+}
+
+/// A Solana cluster's entries: one fungibility domain per supported mint — every listed
+/// SPL token circuit version under the forwarder program's label, assigned the kind of the active version.
+/// As on EVM chains, the padding kind is not listed. Solana has no generic call forwarder, so no generic call
+/// entry.
+fn solana_entries(cluster: SolanaCluster, forwarder: SolanaAddress) -> Result<Vec<Entry>> {
+    let mut entries = Vec::new();
+    let active = circuits::spl_token_active();
+    for token in tokens::spl_on(cluster) {
+        let label = kind::spl_token_label_ref(&forwarder, &token.mint);
+        let domain = kind::point(&active.logic_ref, &label)?;
+        let active_kind = AliasOf {
+            version: active.version.clone(),
+            logic_ref: active.logic_ref,
+            label_ref: label,
+        };
+        for circuit in circuits::spl_token() {
+            let alias_of = (circuit.status == Status::Deprecated).then(|| active_kind.clone());
+            entries.push(spl_member(circuit, token, forwarder, &domain, alias_of));
+        }
+    }
+    entries.sort_by_key(Entry::key);
+    if entries
+        .windows(2)
+        .any(|pair| pair[0].key() == pair[1].key())
+    {
+        bail!("{}: duplicate kind", cluster.name());
+    }
+    Ok(entries)
 }
 
 fn chain_entries(
@@ -322,14 +417,29 @@ fn main() -> Result<()> {
         for chain in chains {
             let entries = chain_entries(environment, chain, &versions)?;
             commitments.insert(
-                chain as u64,
+                Chain::Evm(chain).key(),
                 ChainCommitment {
                     comment: chain.to_string(),
                     commitment: hex::encode(commitment::of(&entries).as_bytes()),
                 },
             );
             files.push((
-                format!("{}.json", chain as u64),
+                format!("{}.json", Chain::Evm(chain).file_stem()),
+                serde_json::to_string_pretty(&entries)? + "\n",
+            ));
+        }
+        if let Some((cluster, forwarder)) = solana_forwarder(environment) {
+            let chain = Chain::Solana(cluster);
+            let entries = solana_entries(cluster, forwarder)?;
+            commitments.insert(
+                chain.key(),
+                ChainCommitment {
+                    comment: cluster.name().to_string(),
+                    commitment: hex::encode(commitment::of(&entries).as_bytes()),
+                },
+            );
+            files.push((
+                format!("{}.json", chain.file_stem()),
                 serde_json::to_string_pretty(&entries)? + "\n",
             ));
         }

@@ -3,6 +3,7 @@
 
 use crate::circuits::Status;
 use crate::kind;
+use crate::solana::SolanaAddress;
 use alloy::primitives::Address;
 use risc0_zkvm::Digest;
 use serde::{Deserialize, Serialize};
@@ -51,13 +52,26 @@ pub enum Metadata {
         #[serde(with = "checksummed")]
         forwarder: Address,
     },
+    /// One supported SPL token mint behind the Solana token forwarder program. The same fungibility-domain
+    /// rules as `Erc20`: every listed SPL token circuit version under the forwarder's label, assigned the kind of
+    /// the active version.
+    #[serde(rename = "SPLTokenResource")]
+    SplToken {
+        version: String,
+        name: String,
+        mint: SolanaAddress,
+        forwarder: SolanaAddress,
+        status: Status,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        alias_of: Option<AliasOf>,
+    },
 }
 
 impl Metadata {
     /// The kind an ERC20 alias takes its kind point from; `None` for every other entry.
     pub fn alias_of(&self) -> Option<&AliasOf> {
         match self {
-            Self::Erc20 { alias_of, .. } => alias_of.as_ref(),
+            Self::Erc20 { alias_of, .. } | Self::SplToken { alias_of, .. } => alias_of.as_ref(),
             Self::GenericCall { .. } => None,
         }
     }
@@ -149,6 +163,7 @@ mod checksummed {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::circuits::Status;
     use hex::FromHex;
 
     fn entry() -> Entry {
@@ -205,5 +220,30 @@ mod tests {
             crate::commitment::of(&[bare]),
             crate::commitment::of(&[annotated])
         );
+    }
+
+    #[test]
+    fn spl_token_metadata_round_trips_with_base58_addresses() {
+        let metadata = Metadata::SplToken {
+            version: "2.0.0-rc.1".to_string(),
+            name: "AnomaPay devnet test token".to_string(),
+            mint: "9EHEFzyuY7sZEzTVm7C3uMkNZFMgm5ZeWjGjirZ3MVfr"
+                .parse()
+                .unwrap(),
+            forwarder: "5CrHbBeHjg53UyL3Htn9dCYYTy68fMcrbDoeAdo4yQrx"
+                .parse()
+                .unwrap(),
+            status: Status::Active,
+            alias_of: None,
+        };
+        let json = serde_json::to_value(&metadata).unwrap();
+        assert_eq!(json["type"], "SPLTokenResource");
+        assert_eq!(json["mint"], "9EHEFzyuY7sZEzTVm7C3uMkNZFMgm5ZeWjGjirZ3MVfr");
+        assert_eq!(
+            json["forwarder"],
+            "5CrHbBeHjg53UyL3Htn9dCYYTy68fMcrbDoeAdo4yQrx"
+        );
+        assert_eq!(json.get("alias_of"), None);
+        assert_eq!(serde_json::from_value::<Metadata>(json).unwrap(), metadata);
     }
 }

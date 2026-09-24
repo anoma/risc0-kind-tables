@@ -2,5 +2,9 @@
   "11155111": {
     "_comment": "sepolia",
     "commitment": "5a57372ef4899495ac1e72e2e53089a70f6667f3257b9cd145a7284604d36963"
+  },
+  "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1": {
+    "_comment": "solana-devnet",
+    "commitment": "f7205e227c4bbb3cf3c4a5228b806ec9aab3bb1926063543dff98169df4b68a5"
   }
 }
