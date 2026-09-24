@@ -143,13 +143,17 @@ macro_rules! environment_module {
     };
 }
 
-environment_module!(staging, ("eip155", "11155111"));
+environment_module!(
+    staging,
+    ("eip155", "11155111"),
+    ("solana", "EtWTRABZaYq6iMfeYKouRu166VU2xqa1")
+);
 environment_module!(production);
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::chain::Chain;
+    use crate::chain::{Chain, SolanaCluster};
     use crate::entry::Metadata;
     use crate::kind;
     use alloy_chains::NamedChain;
@@ -278,8 +282,9 @@ mod tests {
         ] {
             for (chain, table) in tables {
                 let context = format!("{module} {chain}");
-                let evm_chain =
-                    NamedChain::try_from(chain).expect("every recorded chain is an EVM chain");
+                let Ok(evm_chain) = NamedChain::try_from(chain) else {
+                    continue; // This test does not read the forwarder of an SPL mint.
+                };
                 let Some(current) = erc20_forwarder_address(environment, &evm_chain) else {
                     continue; // No ERC20 fungibility domain on this chain.
                 };
@@ -321,6 +326,31 @@ mod tests {
             staging::table(NamedChain::Mainnet),
             Err(Error::UnrecordedChain(chain)) if chain == Caip2ChainId::eip155(1)
         ));
+    }
+
+    /// The staging environment records the solana-devnet table: the test mint's active member under the devnet
+    /// forwarder's label, and nothing else.
+    #[test]
+    fn staging_records_the_solana_devnet_table() {
+        let devnet = SolanaCluster::Devnet;
+        let table = staging::table(devnet).expect("solana-devnet is recorded in staging");
+        assert_eq!(table.entries.len(), 1, "one SPL token member");
+        let member = table
+            .entries
+            .iter()
+            .find(|entry| matches!(entry.metadata, Some(Metadata::SplToken { .. })))
+            .expect("an SPL token member");
+        assert_eq!(
+            member.label_ref.to_string(),
+            "53dcbb3ebad803b9f20fc2457f1271b2981e52ed602c240cfbbfafb1d58f7b7a",
+            "the label is sha256(devnet forwarder ‖ test mint)"
+        );
+        assert_eq!(
+            member.logic_ref,
+            crate::circuits::spl_token_active().logic_ref
+        );
+        assert!(!member.is_alias(), "the active version keeps its own kind");
+        assert_eq!(staging::commitment(devnet).unwrap(), table.commitment());
     }
 
     /// The macro invocation lists the table files by hand, so pin it to `commitments.json`.

@@ -33,6 +33,9 @@ pub struct SplToken {
     pub name: String,
     pub decimals: u8,
     pub mint: SolanaAddress,
+    /// Whether the table lists the mint's active kind with its own kind point, so the compliance circuit reads the
+    /// point instead of computing it by hash to curve. Every mint states it; its aliases are listed either way.
+    pub precompute_kind_point: bool,
 }
 
 /// One chain's supported tokens, typed by the chain they are on.

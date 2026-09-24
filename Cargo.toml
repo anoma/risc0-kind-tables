@@ -36,8 +36,9 @@ tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros"] }
 transfer_library = "=3.0.0-rc.2"
 transfer_witness = "=3.0.0-rc.2"
 
-# The Solana deployment record, pinned by commit.
+# The Solana deployment record and the AnomaPay Solana resource, pinned by commit.
 anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-client", rev = "5b2df9475d08f61566a96b68fecb92088276d398" }
+anomapay-solana-transfer-library = { package = "transfer_library", git = "https://github.com/anoma/anomapay-solana-resource", rev = "963d6cb574aa9bdecd167861acc20a3300712808" }
 base64 = "0.22.1"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 solana-program = "2.1"
