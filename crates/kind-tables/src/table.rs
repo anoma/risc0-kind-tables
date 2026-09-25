@@ -225,6 +225,25 @@ mod tests {
         }
     }
 
+    /// An EVM consumer passes the chain it already has, so the lookups accept a `NamedChain`.
+    #[test]
+    fn table_accepts_an_evm_chain() {
+        let sepolia = Caip2ChainId::eip155(11_155_111);
+
+        assert_eq!(
+            staging::table(NamedChain::Sepolia).unwrap(),
+            staging::table(sepolia.clone()).unwrap()
+        );
+        assert_eq!(
+            staging::commitment(NamedChain::Sepolia).unwrap(),
+            staging::commitment(sepolia).unwrap()
+        );
+        assert!(matches!(
+            staging::table(NamedChain::Mainnet),
+            Err(Error::UnrecordedChain(chain)) if chain == Caip2ChainId::eip155(1)
+        ));
+    }
+
     /// The macro invocation lists the table files by hand, so pin it to `commitments.json`.
     #[test]
     fn embedded_tables_match_the_recorded_commitments() {
