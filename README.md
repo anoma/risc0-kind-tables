@@ -16,14 +16,14 @@ crates/kind-tables/            the library and the generator
 │   ├── tokens.json            authored: the supported tokens, per chain
 │   ├── circuit-versions.json  authored: the ERC20 circuit versions, once for every chain
 │   └── generated/
-│       ├── staging/           <chain id>.json tables + commitments.json
+│       ├── staging/           <namespace>_<reference>.json tables + commitments.json
 │       └── production/
 └── src/
 crates/integration-test/       on-chain token and forwarder checks, promotion freshness gate, arm-risc0 cross-check
 docs/adr/                      the decisions behind this layout
 ```
 
-Every chain-keyed file — `tokens.json`, `commitments.json` — is keyed by chain ID, as the forwarder and protocol adapter deployment records they are generated from are, and each section carries the chain name in a `_comment` the loaders ignore. A generated table is named for the chain ID it belongs to and is otherwise `anoma-rm-risc0`'s kind table schema, so `init_kind_table_from_file` reads one unchanged.
+Every chain-keyed file — `tokens.json`, `commitments.json` — is keyed by the chain's CAIP-2 chain ID, such as `eip155:11155111` for Sepolia, so that a chain of another family than EVM, such as Solana, has a key too. Each section carries the chain name in a `_comment` the loaders ignore. A generated table is named for the same ID with the colon replaced by `_`, such as `eip155_11155111.json`, because `cargo package` refuses a colon in a file name (ADR-0009). It is otherwise `anoma-rm-risc0`'s kind table schema, so `init_kind_table_from_file` reads one unchanged. The lookups `table`, `commitment` and `tokens::on` take a `Caip2ChainId` or an `alloy_chains::NamedChain`.
 
 The `arm` feature converts an `Entry` into `anoma-rm-risc0`'s `KindTableEntry`, so a prover loads a recorded table with `init_kind_table_from_entries`, without a file.
 
@@ -90,7 +90,7 @@ Adding a token, listing a circuit version and recording a V1 forwarder all chang
 
 ### Add a token
 
-1. Add the token to [`crates/kind-tables/data/tokens.json`](crates/kind-tables/data/tokens.json), under the chain it lives on.
+1. Add the token to [`crates/kind-tables/data/tokens.json`](crates/kind-tables/data/tokens.json), under the CAIP-2 chain ID of the chain it lives on.
 2. Run `just generate`.
 3. Commit the edited file together with the regenerated tables.
 

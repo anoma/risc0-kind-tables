@@ -10,6 +10,7 @@ use anoma_generic_call_forwarder_bindings::addresses::{
     Environment as GenericCallEnvironment, generic_call_forwarder_address,
 };
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
+use anoma_risc0_kind_tables::Caip2ChainId;
 use anoma_risc0_kind_tables_integration_test::provider;
 use anomapay_erc20_forwarder_bindings::addresses::{
     Environment as Erc20Environment, erc20_forwarder_address,
@@ -50,7 +51,7 @@ async fn forwarders_of_another_protocol_adapter(
             let Some(forwarder) = forwarder_of(environment, &chain) else {
                 continue;
             };
-            let provider = provider(chain)?;
+            let provider = provider(&Caip2ChainId::from(chain))?;
             let accepted = IForwarder::new(forwarder, &provider)
                 .getProtocolAdapter()
                 .call()

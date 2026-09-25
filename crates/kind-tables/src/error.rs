@@ -1,4 +1,4 @@
-use alloy_chains::NamedChain;
+use crate::chain::Caip2ChainId;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -15,8 +15,10 @@ pub enum Error {
     InvalidTableJson(#[from] serde_json::Error),
     #[error("cannot read the table file: {0}")]
     Io(#[from] std::io::Error),
-    #[error("unknown chain name: {0}")]
-    UnknownChain(String),
+    #[error("invalid CAIP-2 chain ID {value:?}: {reason}")]
+    InvalidCaip2ChainId { value: String, reason: &'static str },
+    #[error("no chain known for {0}")]
+    UnknownChain(Caip2ChainId),
     #[error("no table recorded for {0}")]
-    UnrecordedChain(NamedChain),
+    UnrecordedChain(Caip2ChainId),
 }

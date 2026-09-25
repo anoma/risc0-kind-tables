@@ -1,8 +1,8 @@
 //! The supported tokens — the authored identity list the ERC20 entries of every chain table are built from.
 //! Being supported is a standing commitment: a chain may list tokens before anything is deployed to it.
 
+use crate::chain::Caip2ChainId;
 use alloy::primitives::Address;
-use alloy_chains::NamedChain;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
@@ -26,25 +26,25 @@ struct ChainTokens {
     tokens: Vec<Token>,
 }
 
-static TOKENS: LazyLock<BTreeMap<NamedChain, Vec<Token>>> = LazyLock::new(|| {
-    let raw: BTreeMap<u64, ChainTokens> = serde_json::from_str(include_str!("../data/tokens.json"))
-        .expect("tokens.json: invalid JSON");
+static TOKENS: LazyLock<BTreeMap<Caip2ChainId, Vec<Token>>> = LazyLock::new(|| {
+    let raw: BTreeMap<Caip2ChainId, ChainTokens> =
+        serde_json::from_str(include_str!("../data/tokens.json"))
+            .expect("tokens.json: invalid JSON");
     raw.into_iter()
-        .map(|(id, section)| {
+        .map(|(chain, section)| {
             // A chain that fails to resolve must fail loudly: dropping it would silently drop its kinds.
-            let chain =
-                NamedChain::try_from(id).unwrap_or_else(|_| panic!("unknown chain ID: {id}"));
+            assert!(chain.name().is_some(), "unknown chain: {chain}");
             (chain, section.tokens)
         })
         .collect()
 });
 
 /// All supported tokens, per chain.
-pub fn all() -> &'static BTreeMap<NamedChain, Vec<Token>> {
+pub fn all() -> &'static BTreeMap<Caip2ChainId, Vec<Token>> {
     &TOKENS
 }
 
 /// The supported tokens on the chain.
-pub fn on(chain: NamedChain) -> &'static [Token] {
-    TOKENS.get(&chain).map_or(&[], Vec::as_slice)
+pub fn on(chain: impl Into<Caip2ChainId>) -> &'static [Token] {
+    TOKENS.get(&chain.into()).map_or(&[], Vec::as_slice)
 }

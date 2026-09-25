@@ -5,7 +5,7 @@
 
 use anoma_pa_evm_bindings::addresses::Environment;
 use anoma_pa_evm_bindings::contract::protocol_adapter;
-use anoma_risc0_kind_tables::table;
+use anoma_risc0_kind_tables::{Caip2ChainId, table};
 use anoma_risc0_kind_tables_integration_test::provider;
 use anyhow::{Context, Result, ensure};
 use risc0_zkvm::Digest;
@@ -22,7 +22,7 @@ fn promotion_target() -> Option<Environment> {
     }
 }
 
-fn commitments(environment: Environment) -> &'static BTreeMap<alloy_chains::NamedChain, Digest> {
+fn commitments(environment: Environment) -> &'static BTreeMap<Caip2ChainId, Digest> {
     match environment {
         Environment::Staging => table::staging::commitments(),
         Environment::Production => table::production::commitments(),
@@ -36,7 +36,7 @@ async fn the_promoted_environment_stores_the_generated_commitments() -> Result<(
         return Ok(());
     };
 
-    for (&chain, expected) in commitments(environment) {
+    for (chain, expected) in commitments(environment) {
         let provider = provider(chain)?;
         let adapter = protocol_adapter(&provider, environment)
             .await

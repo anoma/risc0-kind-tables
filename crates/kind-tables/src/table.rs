@@ -1,10 +1,11 @@
 //! Generated chain tables and their commitments, one set per environment. A chain's table lives in
-//! `data/generated/<environment>/<chain id>.json`; the tables and commitments are embedded and looked up per chain.
+//! `data/generated/<environment>/<namespace>_<reference>.json`, named for the chain's CAIP-2 chain ID; the tables and
+//! commitments are embedded and looked up per chain.
 
+use crate::chain::Caip2ChainId;
 use crate::commitment;
 use crate::entry::Entry;
 use crate::error::{Error, Result};
-use alloy_chains::NamedChain;
 use risc0_zkvm::Digest;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -24,7 +25,7 @@ impl Table {
         })
     }
 
-    /// Reads a table from a generated `<chain>.json` file.
+    /// Reads a table from a generated `<namespace>_<reference>.json` file.
     pub fn load(path: impl AsRef<Path>) -> Result<Self> {
         Self::from_json(&std::fs::read_to_string(path)?)
     }
@@ -57,15 +58,14 @@ struct ChainCommitment {
     commitment: String,
 }
 
-fn parse_commitments(json: &str) -> BTreeMap<NamedChain, Digest> {
+fn parse_commitments(json: &str) -> BTreeMap<Caip2ChainId, Digest> {
     use hex::FromHex;
-    let raw: BTreeMap<u64, ChainCommitment> =
+    let raw: BTreeMap<Caip2ChainId, ChainCommitment> =
         serde_json::from_str(json).expect("commitments.json: invalid JSON");
     raw.into_iter()
-        .map(|(id, recorded)| {
+        .map(|(chain, recorded)| {
             // A chain that fails to resolve must fail loudly: dropping it would erase its freshness assertion.
-            let chain =
-                NamedChain::try_from(id).unwrap_or_else(|_| panic!("unknown chain ID: {id}"));
+            assert!(chain.name().is_some(), "unknown chain: {chain}");
             let digest = Digest::from_hex(&recorded.commitment)
                 .unwrap_or_else(|_| panic!("invalid commitment for {chain}"));
             (chain, digest)
@@ -73,37 +73,56 @@ fn parse_commitments(json: &str) -> BTreeMap<NamedChain, Digest> {
         .collect()
 }
 
+/// Embeds one environment's commitments and tables. Each chain is listed as the namespace and reference of its CAIP-2
+/// chain ID, from which the macro builds both the ID and the table's file name.
 macro_rules! environment_module {
-    ($name:ident, $commitments_path:literal $(, ($id:literal, $table_path:literal))*) => {
+    ($name:ident $(, ($namespace:literal, $reference:literal))*) => {
         pub mod $name {
             use super::*;
             use std::sync::LazyLock;
 
-            static COMMITMENTS: LazyLock<BTreeMap<NamedChain, Digest>> =
-                LazyLock::new(|| parse_commitments(include_str!($commitments_path)));
+            static COMMITMENTS: LazyLock<BTreeMap<Caip2ChainId, Digest>> = LazyLock::new(|| {
+                parse_commitments(include_str!(concat!(
+                    "../data/generated/",
+                    stringify!($name),
+                    "/commitments.json"
+                )))
+            });
 
-            static TABLES: LazyLock<BTreeMap<NamedChain, Table>> = LazyLock::new(|| {
-                let tables: Vec<(NamedChain, Table)> = vec![$((
-                    NamedChain::try_from($id as u64)
-                        .unwrap_or_else(|_| panic!("unknown chain ID: {}", $id)),
-                    Table::from_json(include_str!($table_path))
-                        .unwrap_or_else(|error| panic!("invalid table for chain ID {}: {error}", $id)),
+            static TABLES: LazyLock<BTreeMap<Caip2ChainId, Table>> = LazyLock::new(|| {
+                let tables: Vec<(Caip2ChainId, Table)> = vec![$((
+                    concat!($namespace, ":", $reference)
+                        .parse()
+                        .unwrap_or_else(|error| panic!("{error}")),
+                    Table::from_json(include_str!(concat!(
+                        "../data/generated/",
+                        stringify!($name),
+                        "/",
+                        $namespace,
+                        "_",
+                        $reference,
+                        ".json"
+                    )))
+                    .unwrap_or_else(|error| {
+                        panic!("invalid table for {}: {error}", concat!($namespace, ":", $reference))
+                    }),
                 )),*];
                 tables.into_iter().collect()
             });
 
             /// The chains this environment records a table for.
-            pub fn chains() -> Vec<NamedChain> {
-                COMMITMENTS.keys().copied().collect()
+            pub fn chains() -> Vec<Caip2ChainId> {
+                COMMITMENTS.keys().cloned().collect()
             }
 
             /// The commitments of all recorded chains.
-            pub fn commitments() -> &'static BTreeMap<NamedChain, Digest> {
+            pub fn commitments() -> &'static BTreeMap<Caip2ChainId, Digest> {
                 &COMMITMENTS
             }
 
             /// The commitment recorded for the chain.
-            pub fn commitment(chain: NamedChain) -> Result<Digest> {
+            pub fn commitment(chain: impl Into<Caip2ChainId>) -> Result<Digest> {
+                let chain = chain.into();
                 COMMITMENTS
                     .get(&chain)
                     .copied()
@@ -111,30 +130,28 @@ macro_rules! environment_module {
             }
 
             /// The tables of all recorded chains.
-            pub fn tables() -> &'static BTreeMap<NamedChain, Table> {
+            pub fn tables() -> &'static BTreeMap<Caip2ChainId, Table> {
                 &TABLES
             }
 
             /// The table recorded for the chain.
-            pub fn table(chain: NamedChain) -> Result<&'static Table> {
+            pub fn table(chain: impl Into<Caip2ChainId>) -> Result<&'static Table> {
+                let chain = chain.into();
                 TABLES.get(&chain).ok_or(Error::UnrecordedChain(chain))
             }
         }
     };
 }
 
-environment_module!(
-    staging,
-    "../data/generated/staging/commitments.json",
-    (11155111, "../data/generated/staging/11155111.json")
-);
-environment_module!(production, "../data/generated/production/commitments.json");
+environment_module!(staging, ("eip155", "11155111"));
+environment_module!(production);
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::entry::Metadata;
     use crate::kind;
+    use alloy_chains::NamedChain;
     use anomapay_erc20_forwarder_bindings::addresses::{Environment, erc20_forwarder_address};
 
     /// No kind point is authored. An ERC20 entry is assigned its fungibility domain's kind point — the kind of the
@@ -147,7 +164,9 @@ mod tests {
             ("production", Environment::Production, production::tables()),
         ] {
             for (chain, table) in tables {
-                let current = erc20_forwarder_address(environment, chain);
+                let evm_chain =
+                    NamedChain::try_from(chain).expect("every recorded chain is an EVM chain");
+                let current = erc20_forwarder_address(environment, &evm_chain);
                 for entry in &table.entries {
                     let Some(Metadata::Erc20 { token, status, .. }) = &entry.metadata else {
                         assert!(
@@ -217,8 +236,8 @@ mod tests {
                 production::tables(),
             ),
         ] {
-            let recorded: Vec<&NamedChain> = commitments.keys().collect();
-            let embedded: Vec<&NamedChain> = tables.keys().collect();
+            let recorded: Vec<&Caip2ChainId> = commitments.keys().collect();
+            let embedded: Vec<&Caip2ChainId> = tables.keys().collect();
             assert_eq!(recorded, embedded, "{module}: chains out of sync");
             for (chain, commitment) in commitments {
                 assert_eq!(

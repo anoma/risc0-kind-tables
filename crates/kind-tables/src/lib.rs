@@ -1,3 +1,4 @@
+pub mod chain;
 pub mod circuits;
 pub mod commitment;
 pub mod entry;
@@ -6,6 +7,7 @@ pub mod kind;
 pub mod table;
 pub mod tokens;
 
+pub use chain::Caip2ChainId;
 pub use circuits::{CircuitVersion, Status};
 pub use entry::{AliasOf, Entry, Metadata};
 pub use error::{Error, Result};
