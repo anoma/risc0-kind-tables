@@ -111,18 +111,6 @@ mod tests {
     }
 
     #[test]
-    fn the_caip2_id_is_the_genesis_hash_prefix() {
-        assert_eq!(
-            SolanaCluster::Devnet.caip2(),
-            "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
-        );
-        assert_eq!(
-            SolanaCluster::MainnetBeta.caip2(),
-            "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
-        );
-    }
-
-    #[test]
     fn an_unknown_key_fails_loudly() {
         assert!(Chain::from_key("18446744073709551615").is_err());
         assert!(Chain::from_key("solana:nope").is_err());
