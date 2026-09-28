@@ -7,8 +7,8 @@ use alloy_chains::NamedChain;
 use anoma_generic_call_forwarder_bindings::addresses::Environment as GenericCallEnvironment;
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
 use anoma_risc0_kind_tables::{
-    AliasOf, Caip2ChainId, CircuitVersion, Entry, Metadata, SolanaAddress, SolanaCluster, Status,
-    circuits, commitment, deployments, kind, tokens,
+    AliasOf, Caip2ChainId, Chain, CircuitVersion, Entry, Metadata, SolanaAddress, SolanaCluster,
+    Status, circuits, commitment, deployments, kind, tokens,
 };
 use anomapay_erc20_forwarder_bindings::addresses::Environment as Erc20Environment;
 use anyhow::{Context, Result, bail, ensure};
@@ -88,13 +88,14 @@ fn derived(metadata: Metadata, logic_ref: Digest, label_ref: Digest) -> Result<E
 
 /// A member of a token's fungibility domain: one circuit version under one forwarder's label, assigned the
 /// fungibility domain's kind point. `alias_of` names the kind that point is; only the active version under the
-/// current forwarder's label carries none, and only that member is active.
+/// current forwarder's label carries none, and only that member is active. `metadata` names the token and
+/// forwarder the member belongs to, given the member's version, status and `alias_of`.
 fn member(
     circuit: &CircuitVersion,
-    token: &tokens::Token,
-    forwarder: Address,
+    label_ref: Digest,
     domain_point: &[u8],
     alias_of: Option<AliasOf>,
+    metadata: impl FnOnce(String, Status, Option<AliasOf>) -> Metadata,
 ) -> Entry {
     let status = if alias_of.is_none() {
         Status::Active
@@ -102,54 +103,58 @@ fn member(
         Status::Deprecated
     };
     Entry {
-        metadata: Some(Metadata::Erc20 {
-            version: circuit.version.clone(),
-            name: token.symbol.clone(),
-            token: token.address,
-            forwarder,
-            status,
-            alias_of,
-        }),
+        metadata: Some(metadata(circuit.version.clone(), status, alias_of)),
         logic_ref: circuit.logic_ref,
-        label_ref: kind::erc20_label_ref(&forwarder, &token.address),
+        label_ref,
         kind_point: domain_point.to_vec(),
     }
 }
 
-/// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 crates.
+/// One token's fungibility domain under the current forwarder's label `label_ref`: every deprecated circuit version as
+/// an alias of the active version under that label, and the active version itself, assigned its own kind, only if
+/// `precompute` is set for the token. Returns the domain's kind point and the kind every alias names, for members added
+/// under another label.
+fn domain(
+    listed: &[CircuitVersion],
+    active: &CircuitVersion,
+    label_ref: Digest,
+    precompute: bool,
+    metadata: impl Fn(String, Status, Option<AliasOf>) -> Metadata,
+    entries: &mut Vec<Entry>,
+) -> Result<(Vec<u8>, AliasOf)> {
+    let point = kind::point(&active.logic_ref, &label_ref)?;
+    let active_kind = AliasOf {
+        version: active.version.clone(),
+        logic_ref: active.logic_ref,
+        label_ref,
+    };
+    for circuit in listed {
+        let alias_of = (circuit.status == Status::Deprecated).then(|| active_kind.clone());
+        if alias_of.is_none() && !precompute {
+            continue;
+        }
+        entries.push(member(circuit, label_ref, &point, alias_of, &metadata));
+    }
+    Ok((point, active_kind))
+}
+
+/// A table's entries in table order, sorted by kind, with no kind listed twice.
+fn sorted(mut entries: Vec<Entry>, chain: &Chain) -> Result<Vec<Entry>> {
+    entries.sort_by_key(Entry::key);
+    if entries
+        .windows(2)
+        .any(|pair| pair[0].key() == pair[1].key())
+    {
+        bail!("{chain}: duplicate kind");
+    }
+    Ok(entries)
+}
+
+/// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 and SPL token crates.
 struct Versions {
     transfer: String,
     generic_call: String,
     spl_transfer: String,
-}
-
-/// A member of an SPL token mint's fungibility domain: one Solana circuit version under the forwarder
-/// program's label, assigned the domain's kind point, with the same alias rules as `member`.
-fn spl_member(
-    circuit: &CircuitVersion,
-    token: &tokens::SplToken,
-    forwarder: SolanaAddress,
-    domain_point: &[u8],
-    alias_of: Option<AliasOf>,
-) -> Entry {
-    let status = if alias_of.is_none() {
-        Status::Active
-    } else {
-        Status::Deprecated
-    };
-    Entry {
-        metadata: Some(Metadata::SplToken {
-            version: circuit.version.clone(),
-            name: token.symbol.clone(),
-            mint: token.mint,
-            forwarder,
-            status,
-            alias_of,
-        }),
-        logic_ref: circuit.logic_ref,
-        label_ref: kind::spl_token_label_ref(&forwarder, &token.mint),
-        kind_point: domain_point.to_vec(),
-    }
 }
 
 /// Reads the circuit versions from the resolved dependency graph, so bumping a pin cannot leave a stale
@@ -266,45 +271,35 @@ fn check_circuit_versions(versions: &Versions) -> Result<()> {
     Ok(())
 }
 
-/// The Solana cluster an environment records, with the forwarder program its table is built for. Devnet is
-/// staging; mainnet-beta is production, once anoma-pa-solana-client records a V2 deployment there.
-fn solana_forwarder(environment: Environment) -> Option<(SolanaCluster, SolanaAddress)> {
-    let cluster = match environment {
+/// The Solana cluster an environment's table is built for: devnet is staging, mainnet-beta is production.
+fn solana_cluster(environment: Environment) -> SolanaCluster {
+    match environment {
         Environment::Staging => SolanaCluster::Devnet,
         Environment::Production => SolanaCluster::MainnetBeta,
-    };
-    deployments::solana_deployment(cluster).map(|deployment| (cluster, deployment.forwarder))
+    }
 }
 
-/// A Solana cluster's entries: one fungibility domain per supported mint — every listed
-/// SPL token circuit version under the forwarder program's label, assigned the kind of the active version.
+/// A Solana cluster's entries: one fungibility domain per supported mint under the forwarder program's label.
 /// As on EVM chains, the padding kind is not listed. Solana has no generic call forwarder, so no generic call
 /// entry.
 fn solana_entries(cluster: SolanaCluster, forwarder: SolanaAddress) -> Result<Vec<Entry>> {
     let mut entries = Vec::new();
-    let active = circuits::spl_token_active();
     for token in tokens::spl_on(cluster) {
-        let label = kind::spl_token_label_ref(&forwarder, &token.mint);
-        let domain = kind::point(&active.logic_ref, &label)?;
-        let active_kind = AliasOf {
-            version: active.version.clone(),
-            logic_ref: active.logic_ref,
-            label_ref: label,
-        };
-        for circuit in circuits::spl_token() {
-            let alias_of = (circuit.status == Status::Deprecated).then(|| active_kind.clone());
-            if alias_of.is_none() && !token.precompute_kind_point {
-                continue;
-            }
-            entries.push(spl_member(circuit, token, forwarder, &domain, alias_of));
-        }
-    }
-    entries.sort_by_key(Entry::key);
-    if entries
-        .windows(2)
-        .any(|pair| pair[0].key() == pair[1].key())
-    {
-        bail!("{}: duplicate kind", cluster.name());
+        domain(
+            circuits::spl_token(),
+            circuits::spl_token_active(),
+            kind::spl_token_label_ref(&forwarder, &token.mint),
+            token.precompute_kind_point,
+            |version, status, alias_of| Metadata::SplToken {
+                version,
+                name: token.symbol.clone(),
+                mint: token.mint,
+                forwarder,
+                status,
+                alias_of,
+            },
+            &mut entries,
+        )?;
     }
     Ok(entries)
 }
@@ -345,23 +340,25 @@ fn chain_entries(
     ) {
         Some(current) => {
             let v1 = v1_erc20_forwarder(&chain);
-            let active = circuits::erc20_active();
             for token in supported {
-                let current_label = kind::erc20_label_ref(&current, &token.address);
-                let domain = kind::point(&active.logic_ref, &current_label)?;
-                let active_kind = AliasOf {
-                    version: active.version.clone(),
-                    logic_ref: active.logic_ref,
-                    label_ref: current_label,
-                };
-                for circuit in circuits::erc20() {
-                    let alias_of =
-                        (circuit.status == Status::Deprecated).then(|| active_kind.clone());
-                    if alias_of.is_none() && !token.precompute_kind_point {
-                        continue;
+                let erc20 = |forwarder: Address| {
+                    move |version, status, alias_of| Metadata::Erc20 {
+                        version,
+                        name: token.symbol.clone(),
+                        token: token.address,
+                        forwarder,
+                        status,
+                        alias_of,
                     }
-                    entries.push(member(circuit, token, current, &domain, alias_of));
-                }
+                };
+                let (point, active_kind) = domain(
+                    circuits::erc20(),
+                    circuits::erc20_active(),
+                    kind::erc20_label_ref(&current, &token.address),
+                    token.precompute_kind_point,
+                    erc20(current),
+                    &mut entries,
+                )?;
                 if token.fungible_with_v1
                     && let Some(v1) = &v1
                 {
@@ -374,10 +371,10 @@ fn chain_entries(
                     })?;
                     entries.push(member(
                         circuit,
-                        token,
-                        v1.address,
-                        &domain,
-                        Some(active_kind.clone()),
+                        kind::erc20_label_ref(&v1.address, &token.address),
+                        &point,
+                        Some(active_kind),
+                        erc20(v1.address),
                     ));
                 }
             }
@@ -389,13 +386,6 @@ fn chain_entries(
         ),
     }
 
-    entries.sort_by_key(Entry::key);
-    if entries
-        .windows(2)
-        .any(|pair| pair[0].key() == pair[1].key())
-    {
-        bail!("{chain}: duplicate kind");
-    }
     Ok(entries)
 }
 
@@ -417,10 +407,31 @@ fn main() -> Result<()> {
             .collect();
         chains.sort();
 
+        let mut tables = Vec::new();
+        for chain in chains {
+            tables.push((
+                Chain::Evm(chain),
+                chain_entries(environment, chain, &versions)?,
+            ));
+        }
+        let cluster = solana_cluster(environment);
+        match deployments::solana_deployment(cluster) {
+            Some(deployment) => tables.push((
+                Chain::Solana(cluster),
+                solana_entries(cluster, deployment.forwarder)?,
+            )),
+            None if tokens::spl_on(cluster).is_empty() => {}
+            None => eprintln!(
+                "{}: {} supported mints but no deployment recorded - no token kinds emitted",
+                cluster.name(),
+                tokens::spl_on(cluster).len()
+            ),
+        }
+
         let mut files = Vec::new();
         let mut commitments = BTreeMap::new();
-        for chain in chains {
-            let entries = chain_entries(environment, chain, &versions)?;
+        for (chain, entries) in tables {
+            let entries = sorted(entries, &chain)?;
             let id = Caip2ChainId::from(chain);
             files.push((
                 id.file_name(),
@@ -430,21 +441,6 @@ fn main() -> Result<()> {
                 id,
                 ChainCommitment {
                     comment: chain.to_string(),
-                    commitment: hex::encode(commitment::of(&entries).as_bytes()),
-                },
-            );
-        }
-        if let Some((cluster, forwarder)) = solana_forwarder(environment) {
-            let entries = solana_entries(cluster, forwarder)?;
-            let id = Caip2ChainId::from(cluster);
-            files.push((
-                id.file_name(),
-                serde_json::to_string_pretty(&entries)? + "\n",
-            ));
-            commitments.insert(
-                id,
-                ChainCommitment {
-                    comment: cluster.name().to_string(),
                     commitment: hex::encode(commitment::of(&entries).as_bytes()),
                 },
             );

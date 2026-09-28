@@ -1,7 +1,7 @@
 pub mod chain;
 pub mod circuits;
 pub mod commitment;
-#[cfg(feature = "solana-deployments")]
+#[cfg(any(feature = "solana-deployments", test))]
 pub mod deployments;
 pub mod entry;
 pub mod error;
@@ -16,4 +16,4 @@ pub use entry::{AliasOf, Entry, Metadata};
 pub use error::{Error, Result};
 pub use solana::SolanaAddress;
 pub use table::Table;
-pub use tokens::{ChainTokens, SplToken, Token};
+pub use tokens::{SplToken, Token};

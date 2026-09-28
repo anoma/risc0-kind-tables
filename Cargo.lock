@@ -1157,7 +1157,7 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "hex",
- "reqwest 0.12.28",
+ "reqwest 0.13.5",
  "risc0-zkvm",
  "serde_json",
  "solana-program",

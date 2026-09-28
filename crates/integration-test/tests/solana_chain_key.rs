@@ -7,10 +7,7 @@ use anyhow::{Result, ensure};
 
 #[tokio::test]
 async fn every_recorded_cluster_key_is_its_genesis_hash_prefix() -> Result<()> {
-    let recorded: Vec<SolanaCluster> = tokens::all()
-        .keys()
-        .filter_map(|chain| SolanaCluster::try_from(chain).ok())
-        .collect();
+    let recorded: Vec<SolanaCluster> = tokens::spl_all().keys().copied().collect();
     ensure!(
         !recorded.is_empty(),
         "no Solana cluster is recorded in tokens.json"
