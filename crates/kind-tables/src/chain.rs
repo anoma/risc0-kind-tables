@@ -352,17 +352,10 @@ mod tests {
             Chain::try_from(&parse(SOLANA_MAINNET).unwrap()).unwrap(),
             Chain::Solana(SolanaCluster::MainnetBeta)
         );
-    }
-
-    #[test]
-    fn the_caip2_id_is_the_genesis_hash_prefix() {
+        assert_eq!(Caip2ChainId::from(SolanaCluster::Devnet), devnet);
         assert_eq!(
-            Caip2ChainId::from(SolanaCluster::Devnet).to_string(),
-            "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
-        );
-        assert_eq!(
-            Caip2ChainId::from(SolanaCluster::MainnetBeta).to_string(),
-            SOLANA_MAINNET
+            Caip2ChainId::from(SolanaCluster::MainnetBeta),
+            parse(SOLANA_MAINNET).unwrap()
         );
     }
 
