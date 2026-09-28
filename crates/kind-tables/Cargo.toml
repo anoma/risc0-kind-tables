@@ -49,6 +49,8 @@ thiserror = { workspace = true }
 transfer_library = { workspace = true, optional = true }
 
 [dev-dependencies]
+# The deployment records the offline table test reads the current forwarders from.
+anoma-pa-solana-client = { workspace = true }
 anomapay-erc20-forwarder-bindings = { workspace = true }
 
 [[bin]]

@@ -3,16 +3,8 @@
 use alloy::providers::{DynProvider, Provider, ProviderBuilder};
 use alloy_chains::NamedChain;
 use anoma_pa_evm_bindings::helpers::alchemy_url;
-use anyhow::{Context, Result, ensure};
-
-/// Connects an Alchemy-backed provider for the chain. Every chain carrying supported tokens or a recorded
-/// deployment must be reachable this way; an unknown chain is a hard failure, never a skip.
-pub fn provider(chain: NamedChain) -> Result<DynProvider> {
-    let url = alchemy_url(&chain).with_context(|| format!("no RPC route for {chain}"))?;
-    Ok(ProviderBuilder::new().connect_http(url).erased())
-}
-
 use anoma_risc0_kind_tables::{SolanaAddress, SolanaCluster};
+use anyhow::{Context, Result, ensure};
 use base64::Engine;
 use risc0_zkvm::Digest;
 use risc0_zkvm::sha::{Impl, Sha256};
@@ -20,6 +12,13 @@ use serde_json::{Value, json};
 use solana_program::program_pack::Pack;
 use solana_program::pubkey::Pubkey;
 use std::sync::LazyLock;
+
+/// Connects an Alchemy-backed provider for the chain. Every chain carrying supported tokens or a recorded
+/// deployment must be reachable this way; an unknown chain is a hard failure, never a skip.
+pub fn provider(chain: NamedChain) -> Result<DynProvider> {
+    let url = alchemy_url(&chain).with_context(|| format!("no RPC route for {chain}"))?;
+    Ok(ProviderBuilder::new().connect_http(url).erased())
+}
 
 /// One HTTP client for every cluster: the TLS setup and the connection pool are built once per process.
 static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
@@ -79,8 +78,14 @@ impl SolanaRpc {
             .context("getGenesisHash: not a string")
     }
 
-    /// An account's owner and data, or `None` when it does not exist.
-    async fn account(&self, address: &SolanaAddress) -> Result<Option<(String, Vec<u8>)>> {
+    /// The data of the account at `address`, or `None` when it does not exist. An account that exists must be
+    /// owned by `owner`, the program `what` names.
+    async fn account_owned_by(
+        &self,
+        address: &Pubkey,
+        owner: &Pubkey,
+        what: &str,
+    ) -> Result<Option<Vec<u8>>> {
         let result = self
             .call(
                 "getAccountInfo",
@@ -90,28 +95,31 @@ impl SolanaRpc {
         let Some(value) = result.get("value").filter(|value| !value.is_null()) else {
             return Ok(None);
         };
-        let owner = value["owner"]
+        let actual = value["owner"]
             .as_str()
-            .context("getAccountInfo: no owner")?
-            .to_string();
+            .context("getAccountInfo: no owner")?;
+        ensure!(
+            actual == owner.to_string(),
+            "{address}: owned by {actual}, not {what} {owner}"
+        );
         let encoded = value["data"][0]
             .as_str()
             .context("getAccountInfo: no data")?;
-        let data = base64::engine::general_purpose::STANDARD
+        base64::engine::general_purpose::STANDARD
             .decode(encoded)
-            .context("getAccountInfo: data is not base64")?;
-        Ok(Some((owner, data)))
+            .map(Some)
+            .context("getAccountInfo: data is not base64")
     }
 
     /// The decimals of the SPL token mint at the address, or `None` when no account is there.
     pub async fn mint_decimals(&self, address: &SolanaAddress) -> Result<Option<u8>> {
-        let Some((owner, data)) = self.account(address).await? else {
+        let address = pubkey(address);
+        let Some(data) = self
+            .account_owned_by(&address, &spl_token::id(), "the SPL Token program")
+            .await?
+        else {
             return Ok(None);
         };
-        ensure!(
-            owner == spl_token::id().to_string(),
-            "{address}: owned by {owner}, not the SPL Token program"
-        );
         let mint = spl_token::state::Mint::unpack(&data)
             .with_context(|| format!("{address}: not an SPL token mint"))?;
         Ok(Some(mint.decimals))
@@ -121,15 +129,14 @@ impl SolanaRpc {
     /// The config is the forwarder's `Config` account: the Anchor discriminator, the adapter program id, the
     /// logic ref, the emergency committee, the emergency caller and the bump.
     pub async fn forwarder_logic_ref(&self, forwarder: &SolanaAddress) -> Result<Option<Digest>> {
-        let (config, _) = anoma_pa_solana_client::derive_forwarder_config_pda(&pubkey(forwarder));
-        let config = SolanaAddress::new(config.to_bytes());
-        let Some((owner, data)) = self.account(&config).await? else {
+        let forwarder = pubkey(forwarder);
+        let (config, _) = anoma_pa_solana_client::derive_forwarder_config_pda(&forwarder);
+        let Some(data) = self
+            .account_owned_by(&config, &forwarder, "the forwarder")
+            .await?
+        else {
             return Ok(None);
         };
-        ensure!(
-            owner == forwarder.to_string(),
-            "{config}: owned by {owner}, not the forwarder {forwarder}"
-        );
         ensure!(
             data.len() == 8 + 32 + 32 + 32 + 32 + 1
                 && data[..8] == Impl::hash_bytes(b"account:Config").as_bytes()[..8],
@@ -143,15 +150,14 @@ impl SolanaRpc {
         &self,
         adapter: &SolanaAddress,
     ) -> Result<Option<Digest>> {
-        let (state, _) = anoma_pa_solana_client::derive_pa_state_pda(&pubkey(adapter));
-        let state = SolanaAddress::new(state.to_bytes());
-        let Some((owner, data)) = self.account(&state).await? else {
+        let adapter = pubkey(adapter);
+        let (state, _) = anoma_pa_solana_client::derive_pa_state_pda(&adapter);
+        let Some(data) = self
+            .account_owned_by(&state, &adapter, "the adapter")
+            .await?
+        else {
             return Ok(None);
         };
-        ensure!(
-            owner == adapter.to_string(),
-            "{state}: owned by {owner}, not the adapter {adapter}"
-        );
         let decoded = anoma_pa_solana_client::decode_pa_state(&data)
             .map_err(|error| anyhow::anyhow!("{state}: {error:?}"))?;
         Ok(Some(Digest::from(decoded.kind_table_commitment)))
