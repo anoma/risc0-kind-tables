@@ -1137,6 +1137,7 @@ dependencies = [
  "semver 1.0.28",
  "serde",
  "serde_json",
+ "solana-cluster-type",
  "thiserror 2.0.21",
  "transfer_library 2.0.0-rc.1",
  "transfer_library 3.0.0-rc.2",
@@ -7515,6 +7516,15 @@ dependencies = [
  "solana-sdk-ids",
  "solana-sdk-macro",
  "solana-sysvar-id",
+]
+
+[[package]]
+name = "solana-cluster-type"
+version = "2.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ace9fea2daa28354d107ea879cff107181d85cd4e0f78a2bedb10e1a428c97e"
+dependencies = [
+ "solana-hash",
 ]
 
 [[package]]

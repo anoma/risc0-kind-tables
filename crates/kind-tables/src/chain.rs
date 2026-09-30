@@ -6,6 +6,7 @@
 use crate::error::{Error, Result};
 use alloy_chains::NamedChain;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use solana_cluster_type::ClusterType;
 use std::fmt;
 use std::str::FromStr;
 
@@ -158,11 +159,16 @@ impl SolanaCluster {
     const ALL: [Self; 2] = [Self::MainnetBeta, Self::Devnet];
 
     /// The reference of the cluster's CAIP-2 chain ID: the first 32 characters of the cluster's genesis hash.
-    pub const fn reference(self) -> &'static str {
-        match self {
-            Self::MainnetBeta => "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-            Self::Devnet => "EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
-        }
+    pub fn reference(self) -> String {
+        let cluster_type = match self {
+            Self::MainnetBeta => ClusterType::MainnetBeta,
+            Self::Devnet => ClusterType::Devnet,
+        };
+        let genesis_hash = cluster_type
+            .get_genesis_hash()
+            .expect("the Solana SDK records the genesis hash of every public cluster")
+            .to_string();
+        genesis_hash[..32].to_string()
     }
 
     /// The cluster's name, for review context.
@@ -178,7 +184,7 @@ impl From<SolanaCluster> for Caip2ChainId {
     fn from(cluster: SolanaCluster) -> Self {
         Self {
             namespace: Self::SOLANA.to_string(),
-            reference: cluster.reference().to_string(),
+            reference: cluster.reference(),
         }
     }
 }

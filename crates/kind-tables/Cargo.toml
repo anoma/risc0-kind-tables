@@ -45,6 +45,7 @@ risc0-zkvm = { workspace = true }
 semver = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+solana-cluster-type = { workspace = true }
 thiserror = { workspace = true }
 transfer_library = { workspace = true, optional = true }
 

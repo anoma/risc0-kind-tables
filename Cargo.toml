@@ -41,6 +41,7 @@ anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-clien
 anomapay-solana-transfer-library = { package = "transfer_library", git = "https://github.com/anoma/anomapay-solana-resource", rev = "963d6cb574aa9bdecd167861acc20a3300712808" }
 base64 = "0.22.1"
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+solana-cluster-type = "2.2.1"
 solana-program = "2.1"
 spl-token = { version = "8.0", features = ["no-entrypoint"] }
 

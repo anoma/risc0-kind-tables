@@ -71,15 +71,6 @@ impl SolanaRpc {
             .with_context(|| format!("{method} on {}: no result", self.url))
     }
 
-    /// The cluster's genesis hash, base58.
-    pub async fn genesis_hash(&self) -> Result<String> {
-        self.call("getGenesisHash", json!([]))
-            .await?
-            .as_str()
-            .map(str::to_string)
-            .context("getGenesisHash: not a string")
-    }
-
     /// The data of the account at `address`, or `None` when it does not exist. An account that exists must be
     /// owned by `owner`, the program `what` names.
     async fn account_owned_by(
