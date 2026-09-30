@@ -217,9 +217,8 @@ fn chain_entries(
     chain: NamedChain,
     versions: &Versions,
 ) -> Result<Vec<Entry>> {
-    // The padding kind is not listed: the compliance circuit derives it by hash to curve, which is the point
-    // this table would assign it anyway, and listing it would tie every commitment to the resource machine's
-    // version.
+    // The padding kind is not listed: its resources never convert and need no precomputed kind point, and its logic
+    // ref would tie every table to the arm-risc0 release.
     let mut entries = Vec::new();
 
     if let Some(forwarder) =
