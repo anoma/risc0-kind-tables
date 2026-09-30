@@ -7,7 +7,8 @@ use alloy_chains::NamedChain;
 use anoma_generic_call_forwarder_bindings::addresses::Environment as GenericCallEnvironment;
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
 use anoma_risc0_kind_tables::{
-    AliasOf, CircuitVersion, Entry, Metadata, Status, circuits, commitment, kind, tokens,
+    AliasOf, Caip2ChainId, CircuitVersion, Entry, Metadata, Status, circuits, commitment, kind,
+    tokens,
 };
 use anomapay_erc20_forwarder_bindings::addresses::Environment as Erc20Environment;
 use anyhow::{Context, Result, bail, ensure};
@@ -321,17 +322,18 @@ fn main() -> Result<()> {
         let mut commitments = BTreeMap::new();
         for chain in chains {
             let entries = chain_entries(environment, chain, &versions)?;
+            let id = Caip2ChainId::from(chain);
+            files.push((
+                id.file_name(),
+                serde_json::to_string_pretty(&entries)? + "\n",
+            ));
             commitments.insert(
-                chain as u64,
+                id,
                 ChainCommitment {
                     comment: chain.to_string(),
                     commitment: hex::encode(commitment::of(&entries).as_bytes()),
                 },
             );
-            files.push((
-                format!("{}.json", chain as u64),
-                serde_json::to_string_pretty(&entries)? + "\n",
-            ));
         }
         files.push((
             "commitments.json".to_string(),

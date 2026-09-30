@@ -18,7 +18,7 @@ sol! {
 
 #[tokio::test]
 async fn every_supported_token_reports_its_recorded_identity() -> Result<()> {
-    for (&chain, supported) in tokens::all() {
+    for (chain, supported) in tokens::all() {
         let provider = provider(chain)?;
         for token in supported {
             let context = || format!("{} ({}) on {chain}", token.symbol, token.address);

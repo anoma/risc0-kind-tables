@@ -24,7 +24,11 @@ The mapping from kinds to kind points that one protocol adapter is committed to.
 _Avoid_: kind registry, kind map, lookup table
 
 **Chain table**:
-A kind table named by the chain it belongs to. The unit this repo generates, reviews and publishes.
+A kind table named by the CAIP-2 chain ID of the chain it belongs to. The unit this repo generates, reviews and publishes.
+
+**CAIP-2 chain ID**:
+The name of a chain in any chain family: a namespace and a reference joined by a colon, as CAIP-2 defines it. `eip155:11155111` is Sepolia, and `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` is Solana.
+_Avoid_: chain ID (on its own, which names the EIP-155 number of an EVM chain), network
 
 **Entry**:
 One row of a kind table: a kind, written as its `(logic ref, label ref)`, and the kind point it is assigned.
