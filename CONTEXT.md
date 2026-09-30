@@ -34,15 +34,19 @@ _Avoid_: chain ID (on its own, which names the EIP-155 number of an EVM chain), 
 One row of a kind table: a kind, written as its `(logic ref, label ref)`, and the kind point it is assigned.
 
 **Fungibility domain**:
-The resources whose kind points are equal, and the kinds the table assigns that kind point to. On this table that is one forwarder holding one token on one chain, together with every kind whose resources those tokens back. Their kind point is the kind of the active circuit version under the current forwarder's label, so that entry is assigned its own kind, and every other member is an alias of it.
+The resources whose kind points are equal, and the kinds the table assigns that kind point to. On this table that is one forwarder holding one token on one chain, together with every kind whose resources those tokens back. Their kind point is the kind of the active circuit version under the current forwarder's label, and every other member is an alias of it.
 _Avoid_: domain, alias set, anchor
 
 **Member**:
-An entry inside a fungibility domain: one circuit version under one forwarder's label, assigned the fungibility domain's kind point. Every member except the active version under the current forwarder's label is an alias.
+A kind inside a fungibility domain: one circuit version under one forwarder's label, assigned the fungibility domain's kind point. Every member except the active version under the current forwarder's label is an alias and has a row. The active member has a row only if its token asks for a precomputed kind point.
 
 **Alias**:
 An entry assigned another kind as its kind point, not its own. The table makes two kinds share one kind point, so their resources are fungible. Every member of a fungibility domain is one, except the active version under the current forwarder's label. Its `alias_of` names the kind it takes its kind point from. Only the table can express an alias, and an alias is a permission to create tokens of its fungibility domain: the only entry a reviewer must read.
 _Avoid_: override, remap, redirect, canonical (for the others: an entry assigned its own kind)
+
+**Precomputed kind point**:
+A row that assigns a kind its own kind point, so that the compliance circuit reads the point instead of computing it by hash to curve. Every compliance proof hashes every row, so the table carries one only where proofs gain from it: the generic call kind, and the active kind of each supported token that `data/tokens.json` marks with `precompute_kind_point`. Any other kind that is not an alias has no row, and the circuit computes its kind point.
+_Avoid_: cached kind, fast kind, supported kind (a token without a row is still supported)
 
 **Circuit version**:
 One release of the ERC20 transfer circuit, listed in `data/circuit-versions.json` with its logic ref and a status. Exactly one version is **active**: under the current forwarder's label it keeps its own kind, and the backend creates its resources. Every other is **deprecated**: an alias of the active one, which the backend consumes and converts. The active version is the highest listed, and an older version never becomes active again. Every listed version is a member of every ERC20 fungibility domain, and nothing is ever removed.
@@ -61,7 +65,7 @@ The digest a protocol adapter stores and every compliance proof reproduces, cove
 _Avoid_: kind table hash, table root
 
 **Supported token**:
-An ERC20 contract this project maintains kinds for, on a named chain. Being supported is a standing commitment and does not depend on where anything is deployed. Each one says whether its V1 resources are fungible with its current ones.
+An ERC20 contract this project maintains kinds for, on a named chain. Being supported is a standing commitment and does not depend on where anything is deployed. Each one says whether the table precomputes its active kind point and whether its V1 resources are fungible with its current ones.
 
 **V1 fungibility**:
 Whether the V1 forwarder's label joins the fungibility domain of one supported token, which makes that token's V1 resources fungible with its current ones, so they convert and leave. `data/tokens.json` states it per chain and per token in `fungible_with_v1`, and only a token set to `true` gets a member under the V1 forwarder's label.

@@ -6,7 +6,7 @@ The kind tables the Anoma protocol adapters are committed to — one per chain p
 
 ## How it fits together
 
-A kind table maps kinds, written as `(logic_ref, label_ref)`, to kind points. Its commitment — SHA-256 over the ordered entries — is what a protocol adapter stores via `setKindTableCommitment` and what every compliance proof reproduces. A chain's table is derived: the generic call entry from the recorded forwarder, and one ERC20 entry per supported token from the recorded ERC20 forwarder. The padding kind has no entry: the compliance circuit uses a kind's own kind point when the table has none, and that is the point an entry would assign. The ERC20 entries of one token form a fungibility domain: every listed circuit version under the forwarder's label and, for a token marked for conversion on a chain that ran v1, the V1 forwarder's logic ref under its own label, all assigned the kind of the active version under the current forwarder's label, so their resources are fungible. Every entry is machine-checked — an alias against its fungibility domain, every other entry against its own kind — and no kind point is authored.
+A kind table maps kinds, written as `(logic_ref, label_ref)`, to kind points. Its commitment — SHA-256 over the ordered entries — is what a protocol adapter stores via `setKindTableCommitment` and what every compliance proof reproduces. A chain's table is derived: the generic call entry from the recorded forwarder, and the ERC20 entries of each supported token from the recorded ERC20 forwarder. The padding kind has no entry: nothing converts padding resources and their speed does not matter, so the compliance circuit computes their kind point, and the tables do not depend on the arm-risc0 release (ADR-0008). The ERC20 entries of one token form a fungibility domain: every listed circuit version under the forwarder's label and, for a token marked for conversion on a chain that ran v1, the V1 forwarder's logic ref under its own label, all assigned the kind of the active version under the current forwarder's label, so their resources are fungible. The aliases are always rows. The active version keeps its own kind, which the circuit computes without the table, so it has a row only if the token sets `precompute_kind_point`: the circuit then reads its kind point instead of computing it by hash to curve, and every proof hashes one more row. Every entry is machine-checked — an alias against its fungibility domain, every other entry against its own kind — and no kind point is authored.
 
 ## Layout
 
@@ -46,7 +46,7 @@ An entry carries its kind, the kind point it is assigned, and a `_metadata` obje
 }
 ```
 
-That row is a member of the WETH fungibility domain on Base Sepolia. A fungibility domain is one forwarder holding one token, and every listed circuit version has a member under that forwarder's label, all carrying the same `kind_point`. The kind point is the kind of the active version under that label, so that version's entry is assigned its own kind and every deprecated version's are aliases of it; a version outside the fungibility domain is fungible with nothing. Generic call has no fungibility domain and is assigned its own kind, which the circuit would use anyway.
+That row is the active member of the WETH fungibility domain on Base Sepolia. A fungibility domain is one forwarder holding one token, and every listed circuit version has a member under that forwarder's label, all carrying the same `kind_point`. The kind point is the kind of the active version under that label, so every deprecated version's row is an alias of it; a version outside the fungibility domain is fungible with nothing. The active version's row assigns its own kind, which the circuit computes anyway, so it is listed only because WETH sets `precompute_kind_point`. Generic call has no fungibility domain, and its row assigns its own kind for the same reason: the circuit reads its kind point instead of computing it.
 
 An alias also says what it is a second name for. Its `alias_of` names the kind it takes its kind point from, so a reviewer reads it without recomputing anything, and its `status` is `deprecated`: a member is `active` if and only if it has no `alias_of`. When version 3.0.0 becomes active, 2.0.0 becomes deprecated, every kind point moves to 3.0.0's kind, and the WETH row for 2.0.0 becomes this:
 
@@ -90,7 +90,7 @@ Adding a token, listing a circuit version and recording a V1 forwarder all chang
 
 ### Add a token
 
-1. Add the token to [`crates/kind-tables/data/tokens.json`](crates/kind-tables/data/tokens.json), under the CAIP-2 chain ID of the chain it lives on.
+1. Add the token to [`crates/kind-tables/data/tokens.json`](crates/kind-tables/data/tokens.json), under the CAIP-2 chain ID of the chain it lives on. Every token records `precompute_kind_point`: `true` gives its active kind a row, so proofs of its resources skip hash to curve, and every proof hashes one more row. Set it for the tokens that most transactions carry.
 2. Run `just generate`.
 3. Commit the edited file together with the regenerated tables.
 

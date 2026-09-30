@@ -217,9 +217,8 @@ fn chain_entries(
     chain: NamedChain,
     versions: &Versions,
 ) -> Result<Vec<Entry>> {
-    // The padding kind is not listed: the compliance circuit derives it by hash to curve, which is the point
-    // this table would assign it anyway, and listing it would tie every commitment to the resource machine's
-    // version.
+    // The padding kind is not listed: its resources never convert and need no precomputed kind point, and its logic
+    // ref would tie every table to the arm-risc0 release.
     let mut entries = Vec::new();
 
     if let Some(forwarder) =
@@ -238,10 +237,10 @@ fn chain_entries(
         )?);
     }
 
-    // One fungibility domain per token: every listed circuit version under the current forwarder's label, and, for
-    // a token the list marks for conversion, the V1 forwarder's logic ref under its label, all assigned the
-    // kind of the active version under the current forwarder's label. That entry keeps its own kind, so it needs no
-    // table to know its kind point; the deprecated versions and the V1 members are what the table is for.
+    // One fungibility domain per token, assigned the kind of the active version under the current forwarder's label:
+    // every deprecated circuit version under that label and, for a token the list marks for conversion, the V1
+    // forwarder's logic ref under its own label, as aliases. The active version keeps its own kind, which the circuit
+    // computes without the table, so it gets a row only if the token asks for a precomputed kind point.
     let supported = tokens::on(chain);
     match anomapay_erc20_forwarder_bindings::addresses::erc20_forwarder_address(
         erc20_environment(environment),
@@ -261,6 +260,9 @@ fn chain_entries(
                 for circuit in circuits::erc20() {
                     let alias_of =
                         (circuit.status == Status::Deprecated).then(|| active_kind.clone());
+                    if alias_of.is_none() && !token.precompute_kind_point {
+                        continue;
+                    }
                     entries.push(member(circuit, token, current, &domain, alias_of));
                 }
                 if token.fungible_with_v1
