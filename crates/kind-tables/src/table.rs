@@ -225,6 +225,43 @@ mod tests {
         }
     }
 
+    /// A token's active kind has a row if and only if the token asks for a precomputed kind point. Without the row, the
+    /// circuit computes the same kind point by hash to curve.
+    #[test]
+    fn a_token_has_an_active_row_if_and_only_if_it_asks_for_a_precomputed_kind_point() {
+        let mut checked = 0;
+        for (module, environment, tables) in [
+            ("staging", Environment::Staging, staging::tables()),
+            ("production", Environment::Production, production::tables()),
+        ] {
+            for (chain, table) in tables {
+                let context = format!("{module} {chain}");
+                let evm_chain =
+                    NamedChain::try_from(chain).expect("every recorded chain is an EVM chain");
+                let Some(current) = erc20_forwarder_address(environment, &evm_chain) else {
+                    continue; // No ERC20 fungibility domain on this chain.
+                };
+                for token in crate::tokens::on(evm_chain) {
+                    let active = (
+                        crate::circuits::erc20_active().logic_ref,
+                        kind::erc20_label_ref(&current, &token.address),
+                    );
+                    let listed = table
+                        .entries
+                        .iter()
+                        .any(|entry| (entry.logic_ref, entry.label_ref) == active);
+                    assert_eq!(
+                        listed, token.precompute_kind_point,
+                        "{context}: {} has an active row if and only if it asks for a precomputed kind point",
+                        token.symbol
+                    );
+                    checked += 1;
+                }
+            }
+        }
+        assert!(checked > 0, "the tables carry a token to check");
+    }
+
     /// An EVM consumer passes the chain it already has, so the lookups accept a `NamedChain`.
     #[test]
     fn table_accepts_an_evm_chain() {

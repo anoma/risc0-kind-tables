@@ -18,6 +18,9 @@ pub struct Token {
     /// fungible with its current ones, so they convert and leave through the current forwarder. Every token states
     /// it; a token set to `false` keeps its V1 resources where they are.
     pub fungible_with_v1: bool,
+    /// Whether the table lists the token's active kind with its own kind point, so the compliance circuit reads the
+    /// point instead of computing it by hash to curve. Every token states it; its aliases are listed either way.
+    pub precompute_kind_point: bool,
 }
 
 /// One chain's authored section. The `_comment` naming the chain is review context and is not deserialized.
