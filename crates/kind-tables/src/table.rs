@@ -143,83 +143,133 @@ macro_rules! environment_module {
     };
 }
 
-environment_module!(staging, ("eip155", "11155111"));
+environment_module!(
+    staging,
+    ("eip155", "11155111"),
+    ("solana", "EtWTRABZaYq6iMfeYKouRu166VU2xqa1")
+);
 environment_module!(production);
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::chain::{Chain, SolanaCluster};
+    use crate::circuits::{self, CircuitVersion, Status};
+    use crate::deployments::solana_deployment;
     use crate::entry::Metadata;
     use crate::kind;
     use alloy_chains::NamedChain;
     use anomapay_erc20_forwarder_bindings::addresses::{Environment, erc20_forwarder_address};
 
-    /// No kind point is authored. An ERC20 entry is assigned its fungibility domain's kind point — the kind of the
+    /// The alias rules of a fungibility domain, checked on one member: it is assigned the domain's kind point
+    /// (the kind of the active version under the current forwarder's label), its version is in `listed`, it is
+    /// active if and only if it has no `alias_of`, and an `alias_of` names the active version under that label.
+    fn check_member(
+        context: &str,
+        entry: &Entry,
+        listed: &[CircuitVersion],
+        active: &CircuitVersion,
+        active_label: Digest,
+        status: Status,
+    ) {
+        let domain = kind::point(&active.logic_ref, &active_label).expect("a kind derives");
+        assert_eq!(
+            entry.kind_point, domain,
+            "{context}: a member is not assigned its fungibility domain's kind point"
+        );
+        assert!(
+            listed
+                .iter()
+                .any(|circuit| circuit.logic_ref == entry.logic_ref),
+            "{context}: a member of an unlisted version"
+        );
+        let alias_of = entry.metadata.as_ref().and_then(Metadata::alias_of);
+        assert_eq!(
+            status == Status::Active,
+            alias_of.is_none(),
+            "{context}: a member is active if and only if it has no alias_of"
+        );
+        match alias_of {
+            None => {
+                assert!(
+                    !entry.is_alias(),
+                    "{context}: an entry without alias_of is an alias"
+                );
+                assert_eq!(
+                    (entry.logic_ref, entry.label_ref),
+                    (active.logic_ref, active_label),
+                    "{context}: only the active version under the current forwarder has no alias_of"
+                );
+            }
+            Some(alias_of) => {
+                assert!(
+                    entry.is_alias(),
+                    "{context}: an entry with alias_of is not an alias"
+                );
+                assert_eq!(
+                    (&alias_of.version, alias_of.logic_ref, alias_of.label_ref),
+                    (&active.version, active.logic_ref, active_label),
+                    "{context}: alias_of does not name the active version under the current forwarder"
+                );
+            }
+        }
+    }
+
+    /// No kind point is authored. A token entry is assigned its fungibility domain's kind point — the kind of the
     /// active version under the label of the chain's current forwarder — and every alias says so in `alias_of`.
-    /// Every other entry is assigned its own kind. This reads the embedded tables only.
+    /// Every other entry is assigned its own kind. This reads the embedded tables only; the current forwarder comes
+    /// from the deployment records (the ERC20 forwarder bindings, and the Solana deployment record), never from the
+    /// entries themselves, so a table built for the wrong forwarder fails here.
     #[test]
-    fn erc20_entries_share_their_fungibility_domains_kind_point() {
+    fn token_entries_share_their_fungibility_domains_kind_point() {
         for (module, environment, tables) in [
             ("staging", Environment::Staging, staging::tables()),
             ("production", Environment::Production, production::tables()),
         ] {
             for (chain, table) in tables {
-                let evm_chain =
-                    NamedChain::try_from(chain).expect("every recorded chain is an EVM chain");
-                let current = erc20_forwarder_address(environment, &evm_chain);
+                let context = format!("{module} {chain}");
+                let known =
+                    Chain::try_from(chain).unwrap_or_else(|error| panic!("{context}: {error}"));
+                let (erc20_forwarder, spl_forwarder) = match known {
+                    Chain::Evm(named) => (erc20_forwarder_address(environment, &named), None),
+                    Chain::Solana(cluster) => (
+                        None,
+                        solana_deployment(cluster).map(|deployment| deployment.forwarder),
+                    ),
+                };
                 for entry in &table.entries {
-                    let Some(Metadata::Erc20 { token, status, .. }) = &entry.metadata else {
-                        assert!(
-                            !entry.is_alias(),
-                            "{module} {chain}: an entry outside every fungibility domain is not assigned its own kind"
-                        );
-                        continue;
-                    };
-                    let current = current.unwrap_or_else(|| {
-                        panic!("{module} {chain}: an ERC20 entry but no forwarder recorded")
-                    });
-                    let active = crate::circuits::erc20_active();
-                    let active_label = kind::erc20_label_ref(&current, token);
-                    let domain =
-                        kind::point(&active.logic_ref, &active_label).expect("a kind derives");
-                    assert_eq!(
-                        entry.kind_point, domain,
-                        "{module} {chain}: an ERC20 entry is not assigned its fungibility domain's kind point"
-                    );
-                    assert!(
-                        crate::circuits::erc20_version(&entry.logic_ref).is_some(),
-                        "{module} {chain}: an ERC20 entry of an unlisted version"
-                    );
-                    let alias_of = entry.metadata.as_ref().and_then(Metadata::alias_of);
-                    assert_eq!(
-                        *status == crate::circuits::Status::Active,
-                        alias_of.is_none(),
-                        "{module} {chain}: a member is active if and only if it has no alias_of"
-                    );
-                    match alias_of {
-                        None => {
+                    let (listed, active, active_label, status) = match &entry.metadata {
+                        Some(Metadata::Erc20 { token, status, .. }) => {
+                            let forwarder = erc20_forwarder.unwrap_or_else(|| {
+                                panic!("{context}: an ERC20 entry but no ERC20 forwarder recorded")
+                            });
+                            (
+                                circuits::erc20(),
+                                circuits::erc20_active(),
+                                kind::erc20_label_ref(&forwarder, token),
+                                *status,
+                            )
+                        }
+                        Some(Metadata::SplToken { mint, status, .. }) => {
+                            let forwarder = spl_forwarder.unwrap_or_else(|| {
+                                panic!("{context}: an SPL token entry but no Solana deployment recorded")
+                            });
+                            (
+                                circuits::spl_token(),
+                                circuits::spl_token_active(),
+                                kind::spl_token_label_ref(&forwarder, mint),
+                                *status,
+                            )
+                        }
+                        Some(Metadata::GenericCall { .. }) | None => {
                             assert!(
                                 !entry.is_alias(),
-                                "{module} {chain}: an entry without alias_of is an alias"
+                                "{context}: an entry outside every fungibility domain is not assigned its own kind"
                             );
-                            assert_eq!(
-                                (entry.logic_ref, entry.label_ref),
-                                (active.logic_ref, active_label),
-                                "{module} {chain}: only the active version under the current forwarder has no alias_of"
-                            );
+                            continue;
                         }
-                        Some(alias_of) => {
-                            assert!(
-                                entry.is_alias(),
-                                "{module} {chain}: an entry with alias_of is not an alias"
-                            );
-                            assert_eq!(
-                                (&alias_of.version, alias_of.logic_ref, alias_of.label_ref),
-                                (&active.version, active.logic_ref, active_label),
-                                "{module} {chain}: alias_of does not name the active version under the current forwarder"
-                            );
-                        }
-                    }
+                    };
+                    check_member(&context, entry, listed, active, active_label, status);
                 }
             }
         }
@@ -236,24 +286,42 @@ mod tests {
         ] {
             for (chain, table) in tables {
                 let context = format!("{module} {chain}");
-                let evm_chain =
-                    NamedChain::try_from(chain).expect("every recorded chain is an EVM chain");
-                let Some(current) = erc20_forwarder_address(environment, &evm_chain) else {
-                    continue; // No ERC20 fungibility domain on this chain.
+                let known =
+                    Chain::try_from(chain).unwrap_or_else(|error| panic!("{context}: {error}"));
+                // (symbol, active kind, whether the token asks for a precomputed kind point)
+                let tokens: Vec<(&str, (Digest, Digest), bool)> = match known {
+                    Chain::Evm(named) => match erc20_forwarder_address(environment, &named) {
+                        Some(current) => crate::tokens::on(named)
+                            .iter()
+                            .map(|token| {
+                                let label_ref = kind::erc20_label_ref(&current, &token.address);
+                                let active = (circuits::erc20_active().logic_ref, label_ref);
+                                (token.symbol.as_str(), active, token.precompute_kind_point)
+                            })
+                            .collect(),
+                        None => Vec::new(),
+                    },
+                    Chain::Solana(cluster) => match solana_deployment(cluster) {
+                        Some(deployment) => crate::tokens::spl_on(cluster)
+                            .iter()
+                            .map(|token| {
+                                let label_ref =
+                                    kind::spl_token_label_ref(&deployment.forwarder, &token.mint);
+                                let active = (circuits::spl_token_active().logic_ref, label_ref);
+                                (token.symbol.as_str(), active, token.precompute_kind_point)
+                            })
+                            .collect(),
+                        None => Vec::new(),
+                    },
                 };
-                for token in crate::tokens::on(evm_chain) {
-                    let active = (
-                        crate::circuits::erc20_active().logic_ref,
-                        kind::erc20_label_ref(&current, &token.address),
-                    );
+                for (symbol, active, asks) in tokens {
                     let listed = table
                         .entries
                         .iter()
                         .any(|entry| (entry.logic_ref, entry.label_ref) == active);
                     assert_eq!(
-                        listed, token.precompute_kind_point,
-                        "{context}: {} has an active row if and only if it asks for a precomputed kind point",
-                        token.symbol
+                        listed, asks,
+                        "{context}: {symbol} has an active row if and only if it asks for a precomputed kind point"
                     );
                     checked += 1;
                 }
@@ -279,6 +347,29 @@ mod tests {
             staging::table(NamedChain::Mainnet),
             Err(Error::UnrecordedChain(chain)) if chain == Caip2ChainId::eip155(1)
         ));
+    }
+
+    /// The staging environment records the solana-devnet table: the test mint's active member under the devnet
+    /// forwarder's label, and nothing else.
+    #[test]
+    fn staging_records_the_solana_devnet_table() {
+        let devnet = SolanaCluster::Devnet;
+        let table = staging::table(devnet).expect("solana-devnet is recorded in staging");
+        let [member] = &table.entries[..] else {
+            panic!("expected exactly one entry, got {}", table.entries.len());
+        };
+        assert!(
+            matches!(member.metadata, Some(Metadata::SplToken { .. })),
+            "the entry is an SPL token member"
+        );
+        assert_eq!(
+            member.label_ref.to_string(),
+            "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
+            "the label is sha256(devnet forwarder ‖ test mint)"
+        );
+        assert_eq!(member.logic_ref, circuits::spl_token_active().logic_ref);
+        assert!(!member.is_alias(), "the active version keeps its own kind");
+        assert_eq!(staging::commitment(devnet).unwrap(), table.commitment());
     }
 
     /// The macro invocation lists the table files by hand, so pin it to `commitments.json`.

@@ -5,8 +5,8 @@
 
 use anoma_pa_evm_bindings::addresses::Environment;
 use anoma_pa_evm_bindings::contract::protocol_adapter;
-use anoma_risc0_kind_tables::{Caip2ChainId, table};
-use anoma_risc0_kind_tables_integration_test::provider;
+use anoma_risc0_kind_tables::{Caip2ChainId, Chain, deployments, table};
+use anoma_risc0_kind_tables_integration_test::{provider, solana_rpc};
 use anyhow::{Context, Result, ensure};
 use risc0_zkvm::Digest;
 use std::collections::BTreeMap;
@@ -37,17 +37,33 @@ async fn the_promoted_environment_stores_the_generated_commitments() -> Result<(
     };
 
     for (chain, expected) in commitments(environment) {
-        let provider = provider(chain)?;
-        let adapter = protocol_adapter(&provider, environment)
-            .await
-            .with_context(|| format!("no {environment:?} protocol adapter recorded on {chain}"))?;
-        let stored = adapter
-            .getKindTableCommitment()
-            .call()
-            .await
-            .with_context(|| chain)?;
+        let stored = match Chain::try_from(chain)? {
+            Chain::Evm(_) => {
+                let provider = provider(chain)?;
+                let adapter = protocol_adapter(&provider, environment)
+                    .await
+                    .with_context(|| {
+                        format!("no {environment:?} protocol adapter recorded on {chain}")
+                    })?;
+                let stored = adapter
+                    .getKindTableCommitment()
+                    .call()
+                    .await
+                    .with_context(|| chain.to_string())?;
+                Digest::try_from(stored.as_slice()).context("a commitment is 32 bytes")?
+            }
+            Chain::Solana(cluster) => {
+                let adapter = deployments::solana_deployment(cluster)
+                    .with_context(|| format!("no protocol adapter recorded on {chain}"))?
+                    .adapter;
+                solana_rpc(cluster)
+                    .adapter_kind_table_commitment(&adapter)
+                    .await?
+                    .with_context(|| format!("{chain}: the adapter {adapter} is not initialized"))?
+            }
+        };
         ensure!(
-            stored.as_slice() == expected.as_bytes(),
+            stored == *expected,
             "{chain}: the protocol adapter stores {stored}, the source generates {expected}"
         );
     }

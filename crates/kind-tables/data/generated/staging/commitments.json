@@ -2,5 +2,9 @@
   "eip155:11155111": {
     "_comment": "sepolia",
     "commitment": "5a57372ef4899495ac1e72e2e53089a70f6667f3257b9cd145a7284604d36963"
+  },
+  "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1": {
+    "_comment": "solana-devnet",
+    "commitment": "e6b8e1832b61d0d6ed3685ee46e62a8f4723a49df520096c5d96ff509263b483"
   }
 }

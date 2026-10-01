@@ -1,9 +1,12 @@
 //! The chain a table belongs to, named by its CAIP-2 chain ID: a namespace and a reference joined by a colon, such as
-//! `eip155:11155111` for Sepolia. It names a chain of any family, where an EIP-155 chain ID names an EVM chain only.
+//! `eip155:11155111` for Sepolia. It names a chain of any family, where an EIP-155 chain ID names an EVM chain only. A
+//! Solana cluster's reference is the first 32 characters of its base58 genesis hash, which every tool derives from the
+//! cluster the same way (https://github.com/ChainAgnostic/namespaces/blob/main/solana/caip2.md).
 
 use crate::error::{Error, Result};
 use alloy_chains::NamedChain;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use solana_cluster_type::ClusterType;
 use std::fmt;
 use std::str::FromStr;
 
@@ -19,6 +22,9 @@ pub struct Caip2ChainId {
 impl Caip2ChainId {
     /// The namespace of the EVM chains, whose reference is the EIP-155 chain ID.
     pub const EIP155: &'static str = "eip155";
+
+    /// The namespace of the Solana clusters, whose reference is the start of the genesis hash.
+    pub const SOLANA: &'static str = "solana";
 
     /// The ID of the EVM chain with this EIP-155 chain ID.
     pub fn eip155(chain_id: u64) -> Self {
@@ -47,10 +53,10 @@ impl Caip2ChainId {
         }
     }
 
-    /// The chain's name, if this crate knows the chain. It knows the EVM chains `alloy_chains` names. A chain of
-    /// another namespace has no name until one is added here, and the data loaders reject a chain without one.
+    /// The chain's name, if this crate knows the chain: an EVM chain `alloy_chains` names, or a Solana cluster. The
+    /// data loaders reject a chain without one.
     pub fn name(&self) -> Option<&'static str> {
-        NamedChain::try_from(self).ok().map(|chain| chain.as_str())
+        Chain::try_from(self).ok().map(Chain::name)
     }
 
     /// The file name of the chain's generated table. `cargo package` refuses a colon in a file name, so the colon
@@ -139,6 +145,100 @@ impl TryFrom<&Caip2ChainId> for NamedChain {
             .eip155_chain_id()
             .and_then(|chain_id| NamedChain::try_from(chain_id).ok())
             .ok_or_else(|| Error::UnknownChain(chain.clone()))
+    }
+}
+
+/// A Solana cluster, named by its CAIP-2 chain ID.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum SolanaCluster {
+    MainnetBeta,
+    Devnet,
+}
+
+impl SolanaCluster {
+    const ALL: [Self; 2] = [Self::MainnetBeta, Self::Devnet];
+
+    /// The reference of the cluster's CAIP-2 chain ID: the first 32 characters of the cluster's genesis hash.
+    pub fn reference(self) -> String {
+        let cluster_type = match self {
+            Self::MainnetBeta => ClusterType::MainnetBeta,
+            Self::Devnet => ClusterType::Devnet,
+        };
+        let genesis_hash = cluster_type
+            .get_genesis_hash()
+            .expect("the Solana SDK records the genesis hash of every public cluster")
+            .to_string();
+        genesis_hash[..32].to_string()
+    }
+
+    /// The cluster's name, for review context.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::MainnetBeta => "solana-mainnet-beta",
+            Self::Devnet => "solana-devnet",
+        }
+    }
+}
+
+impl From<SolanaCluster> for Caip2ChainId {
+    fn from(cluster: SolanaCluster) -> Self {
+        Self {
+            namespace: Self::SOLANA.to_string(),
+            reference: cluster.reference(),
+        }
+    }
+}
+
+impl TryFrom<&Caip2ChainId> for SolanaCluster {
+    type Error = Error;
+
+    fn try_from(chain: &Caip2ChainId) -> Result<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|cluster| Caip2ChainId::from(*cluster) == *chain)
+            .ok_or_else(|| Error::UnknownChain(chain.clone()))
+    }
+}
+
+/// A chain this crate knows, by family.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Chain {
+    Evm(NamedChain),
+    Solana(SolanaCluster),
+}
+
+impl Chain {
+    /// The chain's name, for review context.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Evm(chain) => chain.as_str(),
+            Self::Solana(cluster) => cluster.name(),
+        }
+    }
+}
+
+impl TryFrom<&Caip2ChainId> for Chain {
+    type Error = Error;
+
+    fn try_from(chain: &Caip2ChainId) -> Result<Self> {
+        NamedChain::try_from(chain)
+            .map(Self::Evm)
+            .or_else(|_| SolanaCluster::try_from(chain).map(Self::Solana))
+    }
+}
+
+impl From<Chain> for Caip2ChainId {
+    fn from(chain: Chain) -> Self {
+        match chain {
+            Chain::Evm(chain) => chain.into(),
+            Chain::Solana(cluster) => cluster.into(),
+        }
+    }
+}
+
+impl fmt::Display for Chain {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.name())
     }
 }
 
@@ -235,5 +335,52 @@ mod tests {
     #[test]
     fn deserialize_rejects_a_malformed_json_key() {
         assert!(serde_json::from_str::<BTreeMap<Caip2ChainId, u8>>(r#"{"11155111":1}"#).is_err());
+    }
+
+    #[test]
+    fn a_solana_cluster_is_named_by_its_caip2_chain_id() {
+        let devnet = parse("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1").unwrap();
+
+        assert_eq!(
+            SolanaCluster::try_from(&devnet).unwrap(),
+            SolanaCluster::Devnet
+        );
+        assert_eq!(
+            Chain::try_from(&devnet).unwrap(),
+            Chain::Solana(SolanaCluster::Devnet)
+        );
+        assert_eq!(devnet.name(), Some("solana-devnet"));
+        assert_eq!(
+            devnet.file_name(),
+            "solana_EtWTRABZaYq6iMfeYKouRu166VU2xqa1.json"
+        );
+        assert_eq!(
+            Chain::try_from(&parse(SOLANA_MAINNET).unwrap()).unwrap(),
+            Chain::Solana(SolanaCluster::MainnetBeta)
+        );
+        assert_eq!(Caip2ChainId::from(SolanaCluster::Devnet), devnet);
+        assert_eq!(
+            Caip2ChainId::from(SolanaCluster::MainnetBeta),
+            parse(SOLANA_MAINNET).unwrap()
+        );
+    }
+
+    #[test]
+    fn an_unknown_chain_fails_loudly() {
+        assert!(Chain::try_from(&Caip2ChainId::eip155(u64::MAX)).is_err());
+        assert!(Chain::try_from(&parse("solana:nope").unwrap()).is_err());
+        assert!(parse("sepolia").is_err());
+    }
+
+    #[test]
+    fn evm_chains_sort_before_solana_clusters() {
+        assert!(
+            Caip2ChainId::from(NamedChain::Mainnet)
+                < Caip2ChainId::from(SolanaCluster::MainnetBeta)
+        );
+        assert!(
+            Caip2ChainId::from(SolanaCluster::MainnetBeta)
+                < Caip2ChainId::from(SolanaCluster::Devnet)
+        );
     }
 }
