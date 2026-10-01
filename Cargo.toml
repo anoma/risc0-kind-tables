@@ -37,8 +37,8 @@ transfer_library = "=3.0.0-rc.2"
 transfer_witness = "=3.0.0-rc.2"
 
 # The Solana deployment record and the AnomaPay Solana resource, pinned by commit.
-anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-client", rev = "5b2df9475d08f61566a96b68fecb92088276d398" }
-anomapay-solana-transfer-library = { package = "transfer_library", git = "https://github.com/anoma/anomapay-solana-resource", rev = "963d6cb574aa9bdecd167861acc20a3300712808" }
+anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-client", rev = "a0cded3f7f7e281765f310b6fe1877d307824987" }
+anomapay-solana-transfer-library = { package = "transfer_library", git = "https://github.com/anoma/anomapay-solana-resource", rev = "f550cacad7dc176211db9e2990074c9e5df2e021" }
 base64 = "0.22.1"
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
 solana-cluster-type = "2.2.1"

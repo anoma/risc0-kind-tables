@@ -120,7 +120,7 @@ impl SolanaRpc {
 
     /// The logic ref the SPL token forwarder's config accepts, or `None` when the forwarder is not initialized.
     /// The config is the forwarder's `Config` account: the Anchor discriminator, the adapter program id, the
-    /// logic ref, the emergency committee, the emergency caller and the bump.
+    /// logic ref, the emergency committee, the emergency caller and the config version (`u64`).
     pub async fn forwarder_logic_ref(&self, forwarder: &SolanaAddress) -> Result<Option<Digest>> {
         let forwarder = pubkey(forwarder);
         let (config, _) = anoma_pa_solana_client::derive_forwarder_config_pda(&forwarder);
@@ -131,7 +131,7 @@ impl SolanaRpc {
             return Ok(None);
         };
         ensure!(
-            data.len() == 8 + 32 + 32 + 32 + 32 + 1
+            data.len() == 8 + 32 + 32 + 32 + 32 + 8
                 && data[..8] == Impl::hash_bytes(b"account:Config").as_bytes()[..8],
             "{config}: not a forwarder Config account"
         );
