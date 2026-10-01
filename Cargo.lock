@@ -1111,6 +1111,19 @@ dependencies = [
  "hmac 0.12.1",
  "serde",
  "sha2 0.10.9",
+]
+
+[[package]]
+name = "anoma-pa-solana-client"
+version = "0.4.0"
+source = "git+https://github.com/anoma/anoma-pa-solana-client?rev=a0cded3f7f7e281765f310b6fe1877d307824987#a0cded3f7f7e281765f310b6fe1877d307824987"
+dependencies = [
+ "base64 0.22.1",
+ "bincode",
+ "hkdf",
+ "hmac 0.12.1",
+ "serde",
+ "sha2 0.10.9",
  "solana-program",
  "solana-sdk-ids",
  "spl-associated-token-account-client",
@@ -1126,7 +1139,7 @@ dependencies = [
  "anoma-generic-call-forwarder-bindings",
  "anoma-generic-call-library",
  "anoma-pa-evm-bindings",
- "anoma-pa-solana-client",
+ "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=a0cded3f7f7e281765f310b6fe1877d307824987)",
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings",
  "anyhow",
@@ -1151,7 +1164,7 @@ dependencies = [
  "alloy-chains",
  "anoma-generic-call-forwarder-bindings",
  "anoma-pa-evm-bindings",
- "anoma-pa-solana-client",
+ "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=a0cded3f7f7e281765f310b6fe1877d307824987)",
  "anoma-risc0-kind-tables",
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings",
@@ -5860,7 +5873,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a56d757972c98b346a9b766e3f02746cde6dd1cd1d1d563472929fdd74bec4d"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools 0.12.1",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -5873,7 +5886,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b570b25f7617e43d59005d0990ccb79e950a423952cea19671b7a876da390adf"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools 0.12.1",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -8823,9 +8836,9 @@ dependencies = [
 [[package]]
 name = "transfer_library"
 version = "2.0.0-rc.1"
-source = "git+https://github.com/anoma/anomapay-solana-resource?rev=963d6cb574aa9bdecd167861acc20a3300712808#963d6cb574aa9bdecd167861acc20a3300712808"
+source = "git+https://github.com/anoma/anomapay-solana-resource?rev=f550cacad7dc176211db9e2990074c9e5df2e021#f550cacad7dc176211db9e2990074c9e5df2e021"
 dependencies = [
- "anoma-pa-solana-client",
+ "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=5b2df9475d08f61566a96b68fecb92088276d398)",
  "anoma-rm-risc0",
  "anoma-rm-risc0-gadgets",
  "hex-literal",
@@ -8852,14 +8865,13 @@ dependencies = [
 [[package]]
 name = "transfer_witness"
 version = "2.0.0-rc.1"
-source = "git+https://github.com/anoma/anomapay-solana-resource?rev=963d6cb574aa9bdecd167861acc20a3300712808#963d6cb574aa9bdecd167861acc20a3300712808"
+source = "git+https://github.com/anoma/anomapay-solana-resource?rev=f550cacad7dc176211db9e2990074c9e5df2e021#f550cacad7dc176211db9e2990074c9e5df2e021"
 dependencies = [
- "anoma-pa-solana-client",
+ "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=5b2df9475d08f61566a96b68fecb92088276d398)",
  "anoma-rm-risc0",
  "anoma-rm-risc0-gadgets",
  "bincode",
  "k256",
- "rand 0.9.5",
  "serde",
 ]
 
