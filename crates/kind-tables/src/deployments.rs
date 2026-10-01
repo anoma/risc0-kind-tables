@@ -32,11 +32,11 @@ mod tests {
         let devnet = solana_deployment(SolanaCluster::Devnet).unwrap();
         assert_eq!(
             devnet.adapter.to_string(),
-            "28Hvr1YFv2ouGN2fS99aF3ZzYXzkncJVVaHcZNhquLFT"
+            "5zeqkB3kc9fd1RvaXB2GeMB53Jgf98QJtaFK38e6tTsc"
         );
         assert_eq!(
             devnet.forwarder.to_string(),
-            "5CrHbBeHjg53UyL3Htn9dCYYTy68fMcrbDoeAdo4yQrx"
+            "BsfuXpxw8oCmZXnYijyQkUYNcCnuskFZbYizmWLnpSU7"
         );
         assert_eq!(solana_deployment(SolanaCluster::MainnetBeta), None);
     }

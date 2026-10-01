@@ -364,7 +364,7 @@ mod tests {
         );
         assert_eq!(
             member.label_ref.to_string(),
-            "53dcbb3ebad803b9f20fc2457f1271b2981e52ed602c240cfbbfafb1d58f7b7a",
+            "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
             "the label is sha256(devnet forwarder ‖ test mint)"
         );
         assert_eq!(member.logic_ref, circuits::spl_token_active().logic_ref);

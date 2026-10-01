@@ -1116,7 +1116,7 @@ dependencies = [
 [[package]]
 name = "anoma-pa-solana-client"
 version = "0.4.0"
-source = "git+https://github.com/anoma/anoma-pa-solana-client?rev=a0cded3f7f7e281765f310b6fe1877d307824987#a0cded3f7f7e281765f310b6fe1877d307824987"
+source = "git+https://github.com/anoma/anoma-pa-solana-client?rev=da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59#da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59"
 dependencies = [
  "base64 0.22.1",
  "bincode",
@@ -1139,7 +1139,7 @@ dependencies = [
  "anoma-generic-call-forwarder-bindings",
  "anoma-generic-call-library",
  "anoma-pa-evm-bindings",
- "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=a0cded3f7f7e281765f310b6fe1877d307824987)",
+ "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59)",
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings",
  "anyhow",
@@ -1164,7 +1164,7 @@ dependencies = [
  "alloy-chains",
  "anoma-generic-call-forwarder-bindings",
  "anoma-pa-evm-bindings",
- "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=a0cded3f7f7e281765f310b6fe1877d307824987)",
+ "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59)",
  "anoma-risc0-kind-tables",
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings",
