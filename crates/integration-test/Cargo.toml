@@ -1,7 +1,7 @@
 [package]
 name = "anoma-risc0-kind-tables-integration-test"
 version.workspace = true
-description = "Integration tests for the Anoma kind tables: on-chain token identity, forwarder records and commitment freshness."
+description = "Integration tests for the Anoma kind tables: on-chain token identity, forwarder records, commitment freshness and conversion."
 publish = false
 keywords.workspace = true
 authors.workspace = true
@@ -10,15 +10,25 @@ repository.workspace = true
 homepage.workspace = true
 edition.workspace = true
 
+[features]
+e2e = [
+  "dep:anoma-pa-evm-integration-test",
+  "dep:anoma-pa-testkit",
+  "dep:anomapay-erc20-forwarder-integration-test",
+]
+
 [dependencies]
 alloy = { workspace = true }
 alloy-chains = { workspace = true }
 anoma-generic-call-forwarder-bindings = { workspace = true }
 anoma-pa-evm-bindings = { workspace = true }
+anoma-pa-evm-integration-test = { workspace = true, optional = true, features = ["e2e"] }
+anoma-pa-testkit = { workspace = true, optional = true, features = ["fixtures"] }
 anoma-pa-solana-client = { workspace = true }
 anoma-risc0-kind-tables = { workspace = true, features = ["arm", "solana-deployments"] }
 anoma-rm-risc0 = { workspace = true }
 anomapay-erc20-forwarder-bindings = { workspace = true }
+anomapay-erc20-forwarder-integration-test = { workspace = true, optional = true }
 anyhow = { workspace = true }
 base64 = { workspace = true }
 hex = { workspace = true }
@@ -29,3 +39,6 @@ solana-program = { workspace = true }
 spl-token = { workspace = true }
 tokio = { workspace = true }
 transfer_witness = { workspace = true }
+
+[dev-dependencies]
+rstest = { workspace = true }
