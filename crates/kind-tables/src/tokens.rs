@@ -1,8 +1,10 @@
-//! The supported tokens — the authored identity list the ERC20 entries of every chain table are built from.
-//! Being supported is a standing commitment: a chain may list tokens before anything is deployed to it.
+//! The supported tokens — the authored identity list the token entries of every chain table are built from.
+//! Being supported is a standing commitment: a chain may list tokens before anything is deployed to it. An EVM
+//! chain lists ERC20 tokens by address; a Solana cluster lists SPL token mints.
 
+use crate::chain::{Caip2ChainId, Chain, SolanaCluster};
+use crate::solana::SolanaAddress;
 use alloy::primitives::Address;
-use alloy_chains::NamedChain;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
@@ -18,33 +20,103 @@ pub struct Token {
     /// fungible with its current ones, so they convert and leave through the current forwarder. Every token states
     /// it; a token set to `false` keeps its V1 resources where they are.
     pub fungible_with_v1: bool,
+    /// Whether the table lists the token's active kind with its own kind point, so the compliance circuit reads the
+    /// point instead of computing it by hash to curve. Every token states it; its aliases are listed either way.
+    pub precompute_kind_point: bool,
+}
+
+/// The identity of a supported SPL token: its mint, and the name and symbol review knows it by. A mint reports
+/// only its decimals on chain; symbol and name are review context.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SplToken {
+    pub symbol: String,
+    pub name: String,
+    pub decimals: u8,
+    pub mint: SolanaAddress,
+    /// Whether the table lists the mint's active kind with its own kind point, so the compliance circuit reads the
+    /// point instead of computing it by hash to curve. Every mint states it; its aliases are listed either way.
+    pub precompute_kind_point: bool,
 }
 
 /// One chain's authored section. The `_comment` naming the chain is review context and is not deserialized.
 #[derive(Deserialize)]
-struct ChainTokens {
-    tokens: Vec<Token>,
+struct Section<T> {
+    tokens: Vec<T>,
 }
 
-static TOKENS: LazyLock<BTreeMap<NamedChain, Vec<Token>>> = LazyLock::new(|| {
-    let raw: BTreeMap<u64, ChainTokens> = serde_json::from_str(include_str!("../data/tokens.json"))
-        .expect("tokens.json: invalid JSON");
-    raw.into_iter()
-        .map(|(id, section)| {
-            // A chain that fails to resolve must fail loudly: dropping it would silently drop its kinds.
-            let chain =
-                NamedChain::try_from(id).unwrap_or_else(|_| panic!("unknown chain ID: {id}"));
-            (chain, section.tokens)
-        })
-        .collect()
+/// The authored list, split by chain family: the key decides which token type a section holds.
+struct Tokens {
+    erc20: BTreeMap<Caip2ChainId, Vec<Token>>,
+    spl: BTreeMap<SolanaCluster, Vec<SplToken>>,
+}
+
+static TOKENS: LazyLock<Tokens> = LazyLock::new(|| {
+    let raw: BTreeMap<Caip2ChainId, serde_json::Value> =
+        serde_json::from_str(include_str!("../data/tokens.json"))
+            .expect("tokens.json: invalid JSON");
+    let mut tokens = Tokens {
+        erc20: BTreeMap::new(),
+        spl: BTreeMap::new(),
+    };
+    for (id, section) in raw {
+        // A chain that fails to resolve must fail loudly: dropping it would silently drop its kinds.
+        let chain = Chain::try_from(&id).unwrap_or_else(|error| panic!("tokens.json: {error}"));
+        match chain {
+            Chain::Evm(_) => {
+                tokens.erc20.insert(id, typed(chain, section));
+            }
+            Chain::Solana(cluster) => {
+                tokens.spl.insert(cluster, typed(chain, section));
+            }
+        }
+    }
+    tokens
 });
 
-/// All supported tokens, per chain.
-pub fn all() -> &'static BTreeMap<NamedChain, Vec<Token>> {
-    &TOKENS
+/// Deserializes a chain's section as the token type its chain family lists, failing loudly on any other shape.
+fn typed<T: serde::de::DeserializeOwned>(chain: Chain, section: serde_json::Value) -> Vec<T> {
+    serde_json::from_value::<Section<T>>(section)
+        .unwrap_or_else(|error| panic!("tokens.json: {chain}: {error}"))
+        .tokens
 }
 
-/// The supported tokens on the chain.
-pub fn on(chain: NamedChain) -> &'static [Token] {
-    TOKENS.get(&chain).map_or(&[], Vec::as_slice)
+/// All supported ERC20 tokens, per EVM chain.
+pub fn all() -> &'static BTreeMap<Caip2ChainId, Vec<Token>> {
+    &TOKENS.erc20
+}
+
+/// The supported ERC20 tokens on the chain; none on a Solana cluster.
+pub fn on(chain: impl Into<Caip2ChainId>) -> &'static [Token] {
+    TOKENS.erc20.get(&chain.into()).map_or(&[], Vec::as_slice)
+}
+
+/// All supported SPL token mints, per Solana cluster.
+pub fn spl_all() -> &'static BTreeMap<SolanaCluster, Vec<SplToken>> {
+    &TOKENS.spl
+}
+
+/// The supported SPL token mints on the cluster.
+pub fn spl_on(cluster: SolanaCluster) -> &'static [SplToken] {
+    TOKENS.spl.get(&cluster).map_or(&[], Vec::as_slice)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_embedded_list_carries_the_devnet_test_mint_under_its_caip2_key() {
+        let [token] = spl_on(SolanaCluster::Devnet) else {
+            panic!("expected exactly one supported mint on solana-devnet");
+        };
+        assert_eq!(
+            token.mint.to_string(),
+            "9EHEFzyuY7sZEzTVm7C3uMkNZFMgm5ZeWjGjirZ3MVfr"
+        );
+        assert_eq!(token.decimals, 6);
+        assert!(
+            on(SolanaCluster::Devnet).is_empty(),
+            "a Solana chain has no ERC20 tokens"
+        );
+    }
 }

@@ -1,9 +1,10 @@
-//! Every ERC20 member of a generated table balances the active member of its fungibility domain in a compliance unit.
+//! Every ERC20 member of a generated table balances the active member of its fungibility domain in a compliance unit,
+//! whether the table lists the active member or the circuit computes its kind point by hash to curve.
 //! The resources take their labels from the transfer circuit's derivation, and the compliance constraints take their
 //! kinds from the table, so the generated keys and kind points are checked against both circuits. It needs no chain.
 
 use anoma_risc0_kind_tables::table::{production, staging};
-use anoma_risc0_kind_tables::{Entry, Metadata, Table};
+use anoma_risc0_kind_tables::{Entry, Metadata};
 use anoma_rm_risc0::Digest;
 use anoma_rm_risc0::compliance::{self, KindTableEntry};
 use anoma_rm_risc0::nullifier_key::NullifierKey;
@@ -27,18 +28,12 @@ fn resource_kind(entry: &Entry) -> Option<Kind> {
     ))
 }
 
-/// The active member this entry takes its kind point from, or the entry itself.
-fn active<'table>(table: &'table Table, entry: &'table Entry) -> &'table Entry {
-    let Some(alias_of) = entry.metadata.as_ref().and_then(Metadata::alias_of) else {
-        return entry;
-    };
-    table
-        .entries
-        .iter()
-        .find(|candidate| {
-            (candidate.logic_ref, candidate.label_ref) == (alias_of.logic_ref, alias_of.label_ref)
-        })
-        .expect("the table lists the active member of every alias")
+/// The kind this entry takes its kind point from: the kind its `alias_of` names, or its own.
+fn active_kind(entry: &Entry) -> Kind {
+    match entry.metadata.as_ref().and_then(Metadata::alias_of) {
+        Some(alias_of) => (alias_of.logic_ref, alias_of.label_ref),
+        None => (entry.logic_ref, entry.label_ref),
+    }
 }
 
 /// The delta of a unit that consumes one unit of `consumed` and creates one unit of `created`. `rcv` is fixed to 1, so
@@ -74,6 +69,7 @@ fn delta(consumed: Kind, created: Kind, table: &[KindTableEntry]) -> ([u32; 8], 
 
 #[test]
 fn every_erc20_member_balances_its_active_member() {
+    let mut aliases = 0;
     for (module, tables) in [
         ("staging", staging::tables()),
         ("production", production::tables()),
@@ -97,7 +93,7 @@ fn every_erc20_member_balances_its_active_member() {
                     "{module} {chain}: the transfer circuit labels a resource of {} differently",
                     entry.label_ref
                 );
-                let active = resource_kind(active(table, entry)).expect("an active ERC20 member");
+                let active = active_kind(entry);
                 let balanced = delta(active, active, &entries);
                 assert_eq!(
                     delta(member, active, &entries),
@@ -106,6 +102,18 @@ fn every_erc20_member_balances_its_active_member() {
                     entry.label_ref
                 );
                 if entry.is_alias() {
+                    aliases += 1;
+                    let without_active_row: Vec<KindTableEntry> = entries
+                        .iter()
+                        .filter(|row| (row.logic_ref, row.label_ref) != active)
+                        .cloned()
+                        .collect();
+                    assert_eq!(
+                        delta(member, active, &without_active_row),
+                        delta(active, active, &without_active_row),
+                        "{module} {chain}: {} does not balance its active member when the table has no row for it",
+                        entry.label_ref
+                    );
                     assert_ne!(
                         delta(member, active, &[]),
                         delta(active, active, &[]),
@@ -116,4 +124,5 @@ fn every_erc20_member_balances_its_active_member() {
             }
         }
     }
+    assert!(aliases > 0, "the tables carry an alias");
 }

@@ -5,8 +5,8 @@
 
 use anoma_pa_evm_bindings::addresses::Environment;
 use anoma_pa_evm_bindings::contract::protocol_adapter;
-use anoma_risc0_kind_tables::table;
-use anoma_risc0_kind_tables_integration_test::provider;
+use anoma_risc0_kind_tables::{Caip2ChainId, Chain, deployments, table};
+use anoma_risc0_kind_tables_integration_test::{provider, solana_rpc};
 use anyhow::{Context, Result, ensure};
 use risc0_zkvm::Digest;
 use std::collections::BTreeMap;
@@ -22,7 +22,7 @@ fn promotion_target() -> Option<Environment> {
     }
 }
 
-fn commitments(environment: Environment) -> &'static BTreeMap<alloy_chains::NamedChain, Digest> {
+fn commitments(environment: Environment) -> &'static BTreeMap<Caip2ChainId, Digest> {
     match environment {
         Environment::Staging => table::staging::commitments(),
         Environment::Production => table::production::commitments(),
@@ -36,18 +36,34 @@ async fn the_promoted_environment_stores_the_generated_commitments() -> Result<(
         return Ok(());
     };
 
-    for (&chain, expected) in commitments(environment) {
-        let provider = provider(chain)?;
-        let adapter = protocol_adapter(&provider, environment)
-            .await
-            .with_context(|| format!("no {environment:?} protocol adapter recorded on {chain}"))?;
-        let stored = adapter
-            .getKindTableCommitment()
-            .call()
-            .await
-            .with_context(|| chain)?;
+    for (chain, expected) in commitments(environment) {
+        let stored = match Chain::try_from(chain)? {
+            Chain::Evm(_) => {
+                let provider = provider(chain)?;
+                let adapter = protocol_adapter(&provider, environment)
+                    .await
+                    .with_context(|| {
+                        format!("no {environment:?} protocol adapter recorded on {chain}")
+                    })?;
+                let stored = adapter
+                    .getKindTableCommitment()
+                    .call()
+                    .await
+                    .with_context(|| chain.to_string())?;
+                Digest::try_from(stored.as_slice()).context("a commitment is 32 bytes")?
+            }
+            Chain::Solana(cluster) => {
+                let adapter = deployments::solana_deployment(cluster)
+                    .with_context(|| format!("no protocol adapter recorded on {chain}"))?
+                    .adapter;
+                solana_rpc(cluster)
+                    .adapter_kind_table_commitment(&adapter)
+                    .await?
+                    .with_context(|| format!("{chain}: the adapter {adapter} is not initialized"))?
+            }
+        };
         ensure!(
-            stored.as_slice() == expected.as_bytes(),
+            stored == *expected,
             "{chain}: the protocol adapter stores {stored}, the source generates {expected}"
         );
     }

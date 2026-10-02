@@ -3,7 +3,7 @@ resolver = "3"
 members = ["crates/kind-tables", "crates/integration-test"]
 
 [workspace.package]
-version = "1.0.0-rc.3"
+version = "1.0.0-rc.4"
 keywords = ["anoma", "kind-table", "protocol-adapter"]
 authors = ["Anoma Foundation"]
 license = "MIT"
@@ -14,15 +14,16 @@ edition = "2024"
 [workspace.dependencies]
 alloy = { version = "2.3.0", features = ["full"] }
 alloy-chains = "0.2.36"
-anoma-generic-call-forwarder-bindings = "2.0.0-rc.3"
+anoma-generic-call-forwarder-bindings = "2.0.0-rc.4"
 # The circuit crates are pinned exactly: another build has another logic ref, and so another kind.
-anoma-generic-call-library = "=3.0.0-rc.2"
-anoma-pa-evm-bindings = "3.0.0-rc.10"
+anoma-generic-call-library = "=3.0.0-rc.3"
+anoma-pa-evm-bindings = "3.0.0-rc.13"
 anoma-rm-risc0 = { version = "=2.0.0-rc.6", default-features = false, features = [
   "transaction",
 ] }
-anomapay-erc20-forwarder-bindings = "3.0.0-rc.10"
+anomapay-erc20-forwarder-bindings = "3.0.0-rc.12"
 anyhow = "1.0.104"
+bs58 = "0.5.1"
 dotenvy = "0.15.7"
 hex = "0.4.3"
 k256 = { version = "0.13.3", features = ["arithmetic", "hash2curve"] }
@@ -32,7 +33,16 @@ serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 thiserror = "2.0.19"
 tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros"] }
-transfer_library = "=3.0.0-rc.2"
-transfer_witness = "=3.0.0-rc.2"
+transfer_library = "=3.0.0-rc.3"
+transfer_witness = "=3.0.0-rc.3"
+
+# The Solana deployment record and the AnomaPay Solana resource, pinned by commit.
+anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-client", rev = "da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59" }
+anomapay-solana-transfer-library = { package = "transfer_library", git = "https://github.com/anoma/anomapay-solana-resource", rev = "f550cacad7dc176211db9e2990074c9e5df2e021" }
+base64 = "0.22.1"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+solana-cluster-type = "2.2.1"
+solana-program = "2.1"
+spl-token = { version = "8.0", features = ["no-entrypoint"] }
 
 anoma-risc0-kind-tables = { path = "crates/kind-tables" }

@@ -7,7 +7,8 @@ use alloy_chains::NamedChain;
 use anoma_generic_call_forwarder_bindings::addresses::Environment as GenericCallEnvironment;
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
 use anoma_risc0_kind_tables::{
-    AliasOf, CircuitVersion, Entry, Metadata, Status, circuits, commitment, kind, tokens,
+    AliasOf, Caip2ChainId, Chain, CircuitVersion, Entry, Metadata, SolanaAddress, SolanaCluster,
+    Status, circuits, commitment, deployments, kind, tokens,
 };
 use anomapay_erc20_forwarder_bindings::addresses::Environment as Erc20Environment;
 use anyhow::{Context, Result, bail, ensure};
@@ -87,13 +88,14 @@ fn derived(metadata: Metadata, logic_ref: Digest, label_ref: Digest) -> Result<E
 
 /// A member of a token's fungibility domain: one circuit version under one forwarder's label, assigned the
 /// fungibility domain's kind point. `alias_of` names the kind that point is; only the active version under the
-/// current forwarder's label carries none, and only that member is active.
+/// current forwarder's label carries none, and only that member is active. `metadata` names the token and
+/// forwarder the member belongs to, given the member's version, status and `alias_of`.
 fn member(
     circuit: &CircuitVersion,
-    token: &tokens::Token,
-    forwarder: Address,
+    label_ref: Digest,
     domain_point: &[u8],
     alias_of: Option<AliasOf>,
+    metadata: impl FnOnce(String, Status, Option<AliasOf>) -> Metadata,
 ) -> Entry {
     let status = if alias_of.is_none() {
         Status::Active
@@ -101,24 +103,58 @@ fn member(
         Status::Deprecated
     };
     Entry {
-        metadata: Some(Metadata::Erc20 {
-            version: circuit.version.clone(),
-            name: token.symbol.clone(),
-            token: token.address,
-            forwarder,
-            status,
-            alias_of,
-        }),
+        metadata: Some(metadata(circuit.version.clone(), status, alias_of)),
         logic_ref: circuit.logic_ref,
-        label_ref: kind::erc20_label_ref(&forwarder, &token.address),
+        label_ref,
         kind_point: domain_point.to_vec(),
     }
 }
 
-/// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 crates.
+/// One token's fungibility domain under the current forwarder's label `label_ref`: every deprecated circuit version as
+/// an alias of the active version under that label, and the active version itself, assigned its own kind, only if
+/// `precompute` is set for the token. Returns the domain's kind point and the kind every alias names, for members added
+/// under another label.
+fn domain(
+    listed: &[CircuitVersion],
+    active: &CircuitVersion,
+    label_ref: Digest,
+    precompute: bool,
+    metadata: impl Fn(String, Status, Option<AliasOf>) -> Metadata,
+    entries: &mut Vec<Entry>,
+) -> Result<(Vec<u8>, AliasOf)> {
+    let point = kind::point(&active.logic_ref, &label_ref)?;
+    let active_kind = AliasOf {
+        version: active.version.clone(),
+        logic_ref: active.logic_ref,
+        label_ref,
+    };
+    for circuit in listed {
+        let alias_of = (circuit.status == Status::Deprecated).then(|| active_kind.clone());
+        if alias_of.is_none() && !precompute {
+            continue;
+        }
+        entries.push(member(circuit, label_ref, &point, alias_of, &metadata));
+    }
+    Ok((point, active_kind))
+}
+
+/// A table's entries in table order, sorted by kind, with no kind listed twice.
+fn sorted(mut entries: Vec<Entry>, chain: &Chain) -> Result<Vec<Entry>> {
+    entries.sort_by_key(Entry::key);
+    if entries
+        .windows(2)
+        .any(|pair| pair[0].key() == pair[1].key())
+    {
+        bail!("{chain}: duplicate kind");
+    }
+    Ok(entries)
+}
+
+/// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 and SPL token crates.
 struct Versions {
     transfer: String,
     generic_call: String,
+    spl_transfer: String,
 }
 
 /// Reads the circuit versions from the resolved dependency graph, so bumping a pin cannot leave a stale
@@ -177,6 +213,7 @@ fn versions() -> Result<Versions> {
     Ok(Versions {
         transfer: version_of("transfer_library")?,
         generic_call: version_of("anoma_generic_call_library")?,
+        spl_transfer: version_of("anomapay_solana_transfer_library")?,
     })
 }
 
@@ -190,25 +227,81 @@ fn pinned_erc20_circuits(versions: &Versions) -> Vec<(String, Digest)> {
     )]
 }
 
-/// The list must pass its own checks, and every pinned ERC20 crate must be listed with the logic ref it
+/// The SPL token circuit crates this generator pins, as `pinned_erc20_circuits` for the Solana transfer circuit.
+fn pinned_spl_token_circuits(versions: &Versions) -> Vec<(String, Digest)> {
+    vec![(
+        versions.spl_transfer.clone(),
+        digest(anomapay_solana_transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
+    )]
+}
+
+/// Each list must pass its own checks, and every pinned circuit crate must be listed with the logic ref it
 /// compiles to. Raising a pin without listing the release stops here, and so does a mistyped logic ref.
 fn check_circuit_versions(versions: &Versions) -> Result<()> {
-    circuits::check_erc20().map_err(|error| anyhow::anyhow!("circuit-versions.json: {error}"))?;
-    for (version, compiled) in pinned_erc20_circuits(versions) {
-        let listed = circuits::erc20()
-            .iter()
-            .find(|circuit| circuit.version == version)
-            .with_context(|| {
-                format!("an ERC20 circuit crate at {version} is pinned, but circuit-versions.json does not list it")
-            })?;
-        ensure!(
-            listed.logic_ref == compiled,
-            "circuit-versions.json records {version} with logic ref {}, but the pinned crate compiles to {}",
-            hex(&listed.logic_ref),
-            hex(&compiled)
-        );
+    for (resource, check, listed, pinned) in [
+        (
+            "ERC20Resource",
+            circuits::check_erc20 as fn() -> std::result::Result<(), String>,
+            circuits::erc20(),
+            pinned_erc20_circuits(versions),
+        ),
+        (
+            "SPLTokenResource",
+            circuits::check_spl_token,
+            circuits::spl_token(),
+            pinned_spl_token_circuits(versions),
+        ),
+    ] {
+        check().map_err(|error| anyhow::anyhow!("circuit-versions.json: {resource}: {error}"))?;
+        for (version, compiled) in pinned {
+            let listed = listed
+                .iter()
+                .find(|circuit| circuit.version == version)
+                .with_context(|| {
+                    format!("a {resource} circuit crate at {version} is pinned, but circuit-versions.json does not list it")
+                })?;
+            ensure!(
+                listed.logic_ref == compiled,
+                "circuit-versions.json records {resource} {version} with logic ref {}, but the pinned crate compiles to {}",
+                hex(&listed.logic_ref),
+                hex(&compiled)
+            );
+        }
     }
     Ok(())
+}
+
+/// The Solana cluster an environment's table is built for: devnet is staging, mainnet-beta is production.
+fn solana_cluster(environment: Environment) -> SolanaCluster {
+    match environment {
+        Environment::Staging => SolanaCluster::Devnet,
+        Environment::Production => SolanaCluster::MainnetBeta,
+    }
+}
+
+/// A Solana cluster's entries: one fungibility domain per supported mint under the forwarder program's label.
+/// As on EVM chains, the padding kind is not listed. Solana has no generic call forwarder, so no generic call
+/// entry.
+fn solana_entries(cluster: SolanaCluster, forwarder: SolanaAddress) -> Result<Vec<Entry>> {
+    let mut entries = Vec::new();
+    for token in tokens::spl_on(cluster) {
+        domain(
+            circuits::spl_token(),
+            circuits::spl_token_active(),
+            kind::spl_token_label_ref(&forwarder, &token.mint),
+            token.precompute_kind_point,
+            |version, status, alias_of| Metadata::SplToken {
+                version,
+                name: token.symbol.clone(),
+                mint: token.mint,
+                forwarder,
+                status,
+                alias_of,
+            },
+            &mut entries,
+        )?;
+    }
+    Ok(entries)
 }
 
 fn chain_entries(
@@ -216,9 +309,8 @@ fn chain_entries(
     chain: NamedChain,
     versions: &Versions,
 ) -> Result<Vec<Entry>> {
-    // The padding kind is not listed: the compliance circuit derives it by hash to curve, which is the point
-    // this table would assign it anyway, and listing it would tie every commitment to the resource machine's
-    // version.
+    // The padding kind is not listed: its resources never convert and need no precomputed kind point, and its logic
+    // ref would tie every table to the arm-risc0 release.
     let mut entries = Vec::new();
 
     if let Some(forwarder) =
@@ -237,10 +329,10 @@ fn chain_entries(
         )?);
     }
 
-    // One fungibility domain per token: every listed circuit version under the current forwarder's label, and, for
-    // a token the list marks for conversion, the V1 forwarder's logic ref under its label, all assigned the
-    // kind of the active version under the current forwarder's label. That entry keeps its own kind, so it needs no
-    // table to know its kind point; the deprecated versions and the V1 members are what the table is for.
+    // One fungibility domain per token, assigned the kind of the active version under the current forwarder's label:
+    // every deprecated circuit version under that label and, for a token the list marks for conversion, the V1
+    // forwarder's logic ref under its own label, as aliases. The active version keeps its own kind, which the circuit
+    // computes without the table, so it gets a row only if the token asks for a precomputed kind point.
     let supported = tokens::on(chain);
     match anomapay_erc20_forwarder_bindings::addresses::erc20_forwarder_address(
         erc20_environment(environment),
@@ -248,20 +340,25 @@ fn chain_entries(
     ) {
         Some(current) => {
             let v1 = v1_erc20_forwarder(&chain);
-            let active = circuits::erc20_active();
             for token in supported {
-                let current_label = kind::erc20_label_ref(&current, &token.address);
-                let domain = kind::point(&active.logic_ref, &current_label)?;
-                let active_kind = AliasOf {
-                    version: active.version.clone(),
-                    logic_ref: active.logic_ref,
-                    label_ref: current_label,
+                let erc20 = |forwarder: Address| {
+                    move |version, status, alias_of| Metadata::Erc20 {
+                        version,
+                        name: token.symbol.clone(),
+                        token: token.address,
+                        forwarder,
+                        status,
+                        alias_of,
+                    }
                 };
-                for circuit in circuits::erc20() {
-                    let alias_of =
-                        (circuit.status == Status::Deprecated).then(|| active_kind.clone());
-                    entries.push(member(circuit, token, current, &domain, alias_of));
-                }
+                let (point, active_kind) = domain(
+                    circuits::erc20(),
+                    circuits::erc20_active(),
+                    kind::erc20_label_ref(&current, &token.address),
+                    token.precompute_kind_point,
+                    erc20(current),
+                    &mut entries,
+                )?;
                 if token.fungible_with_v1
                     && let Some(v1) = &v1
                 {
@@ -274,10 +371,10 @@ fn chain_entries(
                     })?;
                     entries.push(member(
                         circuit,
-                        token,
-                        v1.address,
-                        &domain,
-                        Some(active_kind.clone()),
+                        kind::erc20_label_ref(&v1.address, &token.address),
+                        &point,
+                        Some(active_kind),
+                        erc20(v1.address),
                     ));
                 }
             }
@@ -289,13 +386,6 @@ fn chain_entries(
         ),
     }
 
-    entries.sort_by_key(Entry::key);
-    if entries
-        .windows(2)
-        .any(|pair| pair[0].key() == pair[1].key())
-    {
-        bail!("{chain}: duplicate kind");
-    }
     Ok(entries)
 }
 
@@ -317,21 +407,43 @@ fn main() -> Result<()> {
             .collect();
         chains.sort();
 
+        let mut tables = Vec::new();
+        for chain in chains {
+            tables.push((
+                Chain::Evm(chain),
+                chain_entries(environment, chain, &versions)?,
+            ));
+        }
+        let cluster = solana_cluster(environment);
+        match deployments::solana_deployment(cluster) {
+            Some(deployment) => tables.push((
+                Chain::Solana(cluster),
+                solana_entries(cluster, deployment.forwarder)?,
+            )),
+            None if tokens::spl_on(cluster).is_empty() => {}
+            None => eprintln!(
+                "{}: {} supported mints but no deployment recorded - no token kinds emitted",
+                cluster.name(),
+                tokens::spl_on(cluster).len()
+            ),
+        }
+
         let mut files = Vec::new();
         let mut commitments = BTreeMap::new();
-        for chain in chains {
-            let entries = chain_entries(environment, chain, &versions)?;
+        for (chain, entries) in tables {
+            let entries = sorted(entries, &chain)?;
+            let id = Caip2ChainId::from(chain);
+            files.push((
+                id.file_name(),
+                serde_json::to_string_pretty(&entries)? + "\n",
+            ));
             commitments.insert(
-                chain as u64,
+                id,
                 ChainCommitment {
                     comment: chain.to_string(),
                     commitment: hex::encode(commitment::of(&entries).as_bytes()),
                 },
             );
-            files.push((
-                format!("{}.json", chain as u64),
-                serde_json::to_string_pretty(&entries)? + "\n",
-            ));
         }
         files.push((
             "commitments.json".to_string(),

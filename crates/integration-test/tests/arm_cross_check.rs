@@ -3,8 +3,8 @@
 //! reads one file. A compliance unit takes its table as an argument, so the conversion test covers every recorded table.
 
 use alloy_chains::NamedChain;
-use anoma_risc0_kind_tables::Table;
 use anoma_risc0_kind_tables::table::{production, staging};
+use anoma_risc0_kind_tables::{Caip2ChainId, Table};
 use anoma_rm_risc0::Digest;
 use anoma_rm_risc0::compliance::{self, KindTableEntry};
 use anoma_rm_risc0::constants::{init_kind_table_from_file, kind_table_hash};
@@ -12,10 +12,10 @@ use anoma_rm_risc0::nullifier_key::NullifierKey;
 use anoma_rm_risc0::resource::{ConsumedResourceWitness, Resource};
 use std::path::PathBuf;
 
-fn staging_table(chain: NamedChain) -> PathBuf {
+fn staging_table(chain: &Caip2ChainId) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../kind-tables/data/generated/staging")
-        .join(format!("{}.json", chain as u64))
+        .join(chain.file_name())
 }
 
 /// The kind table commitment a compliance unit reproduces for `table`. The unit consumes one ephemeral resource and
@@ -49,7 +49,7 @@ fn unit_commitment(table: Vec<KindTableEntry>) -> Digest {
 
 #[test]
 fn the_local_commitment_matches_the_circuit_loader() {
-    let path = staging_table(NamedChain::Sepolia);
+    let path = staging_table(&NamedChain::Sepolia.into());
     let table = Table::load(&path).expect("the staging sepolia table exists");
 
     init_kind_table_from_file(&path).expect("the upstream loader accepts the generated table");
