@@ -1047,9 +1047,9 @@ dependencies = [
 
 [[package]]
 name = "anoma-generic-call-forwarder-bindings"
-version = "2.0.0-rc.3"
+version = "2.0.0-rc.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3361d70ebdf9b098624ab72fa03433bebabb43e4108aa62935c6f675c506c51b"
+checksum = "66ae5e4a33a9052029c48b983a3114c2dfc52e79d63310e8fcf8f5407dada4a1"
 dependencies = [
  "alloy",
  "alloy-chains",
@@ -1061,9 +1061,9 @@ dependencies = [
 
 [[package]]
 name = "anoma-generic-call-library"
-version = "3.0.0-rc.2"
+version = "3.0.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf34e0a13991d33da1fde4c1610047ca512cc74aec19ae927f9175b29ee7740b"
+checksum = "2b4b87c4f66309dd90d84a31088e6404f8aea982896cd40a072085ffb73e5d70"
 dependencies = [
  "anoma-generic-call-witness",
  "anoma-rm-risc0",
@@ -1087,9 +1087,9 @@ dependencies = [
 
 [[package]]
 name = "anoma-pa-evm-bindings"
-version = "3.0.0-rc.10"
+version = "3.0.0-rc.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "748d3befbc8c2545239d9d64f40c41fcb3d037abfa53358bda5db74ff0191c40"
+checksum = "951b222364a13ab4ddd35f08786dba411ea68a3380c6b7378ca53f00df28a00a"
 dependencies = [
  "alloy",
  "alloy-chains",
@@ -1153,7 +1153,7 @@ dependencies = [
  "solana-cluster-type",
  "thiserror 2.0.21",
  "transfer_library 2.0.0-rc.1",
- "transfer_library 3.0.0-rc.2",
+ "transfer_library 3.0.0-rc.3",
 ]
 
 [[package]]
@@ -1177,7 +1177,7 @@ dependencies = [
  "solana-program",
  "spl-token",
  "tokio",
- "transfer_witness 3.0.0-rc.2",
+ "transfer_witness 3.0.0-rc.3",
 ]
 
 [[package]]
@@ -1237,9 +1237,9 @@ dependencies = [
 
 [[package]]
 name = "anomapay-erc20-forwarder-bindings"
-version = "3.0.0-rc.10"
+version = "3.0.0-rc.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e2a1726f543f623bf151f2713d7282b146506cc77d7d7a2cb62431fb71228b7"
+checksum = "bc3521482a8bf323fdf95ba03a6522860496413feb90c05656512581e3356a71"
 dependencies = [
  "alloy",
  "alloy-chains",
@@ -5873,7 +5873,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a56d757972c98b346a9b766e3f02746cde6dd1cd1d1d563472929fdd74bec4d"
 dependencies = [
  "anyhow",
- "itertools 0.12.1",
+ "itertools 0.14.0",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -5886,7 +5886,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b570b25f7617e43d59005d0990ccb79e950a423952cea19671b7a876da390adf"
 dependencies = [
  "anyhow",
- "itertools 0.12.1",
+ "itertools 0.14.0",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -8849,9 +8849,9 @@ dependencies = [
 
 [[package]]
 name = "transfer_library"
-version = "3.0.0-rc.2"
+version = "3.0.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b53715d3141e9648013e4fe11d5fbea4e69887f522e10104ff9137a41d245f5d"
+checksum = "c5807abad8cc4b5c18c817a9dd59616cbda1fe5bbf553042ee0b6a55bab21727"
 dependencies = [
  "anoma-rm-risc0",
  "anoma-rm-risc0-gadgets",
@@ -8859,7 +8859,7 @@ dependencies = [
  "k256",
  "lazy_static",
  "serde",
- "transfer_witness 3.0.0-rc.2",
+ "transfer_witness 3.0.0-rc.3",
 ]
 
 [[package]]
@@ -8877,9 +8877,9 @@ dependencies = [
 
 [[package]]
 name = "transfer_witness"
-version = "3.0.0-rc.2"
+version = "3.0.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83fd8a59768682bcf885d87f1eb99a4a270a0cbcf771040ca089d85b3c002707"
+checksum = "70aa57cb4c28cbea96ef4dcd4ca911709fa4acba33c704ec1cb3fa1d9b51e88a"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",

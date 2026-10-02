@@ -4,6 +4,11 @@
     {
       "version": "3.0.0-rc.2",
       "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
+      "status": "deprecated"
+    },
+    {
+      "version": "3.0.0-rc.3",
+      "logic_ref": "ca45347792e0e32145325efa7515a552ac9129c5b7193d933219edc6d00c93ad",
       "status": "active"
     }
   ],
