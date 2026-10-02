@@ -122,7 +122,7 @@ The release joins the dependency graph under a new name, so that the generator c
 
 Old resources leave through the new version once the forwarder accepts it, which is an upgrade in the forwarder repository. The promotion gate reads each chain's forwarder and requires that the logic ref it accepts is listed.
 
-An SPL token circuit release follows the same steps with the Solana crate: the release of `anomapay-solana-resource`'s `transfer_library` is pinned by commit under a new name next to `anomapay-solana-transfer-library`, its line goes into `pinned_spl_token_circuits`, and the version is appended to `SPLTokenResource` in `circuit-versions.json`. On Solana the forwarder accepts the new logic ref after its upgrade authority calls `set_logic_ref`; the promotion gate reads the forwarder's config account for it.
+An SPL token circuit release follows the same steps with the Solana crate: the release of `anomapay-solana-resource`'s `transfer_library` is pinned by commit under a new name next to `anomapay-solana-transfer-library`, its line goes into `pinned_spl_token_circuits`, and the version is appended to `SPLTokenResource` in `circuit-versions.json`. On Solana the forwarder accepts the new logic ref after its upgrade authority upgrades it to a build that raises its config version and calls `reinitialize` with the new ref; the promotion gate reads the forwarder's config account for it.
 
 ### Alias the V1 forwarder
 
