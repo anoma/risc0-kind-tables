@@ -1,0 +1,177 @@
+{
+  "_comment": "Alice's 2.0 USDC resource of the Sepolia v1 ERC20 forwarder, read from the events of the v1 protocol adapter. Its merkle path leads to the last root of the v1 protocol adapter, which the v2 protocol adapter holds since the migration. A fork test can consume it on every run while no transaction on Sepolia consumes it.",
+  "chainId": 11155111,
+  "v1Forwarder": "0x0A62bE41E66841f693f922991C4e40C89cb0CFDF",
+  "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+  "leafIndex": 4174,
+  "commitmentTreeRoot": "0x2747e8b84eb0733b4761ad7599ed5adb8feacda532f872dcbcc3bb8f5dbbeda6",
+  "commitment": "0xec866e8ec53523710191caca82edee653f09f025ee35c6bebaa103546dfbf6d4",
+  "nullifier": "0x1ea73cb88f763e8c9ef8a3e1e1bd29f3b8f886b3582361572a2000aa5b193a01",
+  "createdIn": "0x7cf3b8120d737d1fb5604e92ebdd0c361241d35df7ba31e69b81a0fc16183ffc",
+  "resource": {
+    "is_ephemeral": false,
+    "label_ref": [
+      4108279089,
+      1744157304,
+      2170929944,
+      139758339,
+      3301817279,
+      1573797416,
+      39509720,
+      2924169729
+    ],
+    "logic_ref": [
+      909251260,
+      1031586664,
+      2561088568,
+      4078309873,
+      2640556383,
+      698032914,
+      3742398682,
+      2917631289
+    ],
+    "nk_commitment": [
+      21586959,
+      3891931636,
+      1874164045,
+      2390946793,
+      3827317926,
+      181770114,
+      4248026672,
+      146294727
+    ],
+    "nonce": [
+      180,
+      130,
+      90,
+      167,
+      242,
+      64,
+      166,
+      172,
+      150,
+      156,
+      192,
+      195,
+      137,
+      125,
+      51,
+      104,
+      242,
+      51,
+      150,
+      201,
+      65,
+      149,
+      43,
+      138,
+      77,
+      163,
+      97,
+      144,
+      181,
+      0,
+      115,
+      207
+    ],
+    "quantity": 2000000,
+    "rand_seed": [
+      219,
+      110,
+      16,
+      138,
+      239,
+      254,
+      245,
+      183,
+      32,
+      4,
+      147,
+      150,
+      146,
+      42,
+      219,
+      190,
+      146,
+      88,
+      32,
+      125,
+      118,
+      87,
+      76,
+      219,
+      242,
+      138,
+      140,
+      231,
+      184,
+      93,
+      187,
+      70
+    ],
+    "value_ref": [
+      3098991500,
+      2803797773,
+      1660615481,
+      320819102,
+      4058906247,
+      118832119,
+      3123775647,
+      3467747343
+    ]
+  },
+  "merklePath": [
+    {
+      "sibling": "0xd129e8fb1a975f70312198df670b52f1a2ee41c9ce3f233ce46a72b843a50d36",
+      "leafIsOnRight": false
+    },
+    {
+      "sibling": "0xcbab6e91d817c55bb7828288fe84f9c62ea701d1645643d7390a7b75bb140e18",
+      "leafIsOnRight": true
+    },
+    {
+      "sibling": "0x6c4c95d97e889b9a83cd6cef3edc67195bb684f165193bdda58bfd48f5270f83",
+      "leafIsOnRight": true
+    },
+    {
+      "sibling": "0xc920723a3f6794646bb5a596e534729c45824db20eb6c65fc41cf7c0288c2a6f",
+      "leafIsOnRight": true
+    },
+    {
+      "sibling": "0x633014c40dae188cf180719ca4aac59bec55c42f0637a5c4812ca58d434d0387",
+      "leafIsOnRight": false
+    },
+    {
+      "sibling": "0xc28a2e4790e8689eb0551dff6f6bdae7aae52fb6090ab755afdf3a4a58a3b89b",
+      "leafIsOnRight": false
+    },
+    {
+      "sibling": "0xf2703d9b5c4995fb9e90801ef42ca83bac04f19dd500933960f235a1eff426ae",
+      "leafIsOnRight": true
+    },
+    {
+      "sibling": "0x7cd108d9aa1aa6e81c84128c4ab3d4172f84aa71fd03db63cd9a7dd0b221dad1",
+      "leafIsOnRight": false
+    },
+    {
+      "sibling": "0x9fd2b7153c9aac55a4220e24a6734810cf3ddd38da3607f29ac4c42df5802b56",
+      "leafIsOnRight": false
+    },
+    {
+      "sibling": "0x18db5dfe794336af2963876d47dc97738b45276ecb326e53431bbf734cab79f0",
+      "leafIsOnRight": false
+    },
+    {
+      "sibling": "0xd337ccd9a386fe657d315b4561dd126731960ec391ea97730fea2b8bdad775ba",
+      "leafIsOnRight": false
+    },
+    {
+      "sibling": "0x1be19a4cd40ebc4f1eaacf0a746bebcc0ebd41cf4e6c5efac87c9366e36ec5d4",
+      "leafIsOnRight": false
+    },
+    {
+      "sibling": "0x4d584849de52cccbe5d0ba6de18c386c1bd9ac71cc19151840be72f56ec90105",
+      "leafIsOnRight": true
+    }
+  ]
+}

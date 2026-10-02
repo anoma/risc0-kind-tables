@@ -44,6 +44,10 @@ A kind inside a fungibility domain: one circuit version under one forwarder's la
 An entry assigned another kind as its kind point, not its own. The table makes two kinds share one kind point, so their resources are fungible. Every member of a fungibility domain is one, except the active version under the current forwarder's label. Its `alias_of` names the kind it takes its kind point from. Only the table can express an alias, and an alias is a permission to create tokens of its fungibility domain: the only entry a reviewer must read.
 _Avoid_: override, remap, redirect, canonical (for the others: an entry assigned its own kind)
 
+**Conversion**:
+A transaction that consumes a resource of one member of a fungibility domain and creates one of another member. The two balance because the table assigns both members one kind point. A V1 resource and a deprecated version's resource reach the active member this way, before or while they leave through the current forwarder.
+_Avoid_: soft migration, migration (the forwarder repository moves the tokens, and the protocol adapter copies the state)
+
 **Precomputed kind point**:
 A row that assigns a kind its own kind point, so that the compliance circuit reads the point instead of computing it by hash to curve. Every compliance proof hashes every row, so the table carries one only where proofs gain from it: the generic call kind, and the active kind of each supported token that `data/tokens.json` marks with `precompute_kind_point`. Any other kind that is not an alias has no row, and the circuit computes its kind point.
 _Avoid_: cached kind, fast kind, supported kind (a token without a row is still supported)
