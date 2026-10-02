@@ -21,7 +21,7 @@ crates/kind-tables/            the library and the generator
 │       ├── staging/           <namespace>_<reference>.json tables + commitments.json
 │       └── production/
 └── src/
-crates/integration-test/       on-chain token, forwarder and Solana cluster checks, promotion freshness gate, arm-risc0 cross-check
+crates/integration-test/       on-chain token, forwarder and Solana cluster checks, promotion freshness and soft-migration gates, arm-risc0 cross-check
 docs/adr/                      the decisions behind this layout
 ```
 
@@ -140,7 +140,7 @@ A V1 member lets a V1 resource unwrap from the current forwarder. Install the ta
 1. Merge into `next`.
 2. Read each chain's commitment from `crates/kind-tables/data/generated/<environment>/commitments.json`.
 3. Install it with the protocol adapter repo's `contracts-*-kind-table-*` recipes, which call `setKindTableCommitment`. On Solana, the adapter authority calls `set_kind_table_commitment`, through the Solana protocol adapter repo's `dev.sh set-kind-table --cluster <cluster>` with `PA_KIND_TABLE_COMMITMENT` set.
-4. Open the promotion pull request into `staging` or `main`. It passes only when every protocol adapter of that environment already stores the commitment this source generates.
+4. Open the promotion pull request into `staging` or `main`. It passes only when every protocol adapter of that environment already stores the commitment this source generates. The soft-migration gate also proves, on a fork of Sepolia, that a V1 resource converts and leaves through the current forwarder, so the current forwarder must already hold the V1 balances.
 
 ## Verifying
 
@@ -149,3 +149,9 @@ just crates-fmt-check && just crates-build && just crates-lint && just generate-
 ```
 
 The tests read `ALCHEMY_API_KEY` from the environment (or `.env`, see `.env-example`). The Solana checks use the public cluster RPC unless `SOLANA_RPC_URL_DEVNET` or `SOLANA_RPC_URL_MAINNET_BETA` names another.
+
+The e2e tests fork `E2E_CHAIN_ID` (Sepolia by default) with Foundry's `anvil` and prove through the queue at `QUEUE_BASE_URL` with `QUEUE_AUTH_TOKEN`. CI runs them only on a promotion pull request:
+
+```sh
+just crates-test-e2e
+```
