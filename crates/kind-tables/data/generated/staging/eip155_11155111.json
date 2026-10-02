@@ -1,6 +1,16 @@
 [
   {
     "_metadata": {
+      "type": "GenericCallResource",
+      "version": "3.0.0-rc.3",
+      "forwarder": "0x87b4952c74c680FE210fcd8AE35d744f1cd9959b"
+    },
+    "logic_ref": "b564cbdfe7acef7554b2105a2073061883c8402c878ef0cf7fef8bd3eb48cdd7",
+    "label_ref": "e5270079a0cb108e96003d50f06d6e6358a7982d11c08df09cf110baf8a63702",
+    "kind_point": "048d469e3005dd446d9d0134eb1379d965739ecd07df275d5fb1a16f4d44c83cf2fee786b39ad5225dd02edd89e397f9b4ae4ef5ca09608b67aa87447a853c4861"
+  },
+  {
+    "_metadata": {
       "type": "ERC20Resource",
       "version": "3.0.0-rc.2",
       "name": "USDT",
@@ -207,15 +217,5 @@
     "logic_ref": "ca45347792e0e32145325efa7515a552ac9129c5b7193d933219edc6d00c93ad",
     "label_ref": "d06bf06ab9abf6e3ad6e9f8b882cd514f743054a671bf28c7cfed62a18599f1c",
     "kind_point": "04905053ec27f531353753fbd0f8d3233132398f0b556d9ed5043ad7d518191b9dfbd541c5e914ba5894a29d06bd0757424e1942e789a91af4c48c6b26b7655b4e"
-  },
-  {
-    "_metadata": {
-      "type": "GenericCallResource",
-      "version": "3.0.0-rc.2",
-      "forwarder": "0x4d3342bf4975ac8d325087FE631357679a0E3c82"
-    },
-    "logic_ref": "de1d88738d93b2c67bcd7d2515e22a093bbf7f08ecd88ab24030c301a416621a",
-    "label_ref": "3b848bbc421959329e03d4b45e33125fdd879e78596f98287f9510dc129ddc17",
-    "kind_point": "041bf8a5714c38feb95c96e20cde4ef4bc6b9339090810a7dc15b70aa80866d6cd910f7611350ddef377072296db9b658aaed316cffad5c82a5a12ab25da1b03ba"
   }
 ]

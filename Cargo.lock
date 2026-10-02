@@ -1047,9 +1047,9 @@ dependencies = [
 
 [[package]]
 name = "anoma-generic-call-forwarder-bindings"
-version = "2.0.0-rc.3"
+version = "2.0.0-rc.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3361d70ebdf9b098624ab72fa03433bebabb43e4108aa62935c6f675c506c51b"
+checksum = "66ae5e4a33a9052029c48b983a3114c2dfc52e79d63310e8fcf8f5407dada4a1"
 dependencies = [
  "alloy",
  "alloy-chains",
@@ -1061,9 +1061,9 @@ dependencies = [
 
 [[package]]
 name = "anoma-generic-call-library"
-version = "3.0.0-rc.2"
+version = "3.0.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf34e0a13991d33da1fde4c1610047ca512cc74aec19ae927f9175b29ee7740b"
+checksum = "2b4b87c4f66309dd90d84a31088e6404f8aea982896cd40a072085ffb73e5d70"
 dependencies = [
  "anoma-generic-call-witness",
  "anoma-rm-risc0",
