@@ -38,8 +38,8 @@ transfer_witness = "=3.0.0-rc.3"
 
 # The Solana deployment record (the adapter's and the SPL token forwarder's program ids) and the AnomaPay Solana
 # resource, pinned by commit.
-anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-client", rev = "bb04ed226ffb314b9ff19b0b6fa6c495fa4b29ac" }
-anomapay-spl-token-forwarder-client = { git = "https://github.com/anoma/anomapay-spl-token-forwarder", rev = "f7795400c4ba04e6eea48866bdce2f66a644f7f3" }
+anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-client", rev = "4c034a946d34ba09e5ce845fcae1c8880babe0cb" }
+anomapay-spl-token-forwarder-client = { git = "https://github.com/anoma/anomapay-spl-token-forwarder", rev = "2713118e511a67c2cf4926a3c5b9358d06efc188" }
 anomapay-solana-transfer-library = { package = "transfer_library", git = "https://github.com/anoma/anomapay-solana-resource", rev = "f550cacad7dc176211db9e2990074c9e5df2e021" }
 anomapay-solana-transfer-library-rc2 = { package = "transfer_library", git = "https://github.com/anoma/anomapay-solana-resource", rev = "8969825eef8b676822207a420716fdad9b5eda24" }
 base64 = "0.22.1"

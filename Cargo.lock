@@ -1103,6 +1103,22 @@ dependencies = [
 [[package]]
 name = "anoma-pa-solana-client"
 version = "0.4.0"
+source = "git+https://github.com/anoma/anoma-pa-solana-client?rev=4c034a946d34ba09e5ce845fcae1c8880babe0cb#4c034a946d34ba09e5ce845fcae1c8880babe0cb"
+dependencies = [
+ "bincode",
+ "hkdf",
+ "hmac 0.12.1",
+ "serde",
+ "sha2 0.10.9",
+ "solana-compute-budget-interface",
+ "solana-instruction 3.5.1",
+ "solana-pubkey 3.0.0",
+ "solana-sdk-ids 3.1.0",
+]
+
+[[package]]
+name = "anoma-pa-solana-client"
+version = "0.4.0"
 source = "git+https://github.com/anoma/anoma-pa-solana-client?rev=5b2df9475d08f61566a96b68fecb92088276d398#5b2df9475d08f61566a96b68fecb92088276d398"
 dependencies = [
  "base64 0.22.1",
@@ -1127,22 +1143,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anoma-pa-solana-client"
-version = "0.4.0"
-source = "git+https://github.com/anoma/anoma-pa-solana-client?rev=bb04ed226ffb314b9ff19b0b6fa6c495fa4b29ac#bb04ed226ffb314b9ff19b0b6fa6c495fa4b29ac"
-dependencies = [
- "bincode",
- "hkdf",
- "hmac 0.12.1",
- "serde",
- "sha2 0.10.9",
- "solana-compute-budget-interface",
- "solana-instruction 3.5.1",
- "solana-pubkey 3.0.0",
- "solana-sdk-ids 3.1.0",
-]
-
-[[package]]
 name = "anoma-risc0-kind-tables"
 version = "1.0.0-rc.4"
 dependencies = [
@@ -1151,7 +1151,7 @@ dependencies = [
  "anoma-generic-call-forwarder-bindings",
  "anoma-generic-call-library",
  "anoma-pa-evm-bindings",
- "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=bb04ed226ffb314b9ff19b0b6fa6c495fa4b29ac)",
+ "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=4c034a946d34ba09e5ce845fcae1c8880babe0cb)",
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings",
  "anomapay-spl-token-forwarder-client",
@@ -1178,7 +1178,7 @@ dependencies = [
  "alloy-chains",
  "anoma-generic-call-forwarder-bindings",
  "anoma-pa-evm-bindings",
- "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=bb04ed226ffb314b9ff19b0b6fa6c495fa4b29ac)",
+ "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=4c034a946d34ba09e5ce845fcae1c8880babe0cb)",
  "anoma-risc0-kind-tables",
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings",
@@ -1268,9 +1268,9 @@ dependencies = [
 [[package]]
 name = "anomapay-spl-token-forwarder-client"
 version = "0.1.0"
-source = "git+https://github.com/anoma/anomapay-spl-token-forwarder?rev=f7795400c4ba04e6eea48866bdce2f66a644f7f3#f7795400c4ba04e6eea48866bdce2f66a644f7f3"
+source = "git+https://github.com/anoma/anomapay-spl-token-forwarder?rev=2713118e511a67c2cf4926a3c5b9358d06efc188#2713118e511a67c2cf4926a3c5b9358d06efc188"
 dependencies = [
- "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=bb04ed226ffb314b9ff19b0b6fa6c495fa4b29ac)",
+ "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=4c034a946d34ba09e5ce845fcae1c8880babe0cb)",
  "base64 0.22.1",
  "sha2 0.10.9",
  "solana-compute-budget-interface",
