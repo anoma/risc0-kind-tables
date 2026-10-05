@@ -3,7 +3,7 @@
 //! forwarder. Exactly one version is active: under the current forwarder's label it keeps its own kind, which is
 //! the kind point of every ERC20 fungibility domain, and the backend creates its resources. Every other version is
 //! deprecated: an alias of the active one, which the backend consumes and converts. Nothing is removed. A version
-//! the protocol adapter refuses stays listed as deprecated, with rows that nothing can use.
+//! whose logic ref the protocol adapter denies stays listed as deprecated, with rows that nothing can use.
 
 use crate::entry::hex_digest;
 use risc0_zkvm::Digest;
@@ -105,8 +105,8 @@ fn version(
 }
 
 /// Checks the list: every version and logic ref once, exactly one active version, and the active version is
-/// the highest listed. The last rule rules out making an old version active again, which is never the plan: a
-/// broken release is refused at the protocol adapter and replaced by a higher one.
+/// the highest listed. The last rule rules out making an old version active again, which is never the plan: the
+/// protocol adapter denies the logic ref of a broken release, and a higher release replaces it.
 fn check(versions: &[CircuitVersion]) -> Result<(), String> {
     let mut seen_versions = std::collections::BTreeSet::new();
     let mut seen_refs = std::collections::BTreeSet::new();
