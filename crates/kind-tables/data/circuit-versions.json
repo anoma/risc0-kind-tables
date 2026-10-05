@@ -1,5 +1,5 @@
 {
-  "_comment": "The ERC20 transfer circuit versions. Every listed version is a member of every ERC20 fungibility domain, so its resources are fungible with every other listed version's behind the same forwarder. Exactly one version is active: it keeps its own kind, and the backend creates its resources. Every other version is deprecated: an alias of the active one, which the backend consumes and converts. A release appends the new version as active and sets the previous one to deprecated. The active version is always the highest listed. Nothing is removed: a version the protocol adapter refuses stays listed as deprecated.",
+  "_comment": "The ERC20 transfer circuit versions. Every listed version is a member of every ERC20 fungibility domain, so its resources are fungible with every other listed version's behind the same forwarder. Exactly one version is active: it keeps its own kind, and the backend creates its resources. Every other version is deprecated: an alias of the active one, which the backend consumes and converts. A release appends the new version as active and sets the previous one to deprecated. The active version is always the highest listed. Nothing is removed: a version whose logic ref the protocol adapter denies stays listed as deprecated.",
   "ERC20Resource": [
     {
       "version": "3.0.0-rc.2",
