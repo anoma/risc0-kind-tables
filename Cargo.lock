@@ -1257,7 +1257,7 @@ dependencies = [
 [[package]]
 name = "anomapay-spl-token-forwarder-client"
 version = "0.1.0"
-source = "git+https://github.com/anoma/anomapay-spl-token-forwarder?rev=2713118e511a67c2cf4926a3c5b9358d06efc188#2713118e511a67c2cf4926a3c5b9358d06efc188"
+source = "git+https://github.com/anoma/anomapay-spl-token-forwarder?rev=80f35ea66db0b83f0827f89be595a6944fa96ebf#80f35ea66db0b83f0827f89be595a6944fa96ebf"
 dependencies = [
  "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=4c034a946d34ba09e5ce845fcae1c8880babe0cb)",
  "base64 0.22.1",
