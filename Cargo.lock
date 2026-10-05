@@ -1156,6 +1156,7 @@ dependencies = [
  "thiserror 2.0.21",
  "transfer_library 2.0.0-rc.1",
  "transfer_library 2.0.0-rc.2",
+ "transfer_library 2.0.0-rc.3",
  "transfer_library 3.0.0-rc.3",
 ]
 
@@ -1257,7 +1258,7 @@ dependencies = [
 [[package]]
 name = "anomapay-spl-token-forwarder-client"
 version = "0.1.0"
-source = "git+https://github.com/anoma/anomapay-spl-token-forwarder?rev=80f35ea66db0b83f0827f89be595a6944fa96ebf#80f35ea66db0b83f0827f89be595a6944fa96ebf"
+source = "git+https://github.com/anoma/anomapay-spl-token-forwarder?rev=54eabb1fc80b7b8accc121c91d72d898c55d855d#54eabb1fc80b7b8accc121c91d72d898c55d855d"
 dependencies = [
  "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=4c034a946d34ba09e5ce845fcae1c8880babe0cb)",
  "base64 0.22.1",
@@ -8021,6 +8022,20 @@ dependencies = [
 
 [[package]]
 name = "transfer_library"
+version = "2.0.0-rc.3"
+source = "git+https://github.com/anoma/anomapay-solana-resource?rev=ac4c933e6bc9e52f7f7fd53b65ba687e6bfa1f78#ac4c933e6bc9e52f7f7fd53b65ba687e6bfa1f78"
+dependencies = [
+ "anoma-rm-risc0",
+ "anoma-rm-risc0-gadgets",
+ "anomapay-spl-token-forwarder-client",
+ "hex-literal",
+ "k256",
+ "serde",
+ "transfer_witness 2.0.0-rc.3",
+]
+
+[[package]]
+name = "transfer_library"
 version = "3.0.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c5807abad8cc4b5c18c817a9dd59616cbda1fe5bbf553042ee0b6a55bab21727"
@@ -8055,6 +8070,20 @@ dependencies = [
  "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=6fa81a51cf4fde3e65260a2f0c7c1cf4bc4a8287)",
  "anoma-rm-risc0",
  "anoma-rm-risc0-gadgets",
+ "bincode",
+ "k256",
+ "serde",
+]
+
+[[package]]
+name = "transfer_witness"
+version = "2.0.0-rc.3"
+source = "git+https://github.com/anoma/anomapay-solana-resource?rev=ac4c933e6bc9e52f7f7fd53b65ba687e6bfa1f78#ac4c933e6bc9e52f7f7fd53b65ba687e6bfa1f78"
+dependencies = [
+ "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=4c034a946d34ba09e5ce845fcae1c8880babe0cb)",
+ "anoma-rm-risc0",
+ "anoma-rm-risc0-gadgets",
+ "anomapay-spl-token-forwarder-client",
  "bincode",
  "k256",
  "serde",

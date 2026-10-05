@@ -156,6 +156,7 @@ struct Versions {
     generic_call: String,
     spl_transfer: String,
     spl_transfer_rc2: String,
+    spl_transfer_rc3: String,
 }
 
 /// Reads the circuit versions from the resolved dependency graph, so bumping a pin cannot leave a stale
@@ -216,6 +217,7 @@ fn versions() -> Result<Versions> {
         generic_call: version_of("anoma_generic_call_library")?,
         spl_transfer: version_of("anomapay_solana_transfer_library")?,
         spl_transfer_rc2: version_of("anomapay_solana_transfer_library_rc2")?,
+        spl_transfer_rc3: version_of("anomapay_solana_transfer_library_rc3")?,
     })
 }
 
@@ -239,6 +241,10 @@ fn pinned_spl_token_circuits(versions: &Versions) -> Vec<(String, Digest)> {
         (
             versions.spl_transfer_rc2.clone(),
             digest(anomapay_solana_transfer_library_rc2::TOKEN_TRANSFER_ID.as_bytes()),
+        ),
+        (
+            versions.spl_transfer_rc3.clone(),
+            digest(anomapay_solana_transfer_library_rc3::TOKEN_TRANSFER_ID.as_bytes()),
         ),
     ]
 }
