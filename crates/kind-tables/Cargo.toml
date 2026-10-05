@@ -12,8 +12,7 @@ edition.workspace = true
 [features]
 # Converts an entry into the resource machine's kind table entry, for a consumer that loads a table to prove.
 arm = ["dep:anoma-rm-risc0"]
-# The Solana deployment record: the adapter and the SPL token forwarder program of each recorded cluster, read from
-# their client crates.
+# The Solana deployment record of each recorded cluster, read from the programs' client crates.
 solana-deployments = ["dep:anoma-pa-solana-client", "dep:anomapay-spl-token-forwarder-client"]
 # The generator reads the live circuit IDs and forwarder deployments, which the library's consumers don't need.
 generate = [

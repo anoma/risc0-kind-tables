@@ -8,7 +8,7 @@ use anyhow::{Context, Result, ensure};
 use base64::Engine;
 use risc0_zkvm::Digest;
 use serde_json::{Value, json};
-use solana_program::program_pack::Pack;
+use solana_program_pack::Pack;
 use solana_pubkey::Pubkey;
 use std::sync::LazyLock;
 
@@ -106,14 +106,13 @@ impl SolanaRpc {
     /// The decimals of the SPL token mint at the address, or `None` when no account is there.
     pub async fn mint_decimals(&self, address: &SolanaAddress) -> Result<Option<u8>> {
         let address = pubkey(address);
-        let token_program = Pubkey::new_from_array(spl_token::id().to_bytes());
         let Some(data) = self
-            .account_owned_by(&address, &token_program, "the SPL Token program")
+            .account_owned_by(&address, &spl_token_interface::ID, "the SPL Token program")
             .await?
         else {
             return Ok(None);
         };
-        let mint = spl_token::state::Mint::unpack(&data)
+        let mint = spl_token_interface::state::Mint::unpack(&data)
             .with_context(|| format!("{address}: not an SPL token mint"))?;
         Ok(Some(mint.decimals))
     }
@@ -129,10 +128,8 @@ impl SolanaRpc {
         else {
             return Ok(None);
         };
-        let config =
-            anomapay_spl_token_forwarder_client::decode_config(&data).map_err(|error| {
-                anyhow::anyhow!("{config}: not a forwarder Config account: {error}")
-            })?;
+        let config = anomapay_spl_token_forwarder_client::decode_config(&data)
+            .with_context(|| format!("{config}: not a forwarder Config account"))?;
         Ok(Some(Digest::from(config.logic_ref)))
     }
 
