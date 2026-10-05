@@ -16,6 +16,7 @@ alloy-chains = { workspace = true }
 anoma-generic-call-forwarder-bindings = { workspace = true }
 anoma-pa-evm-bindings = { workspace = true }
 anoma-pa-solana-client = { workspace = true }
+anomapay-spl-token-forwarder-client = { workspace = true }
 anoma-risc0-kind-tables = { workspace = true, features = ["arm", "solana-deployments"] }
 anoma-rm-risc0 = { workspace = true }
 anomapay-erc20-forwarder-bindings = { workspace = true }
@@ -26,6 +27,7 @@ reqwest = { workspace = true }
 risc0-zkvm = { workspace = true }
 serde_json = { workspace = true }
 solana-program = { workspace = true }
+solana-pubkey = { workspace = true }
 spl-token = { workspace = true }
 tokio = { workspace = true }
 transfer_witness = { workspace = true }

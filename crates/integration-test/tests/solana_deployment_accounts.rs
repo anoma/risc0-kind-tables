@@ -1,5 +1,5 @@
 //! The recorded Solana deployments' accounts decode with this repository's readers: the adapter's state through
-//! anoma-pa-solana-client and the SPL token forwarder's config through `forwarder_logic_ref`. The promotion gates
+//! anoma-pa-solana-client and the SPL token forwarder's config through `forwarder_logic_ref` (anomapay-spl-token-forwarder-client's decoder). The promotion gates
 //! read both; this runs on every pull request and push, so a layout change on chain fails here first.
 
 use anoma_risc0_kind_tables::{SolanaCluster, deployments};

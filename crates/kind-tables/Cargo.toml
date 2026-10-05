@@ -12,8 +12,9 @@ edition.workspace = true
 [features]
 # Converts an entry into the resource machine's kind table entry, for a consumer that loads a table to prove.
 arm = ["dep:anoma-rm-risc0"]
-# The Solana deployment record: the forwarder program of each recorded cluster, read from anoma-pa-solana-client.
-solana-deployments = ["dep:anoma-pa-solana-client"]
+# The Solana deployment record: the adapter and the SPL token forwarder program of each recorded cluster, read from
+# their client crates.
+solana-deployments = ["dep:anoma-pa-solana-client", "dep:anomapay-spl-token-forwarder-client"]
 # The generator reads the live circuit IDs and forwarder deployments, which the library's consumers don't need.
 generate = [
   "solana-deployments",
@@ -35,6 +36,7 @@ anoma-generic-call-forwarder-bindings = { workspace = true, optional = true }
 anoma-generic-call-library = { workspace = true, optional = true }
 anoma-pa-evm-bindings = { workspace = true, optional = true }
 anoma-pa-solana-client = { workspace = true, optional = true }
+anomapay-spl-token-forwarder-client = { workspace = true, optional = true }
 anomapay-solana-transfer-library = { workspace = true, optional = true }
 anomapay-solana-transfer-library-rc2 = { workspace = true, optional = true }
 anoma-rm-risc0 = { workspace = true, optional = true }
@@ -54,6 +56,7 @@ transfer_library = { workspace = true, optional = true }
 [dev-dependencies]
 # The deployment records the offline table test reads the current forwarders from.
 anoma-pa-solana-client = { workspace = true }
+anomapay-spl-token-forwarder-client = { workspace = true }
 anomapay-erc20-forwarder-bindings = { workspace = true }
 
 [[bin]]
