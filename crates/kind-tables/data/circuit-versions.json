@@ -22,6 +22,11 @@
     {
       "version": "2.0.0-rc.2",
       "logic_ref": "1f90852b23dab294cadc7384b6185160726f6d04c58881c0f02c9c8f64625290",
+      "status": "deprecated"
+    },
+    {
+      "version": "2.0.0-rc.3",
+      "logic_ref": "ae9638a19d845680054532813f64d502cff6e65935117245fd87387a7b768315",
       "status": "active"
     }
   ]

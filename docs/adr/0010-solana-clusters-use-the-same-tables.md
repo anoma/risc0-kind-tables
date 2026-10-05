@@ -4,7 +4,7 @@ The Solana protocol adapter runs the same compliance circuit and stores a kind t
 
 A Solana cluster has no EVM chain ID, and a name such as `devnet` is ours rather than the cluster's. It is named by its CAIP-2 chain ID (ADR-0009), whose reference is the first 32 characters of its base58 genesis hash. The genesis hash comes from the Solana SDK's `solana-cluster-type`, as the EVM chain IDs come from `alloy-chains`, so no key is typed by hand.
 
-The EVM deployment records come from the EVM bindings crates. The Solana ones come from the Solana crates, pinned by commit: the adapter and forwarder program ids from `anoma-pa-solana-client`, and the transfer logic ref from `anomapay-solana-resource`'s `transfer_library`.
+The EVM deployment records come from the EVM bindings crates. The Solana ones come from the Solana crates, pinned by commit: the adapter program id from `anoma-pa-solana-client`, the forwarder program id from `anomapay-spl-token-forwarder-client`, and the transfer logic ref from `anomapay-solana-resource`'s `transfer_library`.
 
 ## Consequences
 

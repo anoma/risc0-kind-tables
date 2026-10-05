@@ -7,10 +7,9 @@ use anoma_risc0_kind_tables::{Caip2ChainId, SolanaAddress, SolanaCluster};
 use anyhow::{Context, Result, ensure};
 use base64::Engine;
 use risc0_zkvm::Digest;
-use risc0_zkvm::sha::{Impl, Sha256};
 use serde_json::{Value, json};
-use solana_program::program_pack::Pack;
-use solana_program::pubkey::Pubkey;
+use solana_program_pack::Pack;
+use solana_pubkey::Pubkey;
 use std::sync::LazyLock;
 
 /// Connects an Alchemy-backed provider for the chain. Every chain carrying supported tokens or a recorded
@@ -108,34 +107,30 @@ impl SolanaRpc {
     pub async fn mint_decimals(&self, address: &SolanaAddress) -> Result<Option<u8>> {
         let address = pubkey(address);
         let Some(data) = self
-            .account_owned_by(&address, &spl_token::id(), "the SPL Token program")
+            .account_owned_by(&address, &spl_token_interface::ID, "the SPL Token program")
             .await?
         else {
             return Ok(None);
         };
-        let mint = spl_token::state::Mint::unpack(&data)
+        let mint = spl_token_interface::state::Mint::unpack(&data)
             .with_context(|| format!("{address}: not an SPL token mint"))?;
         Ok(Some(mint.decimals))
     }
 
     /// The logic ref the SPL token forwarder's config accepts, or `None` when the forwarder is not initialized.
-    /// The config is the forwarder's `Config` account: the Anchor discriminator, the adapter program id, the
-    /// logic ref, the emergency committee, the emergency caller, the config version (`u64`) and the owner.
     pub async fn forwarder_logic_ref(&self, forwarder: &SolanaAddress) -> Result<Option<Digest>> {
         let forwarder = pubkey(forwarder);
-        let (config, _) = anoma_pa_solana_client::derive_forwarder_config_pda(&forwarder);
+        let (config, _) =
+            anomapay_spl_token_forwarder_client::derive_forwarder_config_pda(&forwarder);
         let Some(data) = self
             .account_owned_by(&config, &forwarder, "the forwarder")
             .await?
         else {
             return Ok(None);
         };
-        ensure!(
-            data.len() == 8 + 32 + 32 + 32 + 32 + 8 + 32
-                && data[..8] == Impl::hash_bytes(b"account:Config").as_bytes()[..8],
-            "{config}: not a forwarder Config account"
-        );
-        Ok(Some(Digest::try_from(&data[40..72]).expect("32 bytes")))
+        let config = anomapay_spl_token_forwarder_client::decode_config(&data)
+            .with_context(|| format!("{config}: not a forwarder Config account"))?;
+        Ok(Some(Digest::from(config.logic_ref)))
     }
 
     /// The kind-table commitment the protocol adapter stores, or `None` when it is not initialized.
