@@ -17,7 +17,7 @@ alloy-chains = "0.2.36"
 anoma-generic-call-forwarder-bindings = "2.0.0-rc.4"
 # The circuit crates are pinned exactly: another build has another logic ref, and so another kind.
 anoma-generic-call-library = "=3.0.0-rc.3"
-anoma-pa-evm-bindings = "3.0.0-rc.13"
+anoma-pa-evm-bindings = "3.0.0-rc.14"
 anoma-rm-risc0 = { version = "=2.0.0-rc.6", default-features = false, features = [
   "transaction",
 ] }
