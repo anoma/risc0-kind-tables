@@ -356,20 +356,28 @@ mod tests {
     fn staging_records_the_solana_devnet_table() {
         let devnet = SolanaCluster::Devnet;
         let table = staging::table(devnet).expect("solana-devnet is recorded in staging");
-        let [member] = &table.entries[..] else {
-            panic!("expected exactly one entry, got {}", table.entries.len());
-        };
-        assert!(
-            matches!(member.metadata, Some(Metadata::SplToken { .. })),
-            "the entry is an SPL token member"
-        );
         assert_eq!(
-            member.label_ref.to_string(),
-            "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
-            "the label is sha256(devnet forwarder ‖ test mint)"
+            table.entries.len(),
+            circuits::spl_token().len(),
+            "one entry per listed SPL token circuit version, for the one test mint"
         );
-        assert_eq!(member.logic_ref, circuits::spl_token_active().logic_ref);
-        assert!(!member.is_alias(), "the active version keeps its own kind");
+        for member in &table.entries {
+            assert!(
+                matches!(member.metadata, Some(Metadata::SplToken { .. })),
+                "every entry is an SPL token member"
+            );
+            assert_eq!(
+                member.label_ref.to_string(),
+                "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
+                "the label is sha256(devnet forwarder ‖ test mint)"
+            );
+        }
+        let active = table
+            .entries
+            .iter()
+            .find(|member| member.logic_ref == circuits::spl_token_active().logic_ref)
+            .expect("the active version has an entry");
+        assert!(!active.is_alias(), "the active version keeps its own kind");
         assert_eq!(staging::commitment(devnet).unwrap(), table.commitment());
     }
 

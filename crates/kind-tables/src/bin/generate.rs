@@ -155,6 +155,7 @@ struct Versions {
     transfer: String,
     generic_call: String,
     spl_transfer: String,
+    spl_transfer_rc2: String,
 }
 
 /// Reads the circuit versions from the resolved dependency graph, so bumping a pin cannot leave a stale
@@ -214,6 +215,7 @@ fn versions() -> Result<Versions> {
         transfer: version_of("transfer_library")?,
         generic_call: version_of("anoma_generic_call_library")?,
         spl_transfer: version_of("anomapay_solana_transfer_library")?,
+        spl_transfer_rc2: version_of("anomapay_solana_transfer_library_rc2")?,
     })
 }
 
@@ -229,10 +231,16 @@ fn pinned_erc20_circuits(versions: &Versions) -> Vec<(String, Digest)> {
 
 /// The SPL token circuit crates this generator pins, as `pinned_erc20_circuits` for the Solana transfer circuit.
 fn pinned_spl_token_circuits(versions: &Versions) -> Vec<(String, Digest)> {
-    vec![(
-        versions.spl_transfer.clone(),
-        digest(anomapay_solana_transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
-    )]
+    vec![
+        (
+            versions.spl_transfer.clone(),
+            digest(anomapay_solana_transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
+        ),
+        (
+            versions.spl_transfer_rc2.clone(),
+            digest(anomapay_solana_transfer_library_rc2::TOKEN_TRANSFER_ID.as_bytes()),
+        ),
+    ]
 }
 
 /// Each list must pass its own checks, and every pinned circuit crate must be listed with the logic ref it
