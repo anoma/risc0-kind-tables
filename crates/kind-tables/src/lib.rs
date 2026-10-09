@@ -1,7 +1,7 @@
 pub mod chain;
 pub mod circuits;
 pub mod commitment;
-#[cfg(any(feature = "solana-deployments", test))]
+#[cfg(feature = "solana-deployments")]
 pub mod deployments;
 pub mod entry;
 pub mod error;
