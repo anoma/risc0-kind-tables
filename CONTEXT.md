@@ -34,14 +34,14 @@ _Avoid_: chain ID (on its own, which names the EIP-155 number of an EVM chain), 
 One row of a kind table: a kind, written as its `(logic ref, label ref)`, and the kind point it is assigned.
 
 **Fungibility domain**:
-The resources whose kind points are equal, and the kinds the table assigns that kind point to. On this table that is one forwarder holding one token on one chain, together with every kind whose resources those tokens back. Their kind point is the kind of the active circuit version under the current forwarder's label, and every other member is an alias of it.
+The resources whose kind points are equal, and the kinds the table assigns that kind point to. On this table that is one forwarder holding one token on one chain, together with every kind whose resources those tokens back. Their kind point is the kind of the active circuit version under the label of the environment's forwarder, and every other member is an alias of it.
 _Avoid_: domain, alias set, anchor
 
 **Member**:
-A kind inside a fungibility domain: one circuit version under one forwarder's label, assigned the fungibility domain's kind point. Every member except the active version under the current forwarder's label is an alias and has a row. The active member has a row only if its token asks for a precomputed kind point.
+A kind inside a fungibility domain: one circuit version under one forwarder's label, assigned the fungibility domain's kind point. Every member except the active version under the label of the environment's forwarder is an alias and has a row. The active member has a row only if its token asks for a precomputed kind point.
 
 **Alias**:
-An entry assigned another kind as its kind point, not its own. The table makes two kinds share one kind point, so their resources are fungible. Every member of a fungibility domain is one, except the active version under the current forwarder's label. Its `alias_of` names the kind it takes its kind point from. Only the table can express an alias, and an alias is a permission to create tokens of its fungibility domain: the only entry a reviewer must read.
+An entry assigned another kind as its kind point, not its own. The table makes two kinds share one kind point, so their resources are fungible. Every member of a fungibility domain is one, except the active version under the label of the environment's forwarder. Its `alias_of` names the kind it takes its kind point from. Only the table can express an alias, and an alias is a permission to create tokens of its fungibility domain: the only entry a reviewer must read.
 _Avoid_: override, remap, redirect, canonical (for the others: an entry assigned its own kind)
 
 **Conversion**:
@@ -49,7 +49,7 @@ A transaction that consumes a resource of one member of a fungibility domain and
 _Avoid_: migration (the forwarder repository moves the tokens, and the protocol adapter copies the state)
 
 **Soft migration**:
-The conversion of the V1 resources and of the deprecated versions' resources into resources of the active member, before or while they leave through the current forwarder. Each owner converts their own resources, in their own transactions. It moves no tokens between forwarders and copies no state.
+The conversion of the immutable-forwarder resources and of the deprecated versions' resources into resources of the active member, before or while they leave through the environment's forwarder. Each owner converts their own resources, in their own transactions. It moves no tokens between forwarders and copies no state.
 _Avoid_: migration (on its own: the forwarder repository moves the tokens, and the protocol adapter copies the state)
 
 **Precomputed kind point**:
@@ -57,27 +57,31 @@ A row that assigns a kind its own kind point, so that the compliance circuit rea
 _Avoid_: cached kind, fast kind, supported kind (a token without a row is still supported)
 
 **Circuit version**:
-One release of the ERC20 or SPL token transfer circuit, listed in `data/circuit-versions.json` with its logic ref and a status. The two lists follow the same rules, each over its own chains. Exactly one version is **active**: under the current forwarder's label it keeps its own kind, and the backend creates its resources. Every other is **deprecated**: an alias of the active one, which the backend consumes and converts. The active version is the highest listed, and an older version never becomes active again. Every listed version is a member of every fungibility domain of its resource type, and nothing is ever removed.
+One release of the ERC20 or SPL token transfer circuit, listed in `data/circuit-versions.json` with its logic ref and a status. The two lists follow the same rules, each over its own chains. Exactly one version is **active**: under the label of the environment's forwarder it keeps its own kind, and the backend creates its resources. Every other is **deprecated**: an alias of the active one, which the backend consumes and converts. The active version is the highest listed, and an older version never becomes active again. Every listed version is a member of every fungibility domain of its resource type, and nothing is ever removed.
 _Avoid_: succession, upgrade, migration (the migration is what listing enables, not the record of it), inherit (nothing passes from one version to another — both kinds are assigned one kind point)
 
-**V1 forwarder**:
-The immutable ERC20 forwarder that ran with a chain's v1 protocol adapter. Under its label, the logic ref it accepts is a member of every ERC20 fungibility domain on its chain, so its resources convert and leave through the current forwarder. Recorded in the forwarder repository's deployment record, never here.
-_Avoid_: retired forwarder, old forwarder, legacy forwarder
+**Immutable protocol adapter**:
+The protocol adapter of a chain before its protocol adapter proxy: one immutable contract per chain, with no kind table. It is stopped, and its state is copied into the protocol adapter proxy.
+_Avoid_: v1 protocol adapter
 
-**V1 resource**:
-An ERC20 resource whose label names a V1 forwarder.
-_Avoid_: 2.0.0 resource (a circuit version names a logic ref, and a logic ref does not tell a V1 resource from a current one)
+**Immutable ERC20 forwarder**:
+The ERC20 forwarder that ran with a chain's immutable protocol adapter: one immutable contract. Under its label, the logic ref it accepts is a member of every ERC20 fungibility domain on its chain, so its resources convert and leave through the environment's forwarder. Recorded in the forwarder repository's deployment record, never here.
+_Avoid_: V1 forwarder, retired forwarder, old forwarder, legacy forwarder
+
+**Immutable-forwarder resource**:
+An ERC20 resource whose label names an immutable ERC20 forwarder.
+_Avoid_: V1 resource, 2.0.0 resource (a circuit version names a logic ref, and a logic ref does not tell an immutable-forwarder resource from one of the environment's forwarder)
 
 **Kind table commitment**:
 The digest a protocol adapter stores and every compliance proof reproduces, covering every entry and their order. The value this repo exists to publish.
 _Avoid_: kind table hash, table root
 
 **Supported token**:
-An ERC20 contract or SPL token mint this project maintains kinds for, on a named chain. Being supported is a standing commitment and does not depend on where anything is deployed. Each one says whether the table precomputes its active kind point, and each ERC20 token whether its V1 resources are fungible with its current ones; Solana has no V1 forwarder.
+An ERC20 contract or SPL token mint this project maintains kinds for, on a named chain. Being supported is a standing commitment and does not depend on where anything is deployed. Each one says whether the table precomputes its active kind point, and each ERC20 token whether its immutable-forwarder resources can soft-migrate; Solana has no immutable forwarder.
 
-**V1 fungibility**:
-Whether the V1 forwarder's label joins the fungibility domain of one supported token, which makes that token's V1 resources fungible with its current ones, so they convert and leave. `data/tokens.json` states it per chain and per token in `fungible_with_v1`, and only a token set to `true` gets a member under the V1 forwarder's label.
-_Avoid_: migration (the forwarder repository moves the tokens, and the protocol adapter copies the state; neither is this flag), conversion (what the fungibility permits, not the permission)
+**Soft migration from the immutable ERC20 forwarder**:
+Whether the immutable ERC20 forwarder's label joins the fungibility domain of one supported token, which makes that token's immutable-forwarder resources fungible with the resources of the environment's forwarder, so they convert and leave. `data/tokens.json` states it per chain and per token in `fungible_with_v1`, and only a token set to `true` gets a member under the immutable ERC20 forwarder's label.
+_Avoid_: V1 fungibility, migration (on its own: the forwarder repository moves the tokens, and the protocol adapter copies the state; neither is this flag), conversion (what the soft migration permits, not the permission)
 
 **Environment**:
 One of the two protocol adapter deployments a kind table can be installed on, each tracking a branch. Says which deployment, never which chain.
