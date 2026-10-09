@@ -61,8 +61,8 @@ One release of the ERC20 or SPL token transfer circuit, listed in `data/circuit-
 _Avoid_: succession, upgrade, migration (the migration is what listing enables, not the record of it), inherit (nothing passes from one version to another — both kinds are assigned one kind point)
 
 **Immutable protocol adapter**:
-The protocol adapter of a chain before its protocol adapter proxy: one immutable contract per chain, with no kind table. It is stopped, and its state is copied into the protocol adapter proxy.
-_Avoid_: v1 protocol adapter
+The protocol adapter that a chain ran before its upgradeable protocol adapter: one immutable contract per chain, with no kind table. It is stopped, and its state is copied into the protocol adapter.
+_Avoid_: v1 protocol adapter, legacy protocol adapter
 
 **Immutable ERC20 forwarder**:
 The ERC20 forwarder that ran with a chain's immutable protocol adapter: one immutable contract. Under its label, the logic ref it accepts is a member of every ERC20 fungibility domain on its chain, so its resources convert and leave through the environment's forwarder. Recorded in the forwarder repository's deployment record, never here.
