@@ -18,17 +18,17 @@ use anoma_pa_testkit::{execute_tx, prove_actions};
 use anoma_risc0_kind_tables::{Caip2ChainId, table};
 use anoma_rm_risc0::Digest;
 use anoma_rm_risc0::compliance::KindTableEntry;
-use anoma_rm_risc0::constants::{init_kind_table_from_entries, kind_table_hash};
+use anoma_rm_risc0::constants::{init_kind_table_from_entries, kind_table_root};
 use anoma_rm_risc0::merkle_path::MerklePath;
 use anoma_rm_risc0::resource::Resource;
 use anomapay_erc20_forwarder_bindings::addresses::Environment as ForwarderEnvironment;
 use anomapay_erc20_forwarder_bindings::contract::erc20_forwarder;
 use anomapay_erc20_forwarder_integration_test::deploy::erc20_bindings::erc20_example;
 use anomapay_erc20_forwarder_integration_test::fixtures::{transfer, unwrap};
+use anomapay_erc20_witness::{ValueInfo, calculate_persistent_value_ref};
 use anyhow::{Context, ensure};
 use rstest::*;
 use serde_json::Value;
-use transfer_witness::{ValueInfo, calculate_persistent_value_ref};
 
 type EvmE2eEnv = anoma_pa_evm_integration_test::envs::e2e::Environment;
 
@@ -130,14 +130,14 @@ async fn load_the_generated_table(env: &EvmE2eEnv) -> anyhow::Result<()> {
         .with_context(|| format!("{chain}: no staging table"))?;
     init_kind_table_from_entries(table.entries.iter().map(KindTableEntry::from).collect())
         .context("failed to load the kind table")?;
-    let loaded = kind_table_hash().context("no kind table loaded")?;
+    let loaded = kind_table_root().context("no kind table loaded")?;
     let stored = env
         .protocol_adapter
         .pa
-        .getKindTableCommitment()
+        .getKindTableRoot()
         .call()
         .await
-        .context("failed to query the kind table commitment")?;
+        .context("failed to query the kind table root")?;
     ensure!(
         stored.as_slice() == loaded.as_bytes(),
         "{chain}: the protocol adapter stores {stored}, the source generates {loaded}"

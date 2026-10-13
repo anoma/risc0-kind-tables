@@ -150,9 +150,10 @@ fn sorted(mut entries: Vec<Entry>, chain: &Chain) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
-/// The circuit version behind the generic-call logic ref, and that of the pinned ERC20 crate.
+/// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 crates.
 struct Versions {
     transfer: String,
+    anomapay_erc20: String,
     generic_call: String,
 }
 
@@ -211,6 +212,7 @@ fn versions() -> Result<Versions> {
 
     Ok(Versions {
         transfer: version_of("transfer_library")?,
+        anomapay_erc20: version_of("anomapay_erc20_library")?,
         generic_call: version_of("anoma_generic_call_library")?,
     })
 }
@@ -219,10 +221,16 @@ fn versions() -> Result<Versions> {
 /// a renamed dependency and one more line here. A version whose crate is no longer pinned stays listed in
 /// `circuit-versions.json` and is checked against nothing.
 fn pinned_erc20_circuits(versions: &Versions) -> Vec<(String, Digest)> {
-    vec![(
-        versions.transfer.clone(),
-        digest(transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
-    )]
+    vec![
+        (
+            versions.transfer.clone(),
+            digest(transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
+        ),
+        (
+            versions.anomapay_erc20.clone(),
+            digest(anomapay_erc20_library::ANOMAPAY_ERC20_CIRCUIT_ID.as_bytes()),
+        ),
+    ]
 }
 
 /// Each list must pass its own checks, and every pinned circuit crate must be listed with the logic ref it

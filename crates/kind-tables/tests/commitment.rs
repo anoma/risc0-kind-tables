@@ -16,12 +16,24 @@ fn entry(seed: u8) -> Entry {
 }
 
 #[test]
-fn of_commits_to_the_entry_order() {
+fn of_is_independent_of_the_entry_order() {
     let (a, b) = (entry(1), entry(2));
-    assert_ne!(of(&[a.clone(), b.clone()]), of(&[b, a]));
+    assert_eq!(of(&[a.clone(), b.clone()]), of(&[b, a]));
 }
 
 #[test]
-fn of_hashes_the_empty_table_to_the_empty_sha256() {
-    assert_eq!(of(&[]), *Impl::hash_bytes(&[]));
+fn of_gives_a_one_entry_table_its_leaf() {
+    let a = entry(1);
+    let leaf = [
+        a.logic_ref.as_bytes(),
+        a.label_ref.as_bytes(),
+        a.kind_point.as_slice(),
+    ]
+    .concat();
+    assert_eq!(of(std::slice::from_ref(&a)), *Impl::hash_bytes(&leaf));
+}
+
+#[test]
+fn of_gives_the_empty_table_the_padding_leaf() {
+    assert_eq!(of(&[]), *Impl::hash_bytes(b"EMPTY"));
 }

@@ -1,10 +1,10 @@
 {
   "eip155:11155111": {
     "_comment": "sepolia",
-    "commitment": "22874bad8556a7cc384483e010e3fa23154b4a4ce0ad71fb039a32d589b8c955"
+    "commitment": "fce1ce20828ac66b888b22a51dd44d61d780c00bea748a50700e78e50c986d91"
   },
   "eip155:84532": {
     "_comment": "base-sepolia",
-    "commitment": "25baaca36b9172cb111648f0382d07694753577d11e68c5f4571d0e1bf161a0b"
+    "commitment": "7fc40dae6310b18c6f7ab9e23c8d9715ca949fe4eac0e4192c93fa0f12d52c25"
   }
 }
