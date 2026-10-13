@@ -86,7 +86,7 @@ Members are never authored. A circuit release is one appended line in [`crates/k
 }
 ```
 
-The generator then writes one more member per token on every chain that has the token, so neither a token nor a chain can be left out, and checks every version whose crate is pinned against the logic ref that crate compiles to. Nothing is ever removed from the list: a version whose logic ref the protocol adapter denies stays listed, with rows that nothing can use (ADR-0008).
+The generator then writes one more member per token on every chain that has the token, so neither a token nor a chain can be left out, and checks every version whose crate is pinned against the logic ref that crate compiles to. A deprecated version leaves the list only when no resource of it exists under the label of a recorded forwarder. Until then it stays, even when the protocol adapter denies its logic ref, with rows that nothing can use (ADR-0008).
 
 ## Workflows
 
@@ -102,27 +102,22 @@ The token validation test runs on every pull request and push. It calls an ERC20
 
 ### Add a circuit version
 
-Listing a version makes its resources fungible with every other listed version's, behind the same forwarder, one for one. Nothing passes from one version to another: both kinds are assigned one kind point. Exactly one version is active — under the label of the environment's forwarder it keeps its own kind, and the backend creates its resources — and it must be the last listed, because the list is in release order, whatever the version numbers; every other version is deprecated, an alias of the active one, which the backend only consumes. Making a version active moves every ERC20 kind point on every chain to its kind. Review the change as carefully as a permission to create new tokens.
+Listing a version makes its resources fungible with every other listed version's, behind the same forwarder, one for one. Nothing passes from one version to another: both kinds are assigned one kind point. Exactly one version is active — under the label of the environment's forwarder it keeps its own kind, and the backend creates its resources — and it must be the highest listed; every other version is deprecated, an alias of the active one, which the backend only consumes. Making a version active moves every ERC20 kind point on every chain to its kind. Review the change as carefully as a permission to create new tokens.
 
-The release joins the dependency graph under a new name, so that the generator can check the logic ref you list against the one the crate compiles to. The current pin stays.
+The generator pins the crate of the active version and the crate of the legacy circuit, and checks that the logic ref each compiles to is listed. Any other deprecated version stays listed and is checked against nothing.
 
-1. Add the release to `[workspace.dependencies]` in [`Cargo.toml`](Cargo.toml) under a new name:
+1. Pin the release in `[workspace.dependencies]` in [`Cargo.toml`](Cargo.toml) in place of the previous one:
    ```toml
-   transfer_library = "2.0.0"                                                 # unchanged
-   transfer_library_v3 = { package = "transfer_library", version = "3.0.0" }
+   anomapay_erc20_library = "=2.0.0-rc.1"
    ```
-2. Add the same name to [`crates/kind-tables/Cargo.toml`](crates/kind-tables/Cargo.toml), as an optional dependency and in the `generate` feature list.
-3. In [`crates/kind-tables/src/bin/generate.rs`](crates/kind-tables/src/bin/generate.rs), add its version to `Versions` and `versions()`, and one line to `pinned_erc20_circuits`:
-   ```rust
-   (versions.transfer_v3.clone(), digest(transfer_library_v3::TOKEN_TRANSFER_ID.as_bytes())),
-   ```
-4. In [`crates/kind-tables/data/circuit-versions.json`](crates/kind-tables/data/circuit-versions.json), append the version with `"status": "active"` and set the previous active version to `"deprecated"`.
-5. Run `just generate`. Read the diff: one new row per token on every chain, and every older version's rows now alias the new one.
-6. Commit the edited files together with the regenerated tables.
+2. If the release has a new crate name, use it in [`crates/kind-tables/Cargo.toml`](crates/kind-tables/Cargo.toml), as the optional dependency and in the `generate` feature list, and in `versions()` and `pinned_erc20_circuits` in [`crates/kind-tables/src/bin/generate.rs`](crates/kind-tables/src/bin/generate.rs).
+3. In [`crates/kind-tables/data/circuit-versions.json`](crates/kind-tables/data/circuit-versions.json), append the version with `"status": "active"` and set the previous active version to `"deprecated"`.
+4. Run `just generate`. Read the diff: one new row per token on every chain, and every older version's rows now alias the new one.
+5. Commit the edited files together with the regenerated tables.
 
 Old resources leave through the new version once the forwarder accepts it, which is an upgrade in the forwarder repository. The promotion gate reads each chain's forwarder and requires that the logic ref it accepts is listed.
 
-An SPL token circuit release follows the same steps with the Solana crate: the release of `anomapay-solana-resource`'s `transfer_library` is pinned by commit under a new name next to `anomapay-solana-transfer-library`, its line goes into `pinned_spl_token_circuits`, and the version is appended to `SPLTokenResource` in `circuit-versions.json`. On Solana the forwarder accepts the new logic ref after its upgrade authority calls `set_logic_ref`; the promotion gate reads the forwarder's config account for it.
+An SPL token circuit release appends its version to `SPLTokenResource` in `circuit-versions.json`. On Solana the forwarder accepts the new logic ref after its upgrade authority calls `set_logic_ref`. For now the generator builds no Solana table and pins no Solana crate, so nothing checks the listed logic ref.
 
 ### Alias the legacy ERC20 forwarder
 

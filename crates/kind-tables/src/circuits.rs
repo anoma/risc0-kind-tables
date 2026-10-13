@@ -2,8 +2,9 @@
 //! ERC20 fungibility domain, so its resources are fungible with every other listed version's behind the same
 //! forwarder. Exactly one version is active: under the label of the environment's forwarder it keeps its own kind,
 //! which is the kind point of every ERC20 fungibility domain, and the backend creates its resources. Every other
-//! version is deprecated: an alias of the active one, which the backend consumes and converts. Nothing is removed. A
-//! version whose logic ref the protocol adapter denies stays listed as deprecated, with rows that nothing can use.
+//! version is deprecated: an alias of the active one, which the backend consumes and converts. A deprecated
+//! version leaves the list only when no resource of it exists under the label of a recorded forwarder. Until then it
+//! stays, even when the protocol adapter denies its logic ref, with rows that nothing can use.
 
 use crate::entry::hex_digest;
 use risc0_zkvm::Digest;
@@ -24,7 +25,7 @@ pub enum Status {
 /// One listed version of the ERC20 transfer circuit.
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct CircuitVersion {
-    /// The version of the crate that ships the circuit.
+    /// The circuit's release version. The crate that ships it can carry another version.
     pub version: String,
     /// The circuit's verifying key, which every resource of this version carries as its logic ref.
     #[serde(with = "hex_digest")]
@@ -105,11 +106,13 @@ fn version(
         .find(|circuit| circuit.logic_ref == *logic_ref)
 }
 
-/// Checks a list: every version and logic ref once, and exactly one active version, the last listed. A list is in
-/// release order, whatever its version numbers, so the active version is the latest release.
-pub fn check(versions: &[CircuitVersion]) -> Result<(), String> {
+/// Checks the list: every version and logic ref once, exactly one active version, and the active version is
+/// the highest listed. The last rule rules out making an old version active again, which is never the plan: the
+/// protocol adapter denies the logic ref of a broken release, and a higher release replaces it.
+fn check(versions: &[CircuitVersion]) -> Result<(), String> {
     let mut seen_versions = std::collections::BTreeSet::new();
     let mut seen_refs = std::collections::BTreeSet::new();
+    let mut parsed = Vec::new();
     for circuit in versions {
         if !seen_versions.insert(&circuit.version) {
             return Err(format!("{} is listed twice", circuit.version));
@@ -120,27 +123,26 @@ pub fn check(versions: &[CircuitVersion]) -> Result<(), String> {
                 circuit.version
             ));
         }
-        semver::Version::parse(&circuit.version)
+        let version = semver::Version::parse(&circuit.version)
             .map_err(|error| format!("{} is not a version: {error}", circuit.version))?;
+        parsed.push((version, circuit));
     }
-    let mut actives = versions
-        .iter()
-        .filter(|circuit| circuit.status == Status::Active);
-    let active = actives
+    let mut actives = parsed.iter().filter(|(_, c)| c.status == Status::Active);
+    let (active_version, active) = actives
         .next()
         .ok_or_else(|| "no version is active".to_string())?;
-    if let Some(other) = actives.next() {
+    if let Some((_, other)) = actives.next() {
         return Err(format!(
             "{} and {} are both active; exactly one version is",
             active.version, other.version
         ));
     }
-    if let Some(last) = versions.last()
-        && last != active
+    if let Some((highest, _)) = parsed.iter().max_by(|a, b| a.0.cmp(&b.0))
+        && highest > active_version
     {
         return Err(format!(
-            "{} is active, but {} is listed after it; the active version is the last listed",
-            active.version, last.version
+            "{} is active, but {highest} is listed and higher; an older version never becomes active again",
+            active.version
         ));
     }
     Ok(())
