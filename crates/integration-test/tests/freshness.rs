@@ -1,4 +1,4 @@
-//! The promotion gate: every protocol adapter of the promoted environment stores the commitment this source
+//! The promotion gate: every protocol adapter of the promoted environment stores the root this source
 //! generates. Runs only on a pull request into `staging` or `main` (selected via `GITHUB_BASE_REF`, or
 //! `PROMOTION_TARGET` for a local run); a table change is deployed after merging into `next`, and the promotion
 //! pull request turning green is the proof it happened.
@@ -22,21 +22,21 @@ fn promotion_target() -> Option<Environment> {
     }
 }
 
-fn commitments(environment: Environment) -> &'static BTreeMap<Caip2ChainId, Digest> {
+fn roots(environment: Environment) -> &'static BTreeMap<Caip2ChainId, Digest> {
     match environment {
-        Environment::Staging => table::staging::commitments(),
-        Environment::Production => table::production::commitments(),
+        Environment::Staging => table::staging::roots(),
+        Environment::Production => table::production::roots(),
     }
 }
 
 #[tokio::test]
-async fn the_promoted_environment_stores_the_generated_commitments() -> Result<()> {
+async fn the_promoted_environment_stores_the_generated_roots() -> Result<()> {
     let Some(environment) = promotion_target() else {
         eprintln!("skipped: not a promotion pull request");
         return Ok(());
     };
 
-    for (chain, expected) in commitments(environment) {
+    for (chain, expected) in roots(environment) {
         let stored = match Chain::try_from(chain)? {
             Chain::Evm(_) => {
                 let provider = provider(chain)?;
@@ -50,7 +50,7 @@ async fn the_promoted_environment_stores_the_generated_commitments() -> Result<(
                     .call()
                     .await
                     .with_context(|| chain.to_string())?;
-                Digest::try_from(stored.as_slice()).context("a commitment is 32 bytes")?
+                Digest::try_from(stored.as_slice()).context("a root is 32 bytes")?
             }
             Chain::Solana(cluster) => {
                 let adapter = deployments::solana_deployment(cluster)

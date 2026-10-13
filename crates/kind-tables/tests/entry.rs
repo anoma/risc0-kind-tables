@@ -51,13 +51,13 @@ fn the_json_representation_round_trips() {
 }
 
 #[test]
-fn the_metadata_stays_out_of_the_commitment_input() {
+fn the_metadata_stays_out_of_the_root_input() {
     let bare = entry();
     let mut annotated = entry();
     annotated.metadata = Some(erc20_metadata());
     assert_eq!(
-        anoma_risc0_kind_tables::commitment::of(&[bare]),
-        anoma_risc0_kind_tables::commitment::of(&[annotated])
+        anoma_risc0_kind_tables::root::of(&[bare]),
+        anoma_risc0_kind_tables::root::of(&[annotated])
     );
 }
 

@@ -7,8 +7,8 @@ use alloy_chains::NamedChain;
 use anoma_generic_call_forwarder_bindings::addresses::Environment as GenericCallEnvironment;
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
 use anoma_risc0_kind_tables::{
-    AliasOf, Caip2ChainId, Chain, CircuitVersion, Entry, Metadata, Status, circuits, commitment,
-    kind, tokens,
+    AliasOf, Caip2ChainId, Chain, CircuitVersion, Entry, Metadata, Status, circuits, kind, root,
+    tokens,
 };
 use anomapay_erc20_forwarder_bindings::addresses::Environment as Erc20Environment;
 use anyhow::{Context, Result, bail, ensure};
@@ -21,12 +21,12 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-/// One row of `commitments.json`: the chain it belongs to, named for review, and the table commitment.
+/// One row of `roots.json`: the chain it belongs to, named for review, and the table root.
 #[derive(Serialize)]
-struct ChainCommitment {
+struct ChainRoot {
     #[serde(rename = "_comment")]
     comment: String,
-    commitment: String,
+    root: String,
 }
 
 /// The legacy ERC20 forwarder of a chain: the immutable forwarder of its legacy protocol adapter. Under its label, the
@@ -381,7 +381,7 @@ fn main() -> Result<()> {
             ));
         }
         let mut files = Vec::new();
-        let mut commitments = BTreeMap::new();
+        let mut roots = BTreeMap::new();
         for (chain, entries) in tables {
             let entries = sorted(entries, &chain)?;
             let id = Caip2ChainId::from(chain);
@@ -389,19 +389,19 @@ fn main() -> Result<()> {
                 id.file_name(),
                 serde_json::to_string_pretty(&entries)? + "\n",
             ));
-            commitments.insert(
+            roots.insert(
                 id,
-                ChainCommitment {
+                ChainRoot {
                     comment: chain.to_string(),
-                    commitment: hex::encode(commitment::of(&entries).as_bytes()),
+                    root: hex::encode(root::of(&entries).as_bytes()),
                 },
             );
         }
         files.push((
-            "commitments.json".to_string(),
-            serde_json::to_string_pretty(&commitments)? + "\n",
+            "roots.json".to_string(),
+            serde_json::to_string_pretty(&roots)? + "\n",
         ));
-        generated.push((name, files, commitments.len()));
+        generated.push((name, files, roots.len()));
     }
 
     for (name, files, chains) in generated {

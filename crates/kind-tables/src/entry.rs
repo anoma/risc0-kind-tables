@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// A kind, written as its `(logic_ref, label_ref)`, and the kind point it is assigned.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entry {
-    /// Review context for the entry; not covered by the commitment.
+    /// Review context for the entry; not covered by the root.
     #[serde(rename = "_metadata", default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Metadata>,
     #[serde(with = "hex_digest")]
@@ -24,7 +24,7 @@ pub struct Entry {
 }
 
 /// What a kind belongs to: the circuit version behind `logic_ref`, and the deployment behind `label_ref`.
-/// The commitment covers none of it, so it stays free to carry whatever a reviewer needs.
+/// The root covers none of it, so it stays free to carry whatever a reviewer needs.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Metadata {
@@ -106,7 +106,7 @@ impl Entry {
     }
 }
 
-/// The entry as the resource machine loads it, without the metadata the commitment does not cover.
+/// The entry as the resource machine loads it, without the metadata the root does not cover.
 #[cfg(feature = "arm")]
 impl From<&Entry> for anoma_rm_risc0::compliance::KindTableEntry {
     fn from(entry: &Entry) -> Self {

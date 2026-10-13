@@ -51,26 +51,22 @@ fn unit_root(table: &KindTable) -> Digest {
 }
 
 #[test]
-fn the_local_commitment_matches_the_circuit_loader() {
+fn the_local_root_matches_the_circuit_loader() {
     let path = staging_table(&NamedChain::Sepolia.into());
     let table = Table::load(&path).expect("the staging sepolia table exists");
 
     init_kind_table_from_file(&path).expect("the upstream loader accepts the generated table");
     assert_eq!(
         kind_table_root().expect("the loader installed the table"),
-        table.commitment(),
+        table.root(),
     );
 }
 
 #[test]
-fn every_converted_table_commits_to_its_recorded_commitment() {
-    for (environment, commitments, tables) in [
-        ("staging", staging::commitments(), staging::tables()),
-        (
-            "production",
-            production::commitments(),
-            production::tables(),
-        ),
+fn every_converted_table_commits_to_its_recorded_root() {
+    for (environment, roots, tables) in [
+        ("staging", staging::roots(), staging::tables()),
+        ("production", production::roots(), production::tables()),
     ] {
         for (chain, table) in tables {
             let entries = table.entries.iter().map(KindTableEntry::from).collect();
@@ -78,7 +74,7 @@ fn every_converted_table_commits_to_its_recorded_commitment() {
                 KindTable::from_entries(entries).expect("arm-risc0 accepts the converted table");
             assert_eq!(
                 unit_root(&converted),
-                commitments[chain],
+                roots[chain],
                 "{environment} {chain}: a unit given the converted table commits to another table"
             );
         }
