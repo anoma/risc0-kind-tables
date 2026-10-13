@@ -52,7 +52,7 @@ transfer_library = { workspace = true, optional = true }
 [dev-dependencies]
 # The tests read the Solana deployment record, which only this feature compiles.
 anoma-risc0-kind-tables = { path = ".", features = ["solana-deployments"] }
-# The EVM deployment record the offline table test reads the current forwarders from.
+# The EVM deployment record the offline table test reads the environments' forwarders from.
 anomapay-erc20-forwarder-bindings = { workspace = true }
 
 [[bin]]

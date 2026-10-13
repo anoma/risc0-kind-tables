@@ -28,8 +28,9 @@ pub struct Entry {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Metadata {
-    /// One supported token behind an ERC20 forwarder. `forwarder` is the address inside this kind's label. On
-    /// a V1 member it is the V1 forwarder, whose tokens move to the current one.
+    /// One supported token behind an ERC20 forwarder. `forwarder` is the address inside this kind's label. On a
+    /// member under the legacy forwarder's label it is the legacy ERC20 forwarder, whose tokens move to the
+    /// environment's forwarder.
     #[serde(rename = "ERC20Resource")]
     Erc20 {
         version: String,
@@ -40,8 +41,8 @@ pub enum Metadata {
         forwarder: Address,
         /// `active` if and only if `alias_of` is absent: the backend creates only that member's resources.
         status: Status,
-        /// The kind this entry takes its kind point from. Absent only on the active version under the current
-        /// forwarder's label.
+        /// The kind this entry takes its kind point from. Absent only on the active version under the label of the
+        /// environment's forwarder.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         alias_of: Option<AliasOf>,
     },
@@ -77,8 +78,8 @@ impl Metadata {
     }
 }
 
-/// The kind an alias takes its kind point from: the active circuit version under the current forwarder's
-/// label. Written into `_metadata`, so an alias says what it is a second name for.
+/// The kind an alias takes its kind point from: the active circuit version under the label of the environment's
+/// forwarder. Written into `_metadata`, so an alias says what it is a second name for.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AliasOf {
     pub version: String,
@@ -98,8 +99,8 @@ impl Entry {
     }
 
     /// Whether the entry is assigned another kind as its kind point, not its own, so that the table is the only
-    /// place it can come from. Generic call and the active version under the current forwarder's label are
-    /// not.
+    /// place it can come from. Generic call and the active version under the label of the environment's forwarder
+    /// are not.
     pub fn is_alias(&self) -> bool {
         !kind::point(&self.logic_ref, &self.label_ref).is_ok_and(|point| point == self.kind_point)
     }

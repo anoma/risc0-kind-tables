@@ -10,8 +10,8 @@ use anomapay_erc20_forwarder_bindings::addresses::{Environment, erc20_forwarder_
 use risc0_zkvm::Digest;
 
 /// The alias rules of a fungibility domain, checked on one member: it is assigned the domain's kind point
-/// (the kind of the active version under the current forwarder's label), its version is in `listed`, it is
-/// active if and only if it has no `alias_of`, and an `alias_of` names the active version under that label.
+/// (the kind of the active version under the label of the environment's forwarder), its version is in `listed`, it
+/// is active if and only if it has no `alias_of`, and an `alias_of` names the active version under that label.
 fn check_member(
     context: &str,
     entry: &Entry,
@@ -46,7 +46,7 @@ fn check_member(
             assert_eq!(
                 (entry.logic_ref, entry.label_ref),
                 (active.logic_ref, active_label),
-                "{context}: only the active version under the current forwarder has no alias_of"
+                "{context}: only the active version under the environment's forwarder has no alias_of"
             );
         }
         Some(alias_of) => {
@@ -57,17 +57,17 @@ fn check_member(
             assert_eq!(
                 (&alias_of.version, alias_of.logic_ref, alias_of.label_ref),
                 (&active.version, active.logic_ref, active_label),
-                "{context}: alias_of does not name the active version under the current forwarder"
+                "{context}: alias_of does not name the active version under the environment's forwarder"
             );
         }
     }
 }
 
 /// No kind point is authored. A token entry is assigned its fungibility domain's kind point — the kind of the
-/// active version under the label of the chain's current forwarder — and every alias says so in `alias_of`.
-/// Every other entry is assigned its own kind. This reads the embedded tables only; the current forwarder comes
-/// from the deployment records (the ERC20 forwarder bindings, and the Solana deployment record), never from the
-/// entries themselves, so a table built for the wrong forwarder fails here.
+/// active version under the label of the environment's forwarder on the chain — and every alias says so in
+/// `alias_of`. Every other entry is assigned its own kind. This reads the embedded tables only; the environment's
+/// forwarder comes from the deployment records (the ERC20 forwarder bindings, and the Solana deployment record),
+/// never from the entries themselves, so a table built for the wrong forwarder fails here.
 #[test]
 fn token_entries_share_their_fungibility_domains_kind_point() {
     for (module, environment, tables) in [
@@ -139,10 +139,10 @@ fn a_token_has_an_active_row_if_and_only_if_it_asks_for_a_precomputed_kind_point
             // (symbol, active kind, whether the token asks for a precomputed kind point)
             let tokens: Vec<(&str, (Digest, Digest), bool)> = match known {
                 Chain::Evm(named) => match erc20_forwarder_address(environment, &named) {
-                    Some(current) => anoma_risc0_kind_tables::tokens::on(named)
+                    Some(forwarder) => anoma_risc0_kind_tables::tokens::on(named)
                         .iter()
                         .map(|token| {
-                            let label_ref = kind::erc20_label_ref(&current, &token.address);
+                            let label_ref = kind::erc20_label_ref(&forwarder, &token.address);
                             let active = (circuits::erc20_active().logic_ref, label_ref);
                             (token.symbol.as_str(), active, token.precompute_kind_point)
                         })

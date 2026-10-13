@@ -1,8 +1,8 @@
-//! The soft-migration gate: on a fork of the staging chain, a V1 resource converts and leaves through the current
-//! forwarder, in transactions proven against the staging table this source generates. It needs the forked protocol
-//! adapter to store the generated commitment and the current forwarder to hold the V1 balance, which a promotion into
-//! `staging` requires. The fixture is alice's V1 USDC resource on Sepolia, so a fork of another chain skips, and every
-//! run consumes the same resource, because it runs on a fork.
+//! The soft-migration gate: on a fork of the staging chain, a legacy-forwarder resource converts and leaves through the
+//! staging forwarder, in transactions proven against the staging table this source generates. It needs the forked
+//! protocol adapter to store the generated commitment and the staging forwarder to hold the tokens moved from the
+//! legacy forwarder, which a promotion into `staging` requires. The fixture is alice's legacy-forwarder USDC resource
+//! on Sepolia, so a fork of another chain skips, and every run consumes the same resource, because it runs on a fork.
 
 #![cfg(feature = "e2e")]
 
@@ -32,8 +32,9 @@ use transfer_witness::{ValueInfo, calculate_persistent_value_ref};
 
 type EvmE2eEnv = anoma_pa_evm_integration_test::envs::e2e::Environment;
 
-/// Alice's V1 USDC resource, with its path in the tree the protocol adapter holds since the state migration.
-struct V1Resource {
+/// Alice's legacy-forwarder USDC resource, with its path in the tree the protocol adapter holds since the state
+/// migration.
+struct LegacyForwarderResource {
     chain_id: u64,
     token: Address,
     resource: Resource,
@@ -47,9 +48,9 @@ fn b256(fixture: &Value, key: &str) -> anyhow::Result<B256> {
 }
 
 /// Reads the fixture and checks that the resource opens to its commitment and carries alice's value ref.
-fn v1_resource() -> anyhow::Result<V1Resource> {
+fn legacy_forwarder_resource() -> anyhow::Result<LegacyForwarderResource> {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/sepolia-v1-usdc-resource.json");
+        .join("tests/fixtures/sepolia-legacy-forwarder-usdc-resource.json");
     let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path)?)?;
 
     let resource: Resource = serde_json::from_value(fixture["resource"].clone())?;
@@ -87,7 +88,7 @@ fn v1_resource() -> anyhow::Result<V1Resource> {
         "the fixture path does not lead to the root {root}"
     );
 
-    Ok(V1Resource {
+    Ok(LegacyForwarderResource {
         chain_id: fixture["chainId"].as_u64().context("no chain ID")?,
         token: Address::from_str(fixture["token"].as_str().context("no token")?)?,
         resource,
@@ -97,23 +98,28 @@ fn v1_resource() -> anyhow::Result<V1Resource> {
 }
 
 /// The fixture resource, if the fork is of its chain and the resource is unspent there.
-async fn unspent_v1_resource(env: &EvmE2eEnv) -> anyhow::Result<Option<V1Resource>> {
-    let v1 = v1_resource()?;
-    if chain_id(env)? != v1.chain_id {
-        eprintln!("skipped: the fixture resource is on chain {}", v1.chain_id);
+async fn unspent_legacy_forwarder_resource(
+    env: &EvmE2eEnv,
+) -> anyhow::Result<Option<LegacyForwarderResource>> {
+    let legacy = legacy_forwarder_resource()?;
+    if chain_id(env)? != legacy.chain_id {
+        eprintln!(
+            "skipped: the fixture resource is on chain {}",
+            legacy.chain_id
+        );
         return Ok(None);
     }
     let spent = env
         .protocol_adapter
         .pa
-        .isNullifierContained(v1.nullifier)
+        .isNullifierContained(legacy.nullifier)
         .call()
         .await?;
     ensure!(
         !spent,
         "a transaction on chain consumed the fixture resource; replace it"
     );
-    Ok(Some(v1))
+    Ok(Some(legacy))
 }
 
 /// Loads the staging table this source generates for the fork's chain, before a fixture reads the table, and checks
@@ -139,9 +145,12 @@ async fn load_the_generated_table(env: &EvmE2eEnv) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// The recorded staging ERC20 forwarder, which the generated table names as the current forwarder. It must serve the
-/// forked protocol adapter and hold at least the quantity of the V1 resource.
-async fn current_forwarder(env: &EvmE2eEnv, v1: &V1Resource) -> anyhow::Result<Address> {
+/// The recorded staging ERC20 forwarder, the environment's forwarder of the generated staging table. It must serve the
+/// forked protocol adapter and hold at least the quantity of the legacy-forwarder resource.
+async fn staging_forwarder(
+    env: &EvmE2eEnv,
+    legacy: &LegacyForwarderResource,
+) -> anyhow::Result<Address> {
     let provider = env.protocol_adapter.pa.provider();
     let forwarder = erc20_forwarder(provider, ForwarderEnvironment::Staging)
         .await
@@ -151,17 +160,17 @@ async fn current_forwarder(env: &EvmE2eEnv, v1: &V1Resource) -> anyhow::Result<A
     let protocol_adapter = *env.protocol_adapter.pa.address();
     ensure!(
         served == protocol_adapter,
-        "the current forwarder {address} serves the protocol adapter {served}, the fork's is {protocol_adapter}"
+        "the staging forwarder {address} serves the protocol adapter {served}, the fork's is {protocol_adapter}"
     );
-    let held = erc20_example(v1.token, provider.clone())
+    let held = erc20_example(legacy.token, provider.clone())
         .balanceOf(address)
         .call()
         .await?;
-    let quantity = U256::from(v1.resource.quantity);
+    let quantity = U256::from(legacy.resource.quantity);
     ensure!(
         held >= quantity,
-        "the current forwarder {address} holds {held} of {}, the V1 resource carries {quantity}",
-        v1.token
+        "the staging forwarder {address} holds {held} of {}, the legacy-forwarder resource carries {quantity}",
+        legacy.token
     );
     Ok(address)
 }
@@ -169,27 +178,27 @@ async fn current_forwarder(env: &EvmE2eEnv, v1: &V1Resource) -> anyhow::Result<A
 #[rstest]
 #[case::e2e_test(EvmE2eEnv::setup_bare())]
 #[tokio::test]
-async fn unwrap_releases_a_v1_resource_through_the_current_forwarder(
+async fn unwrap_releases_a_legacy_forwarder_resource_through_the_staging_forwarder(
     #[future(awt)]
     #[case]
     env: anyhow::Result<EvmE2eEnv>,
 ) -> anyhow::Result<()> {
     let mut env = env.context("env setup failed")?;
-    let Some(v1) = unspent_v1_resource(&env).await? else {
+    let Some(legacy) = unspent_legacy_forwarder_resource(&env).await? else {
         return Ok(());
     };
     load_the_generated_table(&env).await?;
-    let forwarder = current_forwarder(&env, &v1).await?;
+    let forwarder = staging_forwarder(&env, &legacy).await?;
     let alice = identities::alice()?;
     let recipient = alice.address();
-    let quantity = U256::from(v1.resource.quantity);
+    let quantity = U256::from(legacy.resource.quantity);
 
     let unwrap = unwrap::build(
-        v1.resource,
+        legacy.resource,
         forwarder,
-        v1.token,
+        legacy.token,
         0,
-        Some(v1.path),
+        Some(legacy.path),
         unwrap::Overrides {
             owner: Some(alice),
             ..unwrap::Overrides::default()
@@ -200,7 +209,7 @@ async fn unwrap_releases_a_v1_resource_through_the_current_forwarder(
         .await
         .context("failed to prove the unwrap action")?;
 
-    let usdc = erc20_example(v1.token, env.protocol_adapter.pa.provider().clone());
+    let usdc = erc20_example(legacy.token, env.protocol_adapter.pa.provider().clone());
     let recipient_before = usdc.balanceOf(recipient).call().await?;
     let forwarder_before = usdc.balanceOf(forwarder).call().await?;
 
@@ -219,7 +228,7 @@ async fn unwrap_releases_a_v1_resource_through_the_current_forwarder(
     assert!(
         env.protocol_adapter
             .pa
-            .isNullifierContained(v1.nullifier)
+            .isNullifierContained(legacy.nullifier)
             .call()
             .await?
     );
@@ -229,28 +238,28 @@ async fn unwrap_releases_a_v1_resource_through_the_current_forwarder(
 #[rstest]
 #[case::e2e_test(EvmE2eEnv::setup_bare())]
 #[tokio::test]
-async fn transfer_converts_a_v1_resource_into_a_current_resource(
+async fn transfer_converts_a_legacy_forwarder_resource_into_a_staging_forwarder_resource(
     #[future(awt)]
     #[case]
     env: anyhow::Result<EvmE2eEnv>,
 ) -> anyhow::Result<()> {
     let mut env = env.context("env setup failed")?;
-    let Some(v1) = unspent_v1_resource(&env).await? else {
+    let Some(legacy) = unspent_legacy_forwarder_resource(&env).await? else {
         return Ok(());
     };
     load_the_generated_table(&env).await?;
-    let forwarder = current_forwarder(&env, &v1).await?;
-    let quantity = U256::from(v1.resource.quantity);
-    let usdc = erc20_example(v1.token, env.protocol_adapter.pa.provider().clone());
+    let forwarder = staging_forwarder(&env, &legacy).await?;
+    let quantity = U256::from(legacy.resource.quantity);
+    let usdc = erc20_example(legacy.token, env.protocol_adapter.pa.provider().clone());
     let forwarder_before = usdc.balanceOf(forwarder).call().await?;
 
-    // Alice's V1 resource becomes bob's resource under the current forwarder's label. No token moves.
+    // Alice's legacy-forwarder resource becomes bob's resource under the staging forwarder's label. No token moves.
     let transfer = transfer::build(
-        v1.resource,
+        legacy.resource,
         forwarder,
-        v1.token,
+        legacy.token,
         0,
-        Some(v1.path),
+        Some(legacy.path),
         transfer::Overrides::default(),
     )
     .context("failed to build the transfer action")?;
@@ -264,13 +273,13 @@ async fn transfer_converts_a_v1_resource_into_a_current_resource(
     assert!(
         env.protocol_adapter
             .pa
-            .isNullifierContained(v1.nullifier)
+            .isNullifierContained(legacy.nullifier)
             .call()
             .await?
     );
     assert_eq!(usdc.balanceOf(forwarder).call().await?, forwarder_before);
 
-    // Bob unwraps the current resource like any other.
+    // Bob unwraps the new resource like any other.
     let path = env
         .protocol_adapter()
         .commitment_tree()
@@ -279,7 +288,7 @@ async fn transfer_converts_a_v1_resource_into_a_current_resource(
     let unwrap = unwrap::build(
         transfer.created_persistent,
         forwarder,
-        v1.token,
+        legacy.token,
         1,
         Some(path),
         unwrap::Overrides::default(),
