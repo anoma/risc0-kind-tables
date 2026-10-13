@@ -7,8 +7,8 @@ use alloy_chains::NamedChain;
 use anoma_generic_call_forwarder_bindings::addresses::Environment as GenericCallEnvironment;
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
 use anoma_risc0_kind_tables::{
-    AliasOf, Caip2ChainId, Chain, CircuitVersion, Entry, Metadata, SolanaAddress, SolanaCluster,
-    Status, circuits, commitment, deployments, kind, tokens,
+    AliasOf, Caip2ChainId, Chain, CircuitVersion, Entry, Metadata, Status, circuits, commitment,
+    kind, tokens,
 };
 use anomapay_erc20_forwarder_bindings::addresses::Environment as Erc20Environment;
 use anyhow::{Context, Result, bail, ensure};
@@ -150,11 +150,10 @@ fn sorted(mut entries: Vec<Entry>, chain: &Chain) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
-/// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 and SPL token crates.
+/// The circuit version behind the generic-call logic ref, and that of the pinned ERC20 crate.
 struct Versions {
     transfer: String,
     generic_call: String,
-    spl_transfer: String,
 }
 
 /// Reads the circuit versions from the resolved dependency graph, so bumping a pin cannot leave a stale
@@ -213,7 +212,6 @@ fn versions() -> Result<Versions> {
     Ok(Versions {
         transfer: version_of("transfer_library")?,
         generic_call: version_of("anoma_generic_call_library")?,
-        spl_transfer: version_of("anomapay_solana_transfer_library")?,
     })
 }
 
@@ -224,14 +222,6 @@ fn pinned_erc20_circuits(versions: &Versions) -> Vec<(String, Digest)> {
     vec![(
         versions.transfer.clone(),
         digest(transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
-    )]
-}
-
-/// The SPL token circuit crates this generator pins, as `pinned_erc20_circuits` for the Solana transfer circuit.
-fn pinned_spl_token_circuits(versions: &Versions) -> Vec<(String, Digest)> {
-    vec![(
-        versions.spl_transfer.clone(),
-        digest(anomapay_solana_transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
     )]
 }
 
@@ -249,7 +239,7 @@ fn check_circuit_versions(versions: &Versions) -> Result<()> {
             "SPLTokenResource",
             circuits::check_spl_token,
             circuits::spl_token(),
-            pinned_spl_token_circuits(versions),
+            Vec::new(),
         ),
     ] {
         check().map_err(|error| anyhow::anyhow!("circuit-versions.json: {resource}: {error}"))?;
@@ -269,39 +259,6 @@ fn check_circuit_versions(versions: &Versions) -> Result<()> {
         }
     }
     Ok(())
-}
-
-/// The Solana cluster an environment's table is built for: devnet is staging, mainnet-beta is production.
-fn solana_cluster(environment: Environment) -> SolanaCluster {
-    match environment {
-        Environment::Staging => SolanaCluster::Devnet,
-        Environment::Production => SolanaCluster::MainnetBeta,
-    }
-}
-
-/// A Solana cluster's entries: one fungibility domain per supported mint under the forwarder program's label.
-/// As on EVM chains, the padding kind is not listed. Solana has no generic call forwarder, so no generic call
-/// entry.
-fn solana_entries(cluster: SolanaCluster, forwarder: SolanaAddress) -> Result<Vec<Entry>> {
-    let mut entries = Vec::new();
-    for token in tokens::spl_on(cluster) {
-        domain(
-            circuits::spl_token(),
-            circuits::spl_token_active(),
-            kind::spl_token_label_ref(&forwarder, &token.mint),
-            token.precompute_kind_point,
-            |version, status, alias_of| Metadata::SplToken {
-                version,
-                name: token.symbol.clone(),
-                mint: token.mint,
-                forwarder,
-                status,
-                alias_of,
-            },
-            &mut entries,
-        )?;
-    }
-    Ok(entries)
 }
 
 fn chain_entries(
@@ -415,20 +372,6 @@ fn main() -> Result<()> {
                 chain_entries(environment, chain, &versions)?,
             ));
         }
-        let cluster = solana_cluster(environment);
-        match deployments::solana_deployment(cluster) {
-            Some(deployment) => tables.push((
-                Chain::Solana(cluster),
-                solana_entries(cluster, deployment.forwarder)?,
-            )),
-            None if tokens::spl_on(cluster).is_empty() => {}
-            None => eprintln!(
-                "{}: {} supported mints but no deployment recorded - no token kinds emitted",
-                cluster.name(),
-                tokens::spl_on(cluster).len()
-            ),
-        }
-
         let mut files = Vec::new();
         let mut commitments = BTreeMap::new();
         for (chain, entries) in tables {

@@ -143,10 +143,5 @@ macro_rules! environment_module {
     };
 }
 
-environment_module!(
-    staging,
-    ("eip155", "11155111"),
-    ("eip155", "84532"),
-    ("solana", "EtWTRABZaYq6iMfeYKouRu166VU2xqa1")
-);
+environment_module!(staging, ("eip155", "11155111"), ("eip155", "84532"));
 environment_module!(production);

@@ -6,9 +6,5 @@
   "eip155:84532": {
     "_comment": "base-sepolia",
     "commitment": "25baaca36b9172cb111648f0382d07694753577d11e68c5f4571d0e1bf161a0b"
-  },
-  "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1": {
-    "_comment": "solana-devnet",
-    "commitment": "e6b8e1832b61d0d6ed3685ee46e62a8f4723a49df520096c5d96ff509263b483"
   }
 }

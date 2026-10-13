@@ -1,5 +1,5 @@
 use alloy_chains::NamedChain;
-use anoma_risc0_kind_tables::chain::{Chain, SolanaCluster};
+use anoma_risc0_kind_tables::chain::Chain;
 use anoma_risc0_kind_tables::circuits::{self, CircuitVersion, Status};
 use anoma_risc0_kind_tables::deployments::solana_deployment;
 use anoma_risc0_kind_tables::entry::Metadata;
@@ -195,29 +195,6 @@ fn table_accepts_an_evm_chain() {
         staging::table(NamedChain::Mainnet),
         Err(Error::UnrecordedChain(chain)) if chain == Caip2ChainId::eip155(1)
     ));
-}
-
-/// The staging environment records the solana-devnet table: the test mint's active member under the devnet
-/// forwarder's label, and nothing else.
-#[test]
-fn staging_records_the_solana_devnet_table() {
-    let devnet = SolanaCluster::Devnet;
-    let table = staging::table(devnet).expect("solana-devnet is recorded in staging");
-    let [member] = &table.entries[..] else {
-        panic!("expected exactly one entry, got {}", table.entries.len());
-    };
-    assert!(
-        matches!(member.metadata, Some(Metadata::SplToken { .. })),
-        "the entry is an SPL token member"
-    );
-    assert_eq!(
-        member.label_ref.to_string(),
-        "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
-        "the label is sha256(devnet forwarder ‖ test mint)"
-    );
-    assert_eq!(member.logic_ref, circuits::spl_token_active().logic_ref);
-    assert!(!member.is_alias(), "the active version keeps its own kind");
-    assert_eq!(staging::commitment(devnet).unwrap(), table.commitment());
 }
 
 /// The macro invocation lists the table files by hand, so pin it to `commitments.json`.
