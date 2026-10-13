@@ -18,7 +18,6 @@ solana-deployments = ["dep:anoma-pa-solana-client"]
 generate = [
   "solana-deployments",
   "dep:anoma-generic-call-forwarder-bindings",
-  "dep:anomapay-solana-transfer-library",
   "dep:anoma-generic-call-library",
   "dep:anoma-pa-evm-bindings",
   "dep:anoma-rm-risc0",
@@ -34,7 +33,6 @@ anoma-generic-call-forwarder-bindings = { workspace = true, optional = true }
 anoma-generic-call-library = { workspace = true, optional = true }
 anoma-pa-evm-bindings = { workspace = true, optional = true }
 anoma-pa-solana-client = { workspace = true, optional = true }
-anomapay-solana-transfer-library = { workspace = true, optional = true }
 anoma-rm-risc0 = { workspace = true, optional = true }
 anomapay-erc20-forwarder-bindings = { workspace = true, optional = true }
 anyhow = { workspace = true, optional = true }
