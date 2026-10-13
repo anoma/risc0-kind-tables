@@ -30,6 +30,8 @@ bs58 = "0.5.1"
 dotenvy = "0.15.7"
 hex = "0.4.3"
 k256 = { version = "0.13.3", features = ["arithmetic", "hash2curve"] }
+# The legacy circuit, which the legacy forwarders accept. Tag v3.0.0-rc.2 ships it with a host crate for arm-risc0 2 and its own witness crate.
+legacy-anomapay-erc20-library = { package = "transfer_library", git = "https://github.com/anoma/anomapay-erc20-resource", tag = "v3.0.0-rc.2" }
 risc0-zkvm = { version = "3.0.3", default-features = false }
 rstest = "0.26.1"
 semver = "1.0.27"

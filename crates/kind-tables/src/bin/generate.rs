@@ -150,9 +150,10 @@ fn sorted(mut entries: Vec<Entry>, chain: &Chain) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
-/// The circuit version behind the generic-call logic ref, and that of the pinned ERC20 crate.
+/// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 crates.
 struct Versions {
     anomapay_erc20: String,
+    legacy_anomapay_erc20: String,
     generic_call: String,
 }
 
@@ -211,18 +212,25 @@ fn versions() -> Result<Versions> {
 
     Ok(Versions {
         anomapay_erc20: version_of("anomapay_erc20_library")?,
+        legacy_anomapay_erc20: version_of("legacy_anomapay_erc20_library")?,
         generic_call: version_of("anoma_generic_call_library")?,
     })
 }
 
-/// The ERC20 circuit crate this generator pins, the active version's, with the logic ref it compiles to. A release
-/// replaces it. A version whose crate is no longer pinned stays listed in `circuit-versions.json` and is checked
-/// against nothing.
+/// The ERC20 circuit crates this generator pins, the active version's and the legacy circuit's, each with the logic
+/// ref it compiles to. A release replaces the active pin. A version whose crate is not pinned stays listed in
+/// `circuit-versions.json` and is checked against nothing.
 fn pinned_erc20_circuits(versions: &Versions) -> Vec<(String, Digest)> {
-    vec![(
-        versions.anomapay_erc20.clone(),
-        digest(anomapay_erc20_library::ANOMAPAY_ERC20_CIRCUIT_ID.as_bytes()),
-    )]
+    vec![
+        (
+            versions.anomapay_erc20.clone(),
+            digest(anomapay_erc20_library::ANOMAPAY_ERC20_CIRCUIT_ID.as_bytes()),
+        ),
+        (
+            versions.legacy_anomapay_erc20.clone(),
+            digest(legacy_anomapay_erc20_library::TOKEN_TRANSFER_ID.as_bytes()),
+        ),
+    ]
 }
 
 /// Each list must pass its own checks, and every pinned circuit crate must be listed with the logic ref it
@@ -244,16 +252,9 @@ fn check_circuit_versions(versions: &Versions) -> Result<()> {
     ] {
         check().map_err(|error| anyhow::anyhow!("circuit-versions.json: {resource}: {error}"))?;
         for (version, compiled) in pinned {
-            let listed = listed
-                .iter()
-                .find(|circuit| circuit.version == version)
-                .with_context(|| {
-                    format!("a {resource} circuit crate at {version} is pinned, but circuit-versions.json does not list it")
-                })?;
             ensure!(
-                listed.logic_ref == compiled,
-                "circuit-versions.json records {resource} {version} with logic ref {}, but the pinned crate compiles to {}",
-                hex(&listed.logic_ref),
+                listed.iter().any(|circuit| circuit.logic_ref == compiled),
+                "a {resource} circuit crate at {version} is pinned and compiles to logic ref {}, which circuit-versions.json does not list",
                 hex(&compiled)
             );
         }
