@@ -46,7 +46,7 @@ async fn the_promoted_environment_stores_the_generated_commitments() -> Result<(
                         format!("no {environment:?} protocol adapter recorded on {chain}")
                     })?;
                 let stored = adapter
-                    .getKindTableCommitment()
+                    .getKindTableRoot()
                     .call()
                     .await
                     .with_context(|| chain.to_string())?;

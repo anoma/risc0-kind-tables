@@ -14,15 +14,17 @@ edition = "2024"
 [workspace.dependencies]
 alloy = { version = "2.3.0", features = ["full"] }
 alloy-chains = "0.2.36"
-anoma-generic-call-forwarder-bindings = "2.0.0-rc.5"
+anoma-generic-call-forwarder-bindings = "2.0.0-rc.6"
 # The circuit crates are pinned exactly: another build has another logic ref, and so another kind.
-anoma-generic-call-library = "=3.0.0-rc.3"
-anoma-pa-evm-bindings = "3.0.0-rc.16"
-anoma-pa-testkit = "1.0.0-rc.1"
-anoma-rm-risc0 = { version = "=2.0.0-rc.6", default-features = false, features = [
+anoma-generic-call-library = "=2.0.0-rc.1"
+anoma-pa-evm-bindings = "3.0.0-rc.17"
+anoma-pa-testkit = "1.0.0-rc.2"
+anoma-rm-risc0 = { version = "=2.0.0-rc.7", default-features = false, features = [
   "transaction",
 ] }
-anomapay-erc20-forwarder-bindings = "3.0.0-rc.13"
+anomapay-erc20-forwarder-bindings = "3.0.0-rc.16"
+anomapay_erc20_library = "=2.0.0-rc.1"
+anomapay_erc20_witness = "=2.0.0-rc.1"
 anyhow = "1.0.104"
 bs58 = "0.5.1"
 dotenvy = "0.15.7"
@@ -36,11 +38,10 @@ serde_json = "1.0.151"
 thiserror = "2.0.19"
 tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros"] }
 transfer_library = "=3.0.0-rc.3"
-transfer_witness = "=3.0.0-rc.3"
 
 # The e2e test crates of the protocol adapter and the ERC20 forwarder, pinned by git tag.
-anoma-pa-evm-integration-test = { git = "https://github.com/anoma/pa-evm", tag = "bindings/v3.0.0-rc.16" }
-anomapay-erc20-forwarder-integration-test = { git = "https://github.com/anoma/anomapay-erc20-forwarder", tag = "bindings/v3.0.0-rc.13" }
+anoma-pa-evm-integration-test = { git = "https://github.com/anoma/pa-evm", tag = "bindings/v3.0.0-rc.17" }
+anomapay-erc20-forwarder-integration-test = { git = "https://github.com/anoma/anomapay-erc20-forwarder", tag = "bindings/v3.0.0-rc.15" }
 
 # The Solana deployment record, pinned by commit.
 anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-client", rev = "da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59" }

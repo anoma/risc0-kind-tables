@@ -38,7 +38,7 @@ serde_json = { workspace = true }
 solana-program = { workspace = true }
 spl-token = { workspace = true }
 tokio = { workspace = true }
-transfer_witness = { workspace = true }
+anomapay_erc20_witness = { workspace = true }
 
 [dev-dependencies]
 rstest = { workspace = true }

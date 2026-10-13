@@ -7,9 +7,10 @@ use anoma_risc0_kind_tables::table::{production, staging};
 use anoma_risc0_kind_tables::{Entry, Metadata};
 use anoma_rm_risc0::Digest;
 use anoma_rm_risc0::compliance::{self, KindTableEntry};
+use anoma_rm_risc0::kind_table::KindTable;
 use anoma_rm_risc0::nullifier_key::NullifierKey;
 use anoma_rm_risc0::resource::{ConsumedResourceWitness, Resource};
-use transfer_witness::calculate_label_ref;
+use anomapay_erc20_witness::calculate_label_ref;
 
 /// A resource kind, written as its `(logic_ref, label_ref)`.
 type Kind = (Digest, Digest);
@@ -58,7 +59,7 @@ fn delta(consumed: Kind, created: Kind, table: &[KindTableEntry]) -> ([u32; 8], 
     let mut witness = compliance::from_resources(
         vec![ConsumedResourceWitness::from_resource(consumed, nf_key)],
         vec![created],
-        table.to_vec(),
+        &KindTable::from_entries(table.to_vec()).expect("arm-risc0 accepts the table"),
     );
     let mut rcv = [0; 32];
     rcv[31] = 1;
