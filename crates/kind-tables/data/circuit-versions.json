@@ -9,6 +9,11 @@
     {
       "version": "3.0.0-rc.3",
       "logic_ref": "ca45347792e0e32145325efa7515a552ac9129c5b7193d933219edc6d00c93ad",
+      "status": "deprecated"
+    },
+    {
+      "version": "2.0.0-rc.1",
+      "logic_ref": "51c2403f4e1de40c3c3ecef69385f8772ee99b4a610e88f1ad2b1b85b481a7f2",
       "status": "active"
     }
   ],

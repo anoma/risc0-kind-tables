@@ -7,7 +7,8 @@ use anoma_risc0_kind_tables::table::{production, staging};
 use anoma_risc0_kind_tables::{Caip2ChainId, Table};
 use anoma_rm_risc0::Digest;
 use anoma_rm_risc0::compliance::{self, KindTableEntry};
-use anoma_rm_risc0::constants::{init_kind_table_from_file, kind_table_hash};
+use anoma_rm_risc0::constants::{init_kind_table_from_file, kind_table_root};
+use anoma_rm_risc0::kind_table::KindTable;
 use anoma_rm_risc0::nullifier_key::NullifierKey;
 use anoma_rm_risc0::resource::{ConsumedResourceWitness, Resource};
 use std::path::PathBuf;
@@ -18,13 +19,15 @@ fn staging_table(chain: &Caip2ChainId) -> PathBuf {
         .join(chain.file_name())
 }
 
-/// The kind table commitment a compliance unit reproduces for `table`. The unit consumes one ephemeral resource and
-/// creates one of the same kind.
-fn unit_commitment(table: Vec<KindTableEntry>) -> Digest {
+/// The kind table root a compliance unit reproduces for `table`. The unit consumes one ephemeral resource of the
+/// table's first kind and creates one of the same kind: a unit that takes no kind from its table commits to the empty
+/// table instead.
+fn unit_root(table: &KindTable) -> Digest {
+    let kind = table.entries().first().expect("the table lists a kind");
     let nf_key = NullifierKey::from_bytes([1; 32]);
     let consumed = Resource {
-        logic_ref: Digest::default(),
-        label_ref: Digest::default(),
+        logic_ref: kind.logic_ref,
+        label_ref: kind.label_ref,
         quantity: 1,
         value_ref: Digest::default(),
         is_ephemeral: true,
@@ -44,7 +47,7 @@ fn unit_commitment(table: Vec<KindTableEntry>) -> Digest {
     );
     compliance::constrain(&witness)
         .expect("the unit is compliant")
-        .kind_table_commitment
+        .kind_table_root
 }
 
 #[test]
@@ -54,8 +57,8 @@ fn the_local_commitment_matches_the_circuit_loader() {
 
     init_kind_table_from_file(&path).expect("the upstream loader accepts the generated table");
     assert_eq!(
-        kind_table_hash().expect("the loader installed the table"),
-        &table.commitment(),
+        kind_table_root().expect("the loader installed the table"),
+        table.commitment(),
     );
 }
 
@@ -71,8 +74,10 @@ fn every_converted_table_commits_to_its_recorded_commitment() {
     ] {
         for (chain, table) in tables {
             let entries = table.entries.iter().map(KindTableEntry::from).collect();
+            let converted =
+                KindTable::from_entries(entries).expect("arm-risc0 accepts the converted table");
             assert_eq!(
-                unit_commitment(entries),
+                unit_root(&converted),
                 commitments[chain],
                 "{environment} {chain}: a unit given the converted table commits to another table"
             );
