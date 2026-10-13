@@ -152,8 +152,8 @@ fn sorted(mut entries: Vec<Entry>, chain: &Chain) -> Result<Vec<Entry>> {
 
 /// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 crates.
 struct Versions {
-    anomapay_erc20: String,
     legacy_anomapay_erc20: String,
+    anomapay_erc20: String,
     generic_call: String,
 }
 
@@ -211,24 +211,24 @@ fn versions() -> Result<Versions> {
     };
 
     Ok(Versions {
-        anomapay_erc20: version_of("anomapay_erc20_library")?,
         legacy_anomapay_erc20: version_of("legacy_anomapay_erc20_library")?,
+        anomapay_erc20: version_of("anomapay_erc20_library")?,
         generic_call: version_of("anoma_generic_call_library")?,
     })
 }
 
-/// The ERC20 circuit crates this generator pins, the active version's and the legacy circuit's, each with the logic
+/// The ERC20 circuit crates this generator pins, the legacy circuit's and the active version's, each with the logic
 /// ref it compiles to. A release replaces the active pin. A version whose crate is not pinned stays listed in
 /// `circuit-versions.json` and is checked against nothing.
 fn pinned_erc20_circuits(versions: &Versions) -> Vec<(String, Digest)> {
     vec![
         (
-            versions.anomapay_erc20.clone(),
-            digest(anomapay_erc20_library::ANOMAPAY_ERC20_CIRCUIT_ID.as_bytes()),
-        ),
-        (
             versions.legacy_anomapay_erc20.clone(),
             digest(legacy_anomapay_erc20_library::TOKEN_TRANSFER_ID.as_bytes()),
+        ),
+        (
+            versions.anomapay_erc20.clone(),
+            digest(anomapay_erc20_library::ANOMAPAY_ERC20_CIRCUIT_ID.as_bytes()),
         ),
     ]
 }
