@@ -57,7 +57,7 @@ async fn the_promoted_environment_stores_the_generated_roots() -> Result<()> {
                     .with_context(|| format!("no protocol adapter recorded on {chain}"))?
                     .adapter;
                 solana_rpc(cluster)
-                    .adapter_kind_table_commitment(&adapter)
+                    .adapter_kind_table_root(&adapter)
                     .await?
                     .with_context(|| format!("{chain}: the adapter {adapter} is not initialized"))?
             }
