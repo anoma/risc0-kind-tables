@@ -72,9 +72,9 @@ _Avoid_: V1 forwarder, retired forwarder, old forwarder, immutable ERC20 forward
 An ERC20 resource whose label names a legacy ERC20 forwarder.
 _Avoid_: V1 resource, immutable-forwarder resource, 2.0.0 resource (a circuit version names a logic ref, and a logic ref does not tell a legacy-forwarder resource from one of the environment's forwarder)
 
-**Kind table commitment**:
-The digest a protocol adapter stores and every compliance proof reproduces, covering every entry and their order. The value this repo exists to publish.
-_Avoid_: kind table hash, table root
+**Kind table root**:
+The Merkle root over a table's entries that a protocol adapter stores and every compliance proof that takes a kind from the table reproduces. The value this repo exists to publish.
+_Avoid_: kind table hash, kind table commitment
 
 **Supported token**:
 An ERC20 contract or SPL token mint this project maintains kinds for, on a named chain. Being supported is a standing commitment and does not depend on where anything is deployed. Each one says whether the table precomputes its active kind point, and each ERC20 token whether its legacy-forwarder resources can soft-migrate; Solana has no legacy forwarder.
@@ -91,4 +91,4 @@ _Avoid_: network, deployment target
 The two environments, matching the protocol adapter's. Staging tracks `staging`, production tracks `main`.
 
 **Promotion gate**:
-The assertion, run only on a pull request into an environment's branch, that every protocol adapter in that environment already stores the commitment this source computes.
+The assertion, run only on a pull request into an environment's branch, that every protocol adapter in that environment already stores the root this source computes.

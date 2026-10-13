@@ -1,6 +1,6 @@
 //! The soft-migration gate: on a fork of the staging chain, a legacy-forwarder resource converts and leaves through the
 //! staging forwarder, in transactions proven against the staging table this source generates. It needs the forked
-//! protocol adapter to store the generated commitment and the staging forwarder to hold the tokens moved from the
+//! protocol adapter to store the generated root and the staging forwarder to hold the tokens moved from the
 //! legacy forwarder, which a promotion into `staging` requires. The fixture is alice's legacy-forwarder USDC resource
 //! on Sepolia, so a fork of another chain skips, and every run consumes the same resource, because it runs on a fork.
 
@@ -123,7 +123,7 @@ async fn unspent_legacy_forwarder_resource(
 }
 
 /// Loads the staging table this source generates for the fork's chain, before a fixture reads the table, and checks
-/// that the forked protocol adapter stores its commitment.
+/// that the forked protocol adapter stores its root.
 async fn load_the_generated_table(env: &EvmE2eEnv) -> anyhow::Result<()> {
     let chain = Caip2ChainId::eip155(chain_id(env)?);
     let table = table::staging::table(chain.clone())

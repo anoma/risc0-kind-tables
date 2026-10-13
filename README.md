@@ -2,11 +2,11 @@
 
 [![Crates](https://github.com/anoma/risc0-kind-tables/actions/workflows/crates.yml/badge.svg)](https://github.com/anoma/risc0-kind-tables/actions/workflows/crates.yml)
 
-The kind tables the Anoma protocol adapters are committed to — one per chain per environment — and the supported-token list they are built from. The `anoma-risc0-kind-tables` crate computes the commitments the way the compliance circuit does, so one source answers what every protocol adapter must store.
+The kind tables the Anoma protocol adapters are committed to — one per chain per environment — and the supported-token list they are built from. The `anoma-risc0-kind-tables` crate computes the roots the way the compliance circuit does, so one source answers what every protocol adapter must store.
 
 ## How it fits together
 
-A kind table maps kinds, written as `(logic_ref, label_ref)`, to kind points. Its commitment — the Merkle root that arm-risc0 builds over the entries — is what a protocol adapter stores via `setKindTableRoot` and what every compliance proof that takes a kind from the table reproduces. A chain's table is derived: the generic call entry from the recorded forwarder, and the ERC20 entries of each supported token from the recorded ERC20 forwarder. The padding kind has no entry: nothing converts padding resources and their speed does not matter, so the compliance circuit computes their kind point, and the tables do not depend on the arm-risc0 release (ADR-0008). The ERC20 entries of one token form a fungibility domain: every listed circuit version under the forwarder's label and, for a token marked for soft migration on a chain that ran a legacy protocol adapter, the legacy ERC20 forwarder's logic ref under its own label, all assigned the kind of the active version under the label of the environment's forwarder, so their resources are fungible. The aliases are always rows. The active version keeps its own kind, which the circuit computes without the table, so it has a row only if the token sets `precompute_kind_point`: the circuit then reads its kind point instead of computing it by hash to curve, and every proof hashes one more row. Every entry is machine-checked — an alias against its fungibility domain, every other entry against its own kind — and no kind point is authored.
+A kind table maps kinds, written as `(logic_ref, label_ref)`, to kind points. Its root — the Merkle root that arm-risc0 builds over the entries — is what a protocol adapter stores via `setKindTableRoot` and what every compliance proof that takes a kind from the table reproduces. A chain's table is derived: the generic call entry from the recorded forwarder, and the ERC20 entries of each supported token from the recorded ERC20 forwarder. The padding kind has no entry: nothing converts padding resources and their speed does not matter, so the compliance circuit computes their kind point, and the tables do not depend on the arm-risc0 release (ADR-0008). The ERC20 entries of one token form a fungibility domain: every listed circuit version under the forwarder's label and, for a token marked for soft migration on a chain that ran a legacy protocol adapter, the legacy ERC20 forwarder's logic ref under its own label, all assigned the kind of the active version under the label of the environment's forwarder, so their resources are fungible. The aliases are always rows. The active version keeps its own kind, which the circuit computes without the table, so it has a row only if the token sets `precompute_kind_point`: the circuit then reads its kind point instead of computing it by hash to curve, and every proof hashes one more row. Every entry is machine-checked — an alias against its fungibility domain, every other entry against its own kind — and no kind point is authored.
 
 A Solana cluster's table follows the same rules from different records. Each supported SPL token mint is one fungibility domain under the label `sha256(forwarder program id ‖ mint)`, with every listed SPL token circuit version as a member, and the forwarder program comes from the deployment record in `anoma-pa-solana-client`, pinned by commit. Solana has no generic call forwarder and no V1 forwarder, so its tables have neither entry (ADR-0010). For now, the generator builds no Solana table: the AnomaPay Solana resource pins `anoma-rm-risc0 =2.0.0-rc.6`, so this repository leaves it out.
 
@@ -18,14 +18,14 @@ crates/kind-tables/            the library and the generator
 │   ├── tokens.json            authored: the supported tokens, per chain
 │   ├── circuit-versions.json  authored: the ERC20 and SPL token circuit versions, once for every chain
 │   └── generated/
-│       ├── staging/           <namespace>_<reference>.json tables + commitments.json
+│       ├── staging/           <namespace>_<reference>.json tables + roots.json
 │       └── production/
 └── src/
 crates/integration-test/       on-chain token, forwarder and Solana cluster checks, promotion freshness and soft-migration gates, arm-risc0 cross-check
 docs/adr/                      the decisions behind this layout
 ```
 
-Every chain-keyed file — `tokens.json`, `commitments.json` — is keyed by the chain's CAIP-2 chain ID, such as `eip155:11155111` for Sepolia, so that a chain of another family than EVM, such as Solana, has a key too. A Solana cluster's reference is the first 32 characters of its base58 genesis hash: devnet is `solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1`. Each section carries the chain name in a `_comment` the loaders ignore. A generated table is named for the same ID with the colon replaced by `_`, such as `eip155_11155111.json`, because `cargo package` refuses a colon in a file name (ADR-0009). It is otherwise `anoma-rm-risc0`'s kind table schema, so `init_kind_table_from_file` reads one unchanged. The lookups `table`, `commitment` and `tokens::on` take a `Caip2ChainId`, an `alloy_chains::NamedChain` or a `SolanaCluster`.
+Every chain-keyed file — `tokens.json`, `roots.json` — is keyed by the chain's CAIP-2 chain ID, such as `eip155:11155111` for Sepolia, so that a chain of another family than EVM, such as Solana, has a key too. A Solana cluster's reference is the first 32 characters of its base58 genesis hash: devnet is `solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1`. Each section carries the chain name in a `_comment` the loaders ignore. A generated table is named for the same ID with the colon replaced by `_`, such as `eip155_11155111.json`, because `cargo package` refuses a colon in a file name (ADR-0009). It is otherwise `anoma-rm-risc0`'s kind table schema, so `init_kind_table_from_file` reads one unchanged. The lookups `table`, `root` and `tokens::on` take a `Caip2ChainId`, an `alloy_chains::NamedChain` or a `SolanaCluster`.
 
 The `solana-deployments` feature exposes the recorded Solana deployment of each cluster (the protocol adapter and SPL token forwarder programs), read from `anoma-pa-solana-client`. The generator and the integration tests use it; a consumer that only reads tables does not need it.
 
@@ -33,7 +33,7 @@ The `arm` feature converts an `Entry` into `anoma-rm-risc0`'s `KindTableEntry`, 
 
 ## Entries
 
-An entry carries its kind, the kind point it is assigned, and a `_metadata` object naming what the kind belongs to. The commitment covers `logic_ref`, `label_ref` and `kind_point` only, so `_metadata` is free to carry whatever a reviewer needs and never moves the commitment. `version` is the version of the circuit crate that owns `logic_ref`, read from the resolved dependency graph, so bumping a pin cannot leave a stale version behind. `type` names the resource the kind belongs to: `ERC20Resource`, `SPLTokenResource`, or `GenericCallResource`. An `SPLTokenResource` row carries `mint` and `forwarder` as base58 addresses where an ERC20 row carries `token` and `forwarder`.
+An entry carries its kind, the kind point it is assigned, and a `_metadata` object naming what the kind belongs to. The root covers `logic_ref`, `label_ref` and `kind_point` only, so `_metadata` is free to carry whatever a reviewer needs and never moves the root. `version` is the version of the circuit crate that owns `logic_ref`, read from the resolved dependency graph, so bumping a pin cannot leave a stale version behind. `type` names the resource the kind belongs to: `ERC20Resource`, `SPLTokenResource`, or `GenericCallResource`. An `SPLTokenResource` row carries `mint` and `forwarder` as base58 addresses where an ERC20 row carries `token` and `forwarder`.
 
 ```json
 {
@@ -90,7 +90,7 @@ The generator then writes one more member per token on every chain that has the 
 
 ## Workflows
 
-Adding a token, listing a circuit version and recording a V1 forwarder all change a chain's entries, and therefore change its commitment. A transaction built against the new table verifies only after that chain's protocol adapter stores the new commitment, so all of them end in *Update the deployed commitments*.
+Adding a token, listing a circuit version and recording a V1 forwarder all change a chain's entries, and therefore change its root. A transaction built against the new table verifies only after that chain's protocol adapter stores the new root, so all of them end in *Update the deployed roots*.
 
 ### Add a token
 
@@ -135,12 +135,12 @@ On a chain that ran a legacy protocol adapter, the ERC20 forwarder changes once:
 
 A member under the legacy forwarder's label lets a legacy-forwarder resource unwrap from the environment's forwarder. Install the table while the protocol adapter is paused, and unpause it only after the legacy forwarder's tokens moved to the environment's forwarder (ADR-0008).
 
-### Update the deployed commitments
+### Update the deployed roots
 
 1. Merge into `next`.
-2. Read each chain's commitment from `crates/kind-tables/data/generated/<environment>/commitments.json`.
+2. Read each chain's root from `crates/kind-tables/data/generated/<environment>/roots.json`.
 3. Install it with the protocol adapter repo's `contracts-*-kind-table-*` recipes, which call `setKindTableRoot`. On Solana, the adapter authority calls `set_kind_table_commitment`, through the Solana protocol adapter repo's `dev.sh set-kind-table --cluster <cluster>` with `PA_KIND_TABLE_COMMITMENT` set.
-4. Open the promotion pull request into `staging` or `main`. It passes only when every protocol adapter of that environment already stores the commitment this source generates. The soft-migration gate also proves, on a fork of Sepolia, that a legacy-forwarder resource converts and leaves through the environment's forwarder, so the environment's forwarder must already hold the tokens moved from the legacy forwarder.
+4. Open the promotion pull request into `staging` or `main`. It passes only when every protocol adapter of that environment already stores the root this source generates. The soft-migration gate also proves, on a fork of Sepolia, that a legacy-forwarder resource converts and leaves through the environment's forwarder, so the environment's forwarder must already hold the tokens moved from the legacy forwarder.
 
 ## Verifying
 

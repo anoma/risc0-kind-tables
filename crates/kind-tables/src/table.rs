@@ -1,11 +1,11 @@
-//! Generated chain tables and their commitments, one set per environment. A chain's table lives in
+//! Generated chain tables and their roots, one set per environment. A chain's table lives in
 //! `data/generated/<environment>/<namespace>_<reference>.json`, named for the chain's CAIP-2 chain ID; the tables and
-//! commitments are embedded and looked up per chain.
+//! roots are embedded and looked up per chain.
 
 use crate::chain::Caip2ChainId;
-use crate::commitment;
 use crate::entry::Entry;
 use crate::error::{Error, Result};
+use crate::root;
 use risc0_zkvm::Digest;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -30,9 +30,9 @@ impl Table {
         Self::from_json(&std::fs::read_to_string(path)?)
     }
 
-    /// The commitment over the entries in their table order.
-    pub fn commitment(&self) -> Digest {
-        commitment::of(&self.entries)
+    /// The root over the entries.
+    pub fn root(&self) -> Digest {
+        root::of(&self.entries)
     }
 
     /// Whether the entries are sorted by `logic_ref ‖ label_ref`, as the generator emits them.
@@ -52,28 +52,28 @@ impl Table {
     }
 }
 
-/// One chain's recorded commitment. The `_comment` naming the chain is review context and is not deserialized.
+/// One chain's recorded root. The `_comment` naming the chain is review context and is not deserialized.
 #[derive(Deserialize)]
-struct ChainCommitment {
-    commitment: String,
+struct ChainRoot {
+    root: String,
 }
 
-fn parse_commitments(json: &str) -> BTreeMap<Caip2ChainId, Digest> {
+fn parse_roots(json: &str) -> BTreeMap<Caip2ChainId, Digest> {
     use hex::FromHex;
-    let raw: BTreeMap<Caip2ChainId, ChainCommitment> =
-        serde_json::from_str(json).expect("commitments.json: invalid JSON");
+    let raw: BTreeMap<Caip2ChainId, ChainRoot> =
+        serde_json::from_str(json).expect("roots.json: invalid JSON");
     raw.into_iter()
         .map(|(chain, recorded)| {
             // A chain that fails to resolve must fail loudly: dropping it would erase its freshness assertion.
             assert!(chain.name().is_some(), "unknown chain: {chain}");
-            let digest = Digest::from_hex(&recorded.commitment)
-                .unwrap_or_else(|_| panic!("invalid commitment for {chain}"));
+            let digest = Digest::from_hex(&recorded.root)
+                .unwrap_or_else(|_| panic!("invalid root for {chain}"));
             (chain, digest)
         })
         .collect()
 }
 
-/// Embeds one environment's commitments and tables. Each chain is listed as the namespace and reference of its CAIP-2
+/// Embeds one environment's roots and tables. Each chain is listed as the namespace and reference of its CAIP-2
 /// chain ID, from which the macro builds both the ID and the table's file name.
 macro_rules! environment_module {
     ($name:ident $(, ($namespace:literal, $reference:literal))*) => {
@@ -81,11 +81,11 @@ macro_rules! environment_module {
             use super::*;
             use std::sync::LazyLock;
 
-            static COMMITMENTS: LazyLock<BTreeMap<Caip2ChainId, Digest>> = LazyLock::new(|| {
-                parse_commitments(include_str!(concat!(
+            static ROOTS: LazyLock<BTreeMap<Caip2ChainId, Digest>> = LazyLock::new(|| {
+                parse_roots(include_str!(concat!(
                     "../data/generated/",
                     stringify!($name),
-                    "/commitments.json"
+                    "/roots.json"
                 )))
             });
 
@@ -112,18 +112,18 @@ macro_rules! environment_module {
 
             /// The chains this environment records a table for.
             pub fn chains() -> Vec<Caip2ChainId> {
-                COMMITMENTS.keys().cloned().collect()
+                ROOTS.keys().cloned().collect()
             }
 
-            /// The commitments of all recorded chains.
-            pub fn commitments() -> &'static BTreeMap<Caip2ChainId, Digest> {
-                &COMMITMENTS
+            /// The roots of all recorded chains.
+            pub fn roots() -> &'static BTreeMap<Caip2ChainId, Digest> {
+                &ROOTS
             }
 
-            /// The commitment recorded for the chain.
-            pub fn commitment(chain: impl Into<Caip2ChainId>) -> Result<Digest> {
+            /// The root recorded for the chain.
+            pub fn root(chain: impl Into<Caip2ChainId>) -> Result<Digest> {
                 let chain = chain.into();
-                COMMITMENTS
+                ROOTS
                     .get(&chain)
                     .copied()
                     .ok_or(Error::UnrecordedChain(chain))

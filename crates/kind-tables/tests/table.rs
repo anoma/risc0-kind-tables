@@ -188,8 +188,8 @@ fn table_accepts_an_evm_chain() {
         staging::table(sepolia.clone()).unwrap()
     );
     assert_eq!(
-        staging::commitment(NamedChain::Sepolia).unwrap(),
-        staging::commitment(sepolia).unwrap()
+        staging::root(NamedChain::Sepolia).unwrap(),
+        staging::root(sepolia).unwrap()
     );
     assert!(matches!(
         staging::table(NamedChain::Mainnet),
@@ -197,24 +197,20 @@ fn table_accepts_an_evm_chain() {
     ));
 }
 
-/// The macro invocation lists the table files by hand, so pin it to `commitments.json`.
+/// The macro invocation lists the table files by hand, so pin it to `roots.json`.
 #[test]
-fn embedded_tables_match_the_recorded_commitments() {
-    for (module, commitments, tables) in [
-        ("staging", staging::commitments(), staging::tables()),
-        (
-            "production",
-            production::commitments(),
-            production::tables(),
-        ),
+fn embedded_tables_match_the_recorded_roots() {
+    for (module, roots, tables) in [
+        ("staging", staging::roots(), staging::tables()),
+        ("production", production::roots(), production::tables()),
     ] {
-        let recorded: Vec<&Caip2ChainId> = commitments.keys().collect();
+        let recorded: Vec<&Caip2ChainId> = roots.keys().collect();
         let embedded: Vec<&Caip2ChainId> = tables.keys().collect();
         assert_eq!(recorded, embedded, "{module}: chains out of sync");
-        for (chain, commitment) in commitments {
+        for (chain, root) in roots {
             assert_eq!(
-                tables[chain].commitment(),
-                *commitment,
+                tables[chain].root(),
+                *root,
                 "{module}: stale table for {chain}"
             );
         }
