@@ -1047,9 +1047,9 @@ dependencies = [
 
 [[package]]
 name = "anoma-generic-call-forwarder-bindings"
-version = "2.0.0-rc.4"
+version = "2.0.0-rc.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66ae5e4a33a9052029c48b983a3114c2dfc52e79d63310e8fcf8f5407dada4a1"
+checksum = "a6918eb958394cabb97ebd14780ed258759df7b71dd867062d6d3f598c82c0a8"
 dependencies = [
  "alloy",
  "alloy-chains",

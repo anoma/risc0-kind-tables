@@ -3,11 +3,11 @@
     "_metadata": {
       "type": "GenericCallResource",
       "version": "3.0.0-rc.3",
-      "forwarder": "0x87b4952c74c680FE210fcd8AE35d744f1cd9959b"
+      "forwarder": "0x9989786269972EFb77d2Fc26Fe48F3eCeA25C38B"
     },
     "logic_ref": "b564cbdfe7acef7554b2105a2073061883c8402c878ef0cf7fef8bd3eb48cdd7",
-    "label_ref": "e5270079a0cb108e96003d50f06d6e6358a7982d11c08df09cf110baf8a63702",
-    "kind_point": "048d469e3005dd446d9d0134eb1379d965739ecd07df275d5fb1a16f4d44c83cf2fee786b39ad5225dd02edd89e397f9b4ae4ef5ca09608b67aa87447a853c4861"
+    "label_ref": "e4ae85cfbb15834cc2b0707d8a4ba33708dd34e511fc21f8a6eb3373eadb4d67",
+    "kind_point": "04a4b9a2e9b5c591e511ad5df2c96611b29df53499ff83768703c030fdc6a42f325567c7b304b7dfdd3e2feed5c23d1312994637b74c5067e54f508d634b5d28a4"
   },
   {
     "_metadata": {
