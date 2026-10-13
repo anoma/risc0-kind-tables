@@ -1,0 +1,10 @@
+{
+  "eip155:11155111": {
+    "_comment": "sepolia",
+    "root": "c1c4e78b90ac9d41e43bc30628f98be9ba010c45b3c750f77b434782ea4e31fb"
+  },
+  "eip155:84532": {
+    "_comment": "base-sepolia",
+    "root": "2065ccb97d910f161ce4b4cad934085aa79219268441340e9d67e63a9a67aca4"
+  }
+}

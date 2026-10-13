@@ -1,8 +1,9 @@
 # Show commands before running (helps debug failures)
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-# Recipes read `ALCHEMY_API_KEY` (token validation, freshness gate) from the
-# environment. The file is absent in CI, where the value comes from secrets.
+# Recipes read `ALCHEMY_API_KEY` (token validation, freshness gate, e2e) and the queue's
+# `QUEUE_BASE_URL` and `QUEUE_AUTH_TOKEN` (e2e) from the environment. The file is absent
+# in CI, where the values come from secrets.
 set dotenv-load := true
 set dotenv-required := false
 
@@ -44,6 +45,11 @@ crates-build *args:
 crates-test *args:
     cargo test {{ args }}
 
+# Test the e2e cases on a fork of `E2E_CHAIN_ID` (Sepolia by default), proven by the queue at `QUEUE_BASE_URL`.
+# One thread, unlike the other tests: the queue's CDN blocks bursts.
+crates-test-e2e *args:
+    RUST_TEST_THREADS=1 cargo test --features e2e e2e_test {{ args }}
+
 # Publish anoma-risc0-kind-tables to crates.io
 crates-publish *args:
     cargo publish --package anoma-risc0-kind-tables {{ args }}
@@ -52,6 +58,7 @@ crates-publish *args:
 crates-lint:
     cargo clippy --all-targets --no-deps -- -Dwarnings
     cargo clippy --all-targets --features generate --no-deps -- -Dwarnings
+    cargo clippy --all-targets --features e2e --no-deps -- -Dwarnings
 
 # Format all crates
 crates-fmt *args:

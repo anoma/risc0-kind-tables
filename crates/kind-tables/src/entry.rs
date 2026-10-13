@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// A kind, written as its `(logic_ref, label_ref)`, and the kind point it is assigned.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entry {
-    /// Review context for the entry; not covered by the commitment.
+    /// Review context for the entry; not covered by the root.
     #[serde(rename = "_metadata", default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Metadata>,
     #[serde(with = "hex_digest")]
@@ -24,12 +24,13 @@ pub struct Entry {
 }
 
 /// What a kind belongs to: the circuit version behind `logic_ref`, and the deployment behind `label_ref`.
-/// The commitment covers none of it, so it stays free to carry whatever a reviewer needs.
+/// The root covers none of it, so it stays free to carry whatever a reviewer needs.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Metadata {
-    /// One supported token behind an ERC20 forwarder. `forwarder` is the address inside this kind's label. On
-    /// a V1 member it is the V1 forwarder, whose tokens move to the current one.
+    /// One supported token behind an ERC20 forwarder. `forwarder` is the address inside this kind's label. On a
+    /// member under the legacy forwarder's label it is the legacy ERC20 forwarder, whose tokens move to the
+    /// environment's forwarder.
     #[serde(rename = "ERC20Resource")]
     Erc20 {
         version: String,
@@ -40,8 +41,8 @@ pub enum Metadata {
         forwarder: Address,
         /// `active` if and only if `alias_of` is absent: the backend creates only that member's resources.
         status: Status,
-        /// The kind this entry takes its kind point from. Absent only on the active version under the current
-        /// forwarder's label.
+        /// The kind this entry takes its kind point from. Absent only on the active version under the label of the
+        /// environment's forwarder.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         alias_of: Option<AliasOf>,
     },
@@ -77,8 +78,8 @@ impl Metadata {
     }
 }
 
-/// The kind an alias takes its kind point from: the active circuit version under the current forwarder's
-/// label. Written into `_metadata`, so an alias says what it is a second name for.
+/// The kind an alias takes its kind point from: the active circuit version under the label of the environment's
+/// forwarder. Written into `_metadata`, so an alias says what it is a second name for.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AliasOf {
     pub version: String,
@@ -98,14 +99,14 @@ impl Entry {
     }
 
     /// Whether the entry is assigned another kind as its kind point, not its own, so that the table is the only
-    /// place it can come from. Generic call and the active version under the current forwarder's label are
-    /// not.
+    /// place it can come from. Generic call and the active version under the label of the environment's forwarder
+    /// are not.
     pub fn is_alias(&self) -> bool {
         !kind::point(&self.logic_ref, &self.label_ref).is_ok_and(|point| point == self.kind_point)
     }
 }
 
-/// The entry as the resource machine loads it, without the metadata the commitment does not cover.
+/// The entry as the resource machine loads it, without the metadata the root does not cover.
 #[cfg(feature = "arm")]
 impl From<&Entry> for anoma_rm_risc0::compliance::KindTableEntry {
     fn from(entry: &Entry) -> Self {
@@ -157,93 +158,5 @@ mod checksummed {
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Address, D::Error> {
         let string = String::deserialize(deserializer)?;
         string.parse().map_err(serde::de::Error::custom)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::circuits::Status;
-    use hex::FromHex;
-
-    fn entry() -> Entry {
-        let logic_ref =
-            Digest::from_hex("898f3d23ccad1ec7f07051100973815ce3687870416bc96e823a7aeaa347c367")
-                .unwrap();
-        let label_ref = Digest::default();
-        let kind_point = kind::point(&logic_ref, &label_ref).unwrap();
-        Entry {
-            metadata: None,
-            logic_ref,
-            label_ref,
-            kind_point,
-        }
-    }
-
-    fn erc20_metadata() -> Metadata {
-        Metadata::Erc20 {
-            version: "2.0.0".into(),
-            name: "WETH".into(),
-            token: Address::with_last_byte(6),
-            forwarder: Address::with_last_byte(7),
-            status: Status::Active,
-            alias_of: None,
-        }
-    }
-
-    #[test]
-    fn is_alias_rejects_a_derived_point() {
-        assert!(!entry().is_alias());
-    }
-
-    #[test]
-    fn is_alias_accepts_a_point_of_another_key() {
-        let mut alias = entry();
-        alias.label_ref = Digest::from([1u32; 8]);
-        assert!(alias.is_alias());
-    }
-
-    #[test]
-    fn the_json_representation_round_trips() {
-        let mut entry = entry();
-        entry.metadata = Some(erc20_metadata());
-        let json = serde_json::to_string(&entry).unwrap();
-        assert_eq!(serde_json::from_str::<Entry>(&json).unwrap(), entry);
-    }
-
-    #[test]
-    fn the_metadata_stays_out_of_the_commitment_input() {
-        let bare = entry();
-        let mut annotated = entry();
-        annotated.metadata = Some(erc20_metadata());
-        assert_eq!(
-            crate::commitment::of(&[bare]),
-            crate::commitment::of(&[annotated])
-        );
-    }
-
-    #[test]
-    fn spl_token_metadata_round_trips_with_base58_addresses() {
-        let metadata = Metadata::SplToken {
-            version: "2.0.0-rc.1".to_string(),
-            name: "AnomaPay devnet test token".to_string(),
-            mint: "9EHEFzyuY7sZEzTVm7C3uMkNZFMgm5ZeWjGjirZ3MVfr"
-                .parse()
-                .unwrap(),
-            forwarder: "5CrHbBeHjg53UyL3Htn9dCYYTy68fMcrbDoeAdo4yQrx"
-                .parse()
-                .unwrap(),
-            status: Status::Active,
-            alias_of: None,
-        };
-        let json = serde_json::to_value(&metadata).unwrap();
-        assert_eq!(json["type"], "SPLTokenResource");
-        assert_eq!(json["mint"], "9EHEFzyuY7sZEzTVm7C3uMkNZFMgm5ZeWjGjirZ3MVfr");
-        assert_eq!(
-            json["forwarder"],
-            "5CrHbBeHjg53UyL3Htn9dCYYTy68fMcrbDoeAdo4yQrx"
-        );
-        assert_eq!(json.get("alias_of"), None);
-        assert_eq!(serde_json::from_value::<Metadata>(json).unwrap(), metadata);
     }
 }

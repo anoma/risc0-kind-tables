@@ -47,3 +47,17 @@ jobs:
         run: just crates-test
         env:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+
+      - name: Install Foundry
+        if: github.base_ref == 'staging' || github.base_ref == 'main'
+        uses: foundry-rs/foundry-toolchain@v1
+
+      # The soft-migration gate forks the staging chain and proves through the queue, so like the freshness gate it
+      # runs only on a promotion pull request. The queue the secrets name must prove this resource machine version.
+      - name: Run e2e Tests
+        if: github.base_ref == 'staging' || github.base_ref == 'main'
+        run: just crates-test-e2e
+        env:
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          QUEUE_BASE_URL: ${{ secrets.QUEUE_BASE_URL }}
+          QUEUE_AUTH_TOKEN: ${{ secrets.QUEUE_AUTH_TOKEN }}

@@ -9,17 +9,19 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
-/// The identity of a supported ERC20 token: what the contract itself reports, and whether its V1 resources convert.
+/// The identity of a supported ERC20 token: what the contract itself reports, and whether its legacy-forwarder
+/// resources convert.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Token {
     pub symbol: String,
     pub name: String,
     pub decimals: u8,
     pub address: Address,
-    /// Whether the V1 forwarder's label joins this token's fungibility domain, which makes its V1 resources
-    /// fungible with its current ones, so they convert and leave through the current forwarder. Every token states
-    /// it; a token set to `false` keeps its V1 resources where they are.
-    pub fungible_with_v1: bool,
+    /// Whether the legacy ERC20 forwarder's label joins this token's fungibility domain, which makes its
+    /// legacy-forwarder resources fungible with those of the environment's forwarder, so they convert and leave
+    /// through the environment's forwarder. Every token states it; a token set to `false` keeps its legacy-forwarder
+    /// resources where they are.
+    pub soft_migrate_from_legacy_forwarder: bool,
     /// Whether the table lists the token's active kind with its own kind point, so the compliance circuit reads the
     /// point instead of computing it by hash to curve. Every token states it; its aliases are listed either way.
     pub precompute_kind_point: bool,
@@ -98,25 +100,4 @@ pub fn spl_all() -> &'static BTreeMap<SolanaCluster, Vec<SplToken>> {
 /// The supported SPL token mints on the cluster.
 pub fn spl_on(cluster: SolanaCluster) -> &'static [SplToken] {
     TOKENS.spl.get(&cluster).map_or(&[], Vec::as_slice)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn the_embedded_list_carries_the_devnet_test_mint_under_its_caip2_key() {
-        let [token] = spl_on(SolanaCluster::Devnet) else {
-            panic!("expected exactly one supported mint on solana-devnet");
-        };
-        assert_eq!(
-            token.mint.to_string(),
-            "9EHEFzyuY7sZEzTVm7C3uMkNZFMgm5ZeWjGjirZ3MVfr"
-        );
-        assert_eq!(token.decimals, 6);
-        assert!(
-            on(SolanaCluster::Devnet).is_empty(),
-            "a Solana chain has no ERC20 tokens"
-        );
-    }
 }

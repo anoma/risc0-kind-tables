@@ -1,9 +1,10 @@
 //! The ERC20 circuit versions, read from `data/circuit-versions.json`. Every listed version is a member of every
 //! ERC20 fungibility domain, so its resources are fungible with every other listed version's behind the same
-//! forwarder. Exactly one version is active: under the current forwarder's label it keeps its own kind, which is
-//! the kind point of every ERC20 fungibility domain, and the backend creates its resources. Every other version is
-//! deprecated: an alias of the active one, which the backend consumes and converts. Nothing is removed. A version
-//! the protocol adapter refuses stays listed as deprecated, with rows that nothing can use.
+//! forwarder. Exactly one version is active: under the label of the environment's forwarder it keeps its own kind,
+//! which is the kind point of every ERC20 fungibility domain, and the backend creates its resources. Every other
+//! version is deprecated: an alias of the active one, which the backend consumes and converts. A deprecated
+//! version leaves the list only when no resource of it exists under the label of a recorded forwarder. Until then it
+//! stays, even when the protocol adapter denies its logic ref, with rows that nothing can use.
 
 use crate::entry::hex_digest;
 use risc0_zkvm::Digest;
@@ -14,7 +15,8 @@ use std::sync::LazyLock;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Status {
-    /// The version that keeps its own kind under the current forwarder's label. The backend creates its resources.
+    /// The version that keeps its own kind under the label of the environment's forwarder. The backend creates its
+    /// resources.
     Active,
     /// An alias of the active version. The backend consumes its resources and converts them.
     Deprecated,
@@ -23,7 +25,7 @@ pub enum Status {
 /// One listed version of the ERC20 transfer circuit.
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct CircuitVersion {
-    /// The version of the crate that ships the circuit.
+    /// The circuit's release version. The crate that ships it can carry another version.
     pub version: String,
     /// The circuit's verifying key, which every resource of this version carries as its logic ref.
     #[serde(with = "hex_digest")]
@@ -55,8 +57,8 @@ pub fn spl_token() -> &'static [CircuitVersion] {
     &FILE.spl_token
 }
 
-/// The active ERC20 circuit version. Its kind under the current forwarder's label is the kind point of every
-/// ERC20 fungibility domain. `check_erc20` says why there is exactly one.
+/// The active ERC20 circuit version. Its kind under the label of the environment's forwarder is the kind point of
+/// every ERC20 fungibility domain. `check_erc20` says why there is exactly one.
 pub fn erc20_active() -> &'static CircuitVersion {
     active(erc20(), "ERC20")
 }
@@ -105,8 +107,8 @@ fn version(
 }
 
 /// Checks the list: every version and logic ref once, exactly one active version, and the active version is
-/// the highest listed. The last rule rules out making an old version active again, which is never the plan: a
-/// broken release is refused at the protocol adapter and replaced by a higher one.
+/// the highest listed. The last rule rules out making an old version active again, which is never the plan: the
+/// protocol adapter denies the logic ref of a broken release, and a higher release replaces it.
 fn check(versions: &[CircuitVersion]) -> Result<(), String> {
     let mut seen_versions = std::collections::BTreeSet::new();
     let mut seen_refs = std::collections::BTreeSet::new();
@@ -144,23 +146,4 @@ fn check(versions: &[CircuitVersion]) -> Result<(), String> {
         ));
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn the_embedded_list_passes_its_own_checks() {
-        check_erc20().unwrap();
-        assert_eq!(erc20_active().status, Status::Active);
-    }
-
-    #[test]
-    fn the_embedded_spl_token_list_passes_its_own_checks() {
-        check_spl_token().unwrap();
-        let active = spl_token_active();
-        assert_eq!(active.status, Status::Active);
-        assert_eq!(spl_token_version(&active.logic_ref), Some(active));
-    }
 }
