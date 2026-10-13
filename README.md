@@ -102,7 +102,7 @@ The token validation test runs on every pull request and push. It calls an ERC20
 
 ### Add a circuit version
 
-Listing a version makes its resources fungible with every other listed version's, behind the same forwarder, one for one. Nothing passes from one version to another: both kinds are assigned one kind point. Exactly one version is active — under the label of the environment's forwarder it keeps its own kind, and the backend creates its resources — and it must be the highest listed; every other version is deprecated, an alias of the active one, which the backend only consumes. Making a version active moves every ERC20 kind point on every chain to its kind. Review the change as carefully as a permission to create new tokens.
+Listing a version makes its resources fungible with every other listed version's, behind the same forwarder, one for one. Nothing passes from one version to another: both kinds are assigned one kind point. Exactly one version is active — under the label of the environment's forwarder it keeps its own kind, and the backend creates its resources — and it must be the last listed, because the list is in release order, whatever the version numbers; every other version is deprecated, an alias of the active one, which the backend only consumes. Making a version active moves every ERC20 kind point on every chain to its kind. Review the change as carefully as a permission to create new tokens.
 
 The release joins the dependency graph under a new name, so that the generator can check the logic ref you list against the one the crate compiles to. The current pin stays.
 
