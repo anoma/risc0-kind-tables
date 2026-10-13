@@ -24,7 +24,7 @@ pub enum Status {
 /// One listed version of the ERC20 transfer circuit.
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct CircuitVersion {
-    /// The version of the crate that ships the circuit.
+    /// The circuit's release version. The crate that ships it can carry another version.
     pub version: String,
     /// The circuit's verifying key, which every resource of this version carries as its logic ref.
     #[serde(with = "hex_digest")]

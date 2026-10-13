@@ -51,7 +51,7 @@
   {
     "_metadata": {
       "type": "ERC20Resource",
-      "version": "3.0.0-rc.2",
+      "version": "1.0.0",
       "name": "WETH",
       "token": "0x4200000000000000000000000000000000000006",
       "forwarder": "0x4E76505D541641Ae71F504630520Cb53f07559bc",
@@ -69,7 +69,7 @@
   {
     "_metadata": {
       "type": "ERC20Resource",
-      "version": "3.0.0-rc.2",
+      "version": "1.0.0",
       "name": "USDC",
       "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
       "forwarder": "0x4E76505D541641Ae71F504630520Cb53f07559bc",
@@ -87,7 +87,7 @@
   {
     "_metadata": {
       "type": "ERC20Resource",
-      "version": "3.0.0-rc.2",
+      "version": "1.0.0",
       "name": "EURC",
       "token": "0x808456652fdb597867f38412077A9182bf77359F",
       "forwarder": "0x4E76505D541641Ae71F504630520Cb53f07559bc",
