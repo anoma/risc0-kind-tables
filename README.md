@@ -104,21 +104,16 @@ The token validation test runs on every pull request and push. It calls an ERC20
 
 Listing a version makes its resources fungible with every other listed version's, behind the same forwarder, one for one. Nothing passes from one version to another: both kinds are assigned one kind point. Exactly one version is active — under the label of the environment's forwarder it keeps its own kind, and the backend creates its resources — and it must be the last listed, because the list is in release order, whatever the version numbers; every other version is deprecated, an alias of the active one, which the backend only consumes. Making a version active moves every ERC20 kind point on every chain to its kind. Review the change as carefully as a permission to create new tokens.
 
-The release joins the dependency graph under a new name, so that the generator can check the logic ref you list against the one the crate compiles to. The current pin stays.
+The generator pins the crate of the active version only, and checks the logic ref you list against the one that crate compiles to. A deprecated version stays listed and is checked against nothing.
 
-1. Add the release to `[workspace.dependencies]` in [`Cargo.toml`](Cargo.toml) under a new name:
+1. Pin the release in `[workspace.dependencies]` in [`Cargo.toml`](Cargo.toml) in place of the previous one:
    ```toml
-   transfer_library = "2.0.0"                                                 # unchanged
-   transfer_library_v3 = { package = "transfer_library", version = "3.0.0" }
+   anomapay_erc20_library = "=2.0.0-rc.1"
    ```
-2. Add the same name to [`crates/kind-tables/Cargo.toml`](crates/kind-tables/Cargo.toml), as an optional dependency and in the `generate` feature list.
-3. In [`crates/kind-tables/src/bin/generate.rs`](crates/kind-tables/src/bin/generate.rs), add its version to `Versions` and `versions()`, and one line to `pinned_erc20_circuits`:
-   ```rust
-   (versions.transfer_v3.clone(), digest(transfer_library_v3::TOKEN_TRANSFER_ID.as_bytes())),
-   ```
-4. In [`crates/kind-tables/data/circuit-versions.json`](crates/kind-tables/data/circuit-versions.json), append the version with `"status": "active"` and set the previous active version to `"deprecated"`.
-5. Run `just generate`. Read the diff: one new row per token on every chain, and every older version's rows now alias the new one.
-6. Commit the edited files together with the regenerated tables.
+2. If the release has a new crate name, use it in [`crates/kind-tables/Cargo.toml`](crates/kind-tables/Cargo.toml), as the optional dependency and in the `generate` feature list, and in `versions()` and `pinned_erc20_circuits` in [`crates/kind-tables/src/bin/generate.rs`](crates/kind-tables/src/bin/generate.rs).
+3. In [`crates/kind-tables/data/circuit-versions.json`](crates/kind-tables/data/circuit-versions.json), append the version with `"status": "active"` and set the previous active version to `"deprecated"`.
+4. Run `just generate`. Read the diff: one new row per token on every chain, and every older version's rows now alias the new one.
+5. Commit the edited files together with the regenerated tables.
 
 Old resources leave through the new version once the forwarder accepts it, which is an upgrade in the forwarder repository. The promotion gate reads each chain's forwarder and requires that the logic ref it accepts is listed.
 

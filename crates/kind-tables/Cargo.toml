@@ -24,7 +24,6 @@ generate = [
   "dep:anomapay-erc20-forwarder-bindings",
   "dep:anomapay_erc20_library",
   "dep:anyhow",
-  "dep:transfer_library",
 ]
 
 [dependencies]
@@ -47,7 +46,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 solana-cluster-type = { workspace = true }
 thiserror = { workspace = true }
-transfer_library = { workspace = true, optional = true }
 
 [dev-dependencies]
 # The tests read the Solana deployment record, which only this feature compiles.
