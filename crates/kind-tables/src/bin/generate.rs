@@ -41,7 +41,7 @@ struct LegacyForwarder {
 /// The legacy ERC20 forwarder a chain records, from the forwarder repository's deployment record, where its fork
 /// tests verify it against the chain.
 fn legacy_erc20_forwarder(chain: &NamedChain) -> Option<LegacyForwarder> {
-    anomapay_erc20_forwarder_bindings::addresses::erc20_forwarder_v1(chain).map(|forwarder| {
+    anomapay_erc20_forwarder_bindings::addresses::legacy_erc20_forwarder(chain).map(|forwarder| {
         LegacyForwarder {
             address: forwarder.address,
             logic_ref: digest(forwarder.logic_ref.as_slice()),
