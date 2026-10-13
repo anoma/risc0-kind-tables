@@ -1,5 +1,5 @@
 use alloy_chains::NamedChain;
-use anoma_risc0_kind_tables::chain::Chain;
+use anoma_risc0_kind_tables::chain::{Chain, SolanaCluster};
 use anoma_risc0_kind_tables::circuits::{self, CircuitVersion, Status};
 use anoma_risc0_kind_tables::deployments::solana_deployment;
 use anoma_risc0_kind_tables::entry::Metadata;
@@ -195,6 +195,47 @@ fn table_accepts_an_evm_chain() {
         staging::table(NamedChain::Mainnet),
         Err(Error::UnrecordedChain(chain)) if chain == Caip2ChainId::eip155(1)
     ));
+}
+
+/// The staging environment records the solana-devnet table: the test mint's fungibility domain under the devnet
+/// forwarder's label, one member per listed SPL token circuit version, each deprecated version an alias of the active
+/// one, which keeps its own kind; and nothing else.
+#[test]
+fn staging_records_the_solana_devnet_table() {
+    let devnet = SolanaCluster::Devnet;
+    let table = staging::table(devnet).expect("solana-devnet is recorded in staging");
+    let listed = circuits::spl_token();
+    assert_eq!(
+        table.entries.len(),
+        listed.len(),
+        "one member per listed SPL token circuit version"
+    );
+    let active = circuits::spl_token_active();
+    for circuit in listed {
+        let member = table
+            .entries
+            .iter()
+            .find(|entry| entry.logic_ref == circuit.logic_ref)
+            .unwrap_or_else(|| panic!("{} has no member", circuit.version));
+        assert!(
+            matches!(member.metadata, Some(Metadata::SplToken { .. })),
+            "the {} entry is an SPL token member",
+            circuit.version
+        );
+        assert_eq!(
+            member.label_ref.to_string(),
+            "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
+            "the {} member's label is sha256(devnet forwarder ‖ test mint)",
+            circuit.version
+        );
+        assert_eq!(
+            member.is_alias(),
+            circuit.logic_ref != active.logic_ref,
+            "{}: the active version keeps its own kind, every other is an alias",
+            circuit.version
+        );
+    }
+    assert_eq!(staging::commitment(devnet).unwrap(), table.commitment());
 }
 
 /// The macro invocation lists the table files by hand, so pin it to `commitments.json`.
