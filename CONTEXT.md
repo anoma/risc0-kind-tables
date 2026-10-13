@@ -80,7 +80,7 @@ _Avoid_: kind table hash, table root
 An ERC20 contract or SPL token mint this project maintains kinds for, on a named chain. Being supported is a standing commitment and does not depend on where anything is deployed. Each one says whether the table precomputes its active kind point, and each ERC20 token whether its legacy-forwarder resources can soft-migrate; Solana has no legacy forwarder.
 
 **Soft migration from the legacy ERC20 forwarder**:
-Whether the legacy ERC20 forwarder's label joins the fungibility domain of one supported token, which makes that token's legacy-forwarder resources fungible with the resources of the environment's forwarder, so they convert and leave. `data/tokens.json` states it per chain and per token in `fungible_with_v1`, and only a token set to `true` gets a member under the legacy ERC20 forwarder's label.
+Whether the legacy ERC20 forwarder's label joins the fungibility domain of one supported token, which makes that token's legacy-forwarder resources fungible with the resources of the environment's forwarder, so they convert and leave. `data/tokens.json` states it per chain and per token in `soft_migrate_from_legacy_forwarder`, and only a token set to `true` gets a member under the legacy ERC20 forwarder's label.
 _Avoid_: V1 fungibility, migration (on its own: the forwarder repository moves the tokens, and the protocol adapter copies the state; neither is this flag), conversion (what the soft migration permits, not the permission)
 
 **Environment**:

@@ -1,7 +1,7 @@
 {
-  "_comment": "Alice's 2.0 USDC resource of the Sepolia v1 ERC20 forwarder, read from the events of the v1 protocol adapter. Its merkle path leads to the last root of the v1 protocol adapter, which the v2 protocol adapter holds since the migration. A fork test can consume it on every run while no transaction on Sepolia consumes it.",
+  "_comment": "Alice's 2.0 USDC resource of the Sepolia legacy ERC20 forwarder, read from the events of the legacy protocol adapter. Its merkle path leads to the last root of the legacy protocol adapter, which the protocol adapter holds since the migration. A fork test can consume it on every run while no transaction on Sepolia consumes it.",
   "chainId": 11155111,
-  "v1Forwarder": "0x0A62bE41E66841f693f922991C4e40C89cb0CFDF",
+  "legacyForwarder": "0x0A62bE41E66841f693f922991C4e40C89cb0CFDF",
   "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
   "leafIndex": 4174,
   "commitmentTreeRoot": "0x2747e8b84eb0733b4761ad7599ed5adb8feacda532f872dcbcc3bb8f5dbbeda6",

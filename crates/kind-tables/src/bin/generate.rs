@@ -29,20 +29,20 @@ struct ChainCommitment {
     commitment: String,
 }
 
-/// The immutable ERC20 forwarder of a chain's v1 protocol adapter. Under its label, the logic ref it accepts is a
-/// member of every ERC20 fungibility domain of the chain, so its resources convert and leave through the current
-/// forwarder.
-struct V1Forwarder {
+/// The legacy ERC20 forwarder of a chain: the immutable forwarder of its legacy protocol adapter. Under its label, the
+/// logic ref it accepts is a member of every ERC20 fungibility domain of the chain, so its resources convert and leave
+/// through the environment's forwarder.
+struct LegacyForwarder {
     address: Address,
     /// The logic ref it accepts, the only one its resources carry.
     logic_ref: Digest,
 }
 
-/// The V1 ERC20 forwarder a chain records, from the forwarder repository's deployment record, where its fork tests
-/// verify it against the chain.
-fn v1_erc20_forwarder(chain: &NamedChain) -> Option<V1Forwarder> {
+/// The legacy ERC20 forwarder a chain records, from the forwarder repository's deployment record, where its fork
+/// tests verify it against the chain.
+fn legacy_erc20_forwarder(chain: &NamedChain) -> Option<LegacyForwarder> {
     anomapay_erc20_forwarder_bindings::addresses::erc20_forwarder_v1(chain).map(|forwarder| {
-        V1Forwarder {
+        LegacyForwarder {
             address: forwarder.address,
             logic_ref: digest(forwarder.logic_ref.as_slice()),
         }
@@ -88,8 +88,8 @@ fn derived(metadata: Metadata, logic_ref: Digest, label_ref: Digest) -> Result<E
 
 /// A member of a token's fungibility domain: one circuit version under one forwarder's label, assigned the
 /// fungibility domain's kind point. `alias_of` names the kind that point is; only the active version under the
-/// current forwarder's label carries none, and only that member is active. `metadata` names the token and
-/// forwarder the member belongs to, given the member's version, status and `alias_of`.
+/// label of the environment's forwarder carries none, and only that member is active. `metadata` names the token
+/// and forwarder the member belongs to, given the member's version, status and `alias_of`.
 fn member(
     circuit: &CircuitVersion,
     label_ref: Digest,
@@ -110,10 +110,10 @@ fn member(
     }
 }
 
-/// One token's fungibility domain under the current forwarder's label `label_ref`: every deprecated circuit version as
-/// an alias of the active version under that label, and the active version itself, assigned its own kind, only if
-/// `precompute` is set for the token. Returns the domain's kind point and the kind every alias names, for members added
-/// under another label.
+/// One token's fungibility domain under `label_ref`, the label of the environment's forwarder: every deprecated
+/// circuit version as an alias of the active version under that label, and the active version itself, assigned its
+/// own kind, only if `precompute` is set for the token. Returns the domain's kind point and the kind every alias
+/// names, for members added under another label.
 fn domain(
     listed: &[CircuitVersion],
     active: &CircuitVersion,
@@ -329,17 +329,18 @@ fn chain_entries(
         )?);
     }
 
-    // One fungibility domain per token, assigned the kind of the active version under the current forwarder's label:
-    // every deprecated circuit version under that label and, for a token the list marks for conversion, the V1
-    // forwarder's logic ref under its own label, as aliases. The active version keeps its own kind, which the circuit
-    // computes without the table, so it gets a row only if the token asks for a precomputed kind point.
+    // One fungibility domain per token, assigned the kind of the active version under the label of the environment's
+    // forwarder: every deprecated circuit version under that label and, for a token the list marks for soft migration,
+    // the legacy ERC20 forwarder's logic ref under its own label, as aliases. The active version keeps its own kind,
+    // which the circuit computes without the table, so it gets a row only if the token asks for a precomputed kind
+    // point.
     let supported = tokens::on(chain);
     match anomapay_erc20_forwarder_bindings::addresses::erc20_forwarder_address(
         erc20_environment(environment),
         &chain,
     ) {
-        Some(current) => {
-            let v1 = v1_erc20_forwarder(&chain);
+        Some(environment_forwarder) => {
+            let legacy = legacy_erc20_forwarder(&chain);
             for token in supported {
                 let erc20 = |forwarder: Address| {
                     move |version, status, alias_of| Metadata::Erc20 {
@@ -354,27 +355,27 @@ fn chain_entries(
                 let (point, active_kind) = domain(
                     circuits::erc20(),
                     circuits::erc20_active(),
-                    kind::erc20_label_ref(&current, &token.address),
+                    kind::erc20_label_ref(&environment_forwarder, &token.address),
                     token.precompute_kind_point,
-                    erc20(current),
+                    erc20(environment_forwarder),
                     &mut entries,
                 )?;
-                if token.fungible_with_v1
-                    && let Some(v1) = &v1
+                if token.soft_migrate_from_legacy_forwarder
+                    && let Some(legacy) = &legacy
                 {
-                    let circuit = circuits::erc20_version(&v1.logic_ref).with_context(|| {
+                    let circuit = circuits::erc20_version(&legacy.logic_ref).with_context(|| {
                         format!(
-                            "{chain}: the V1 forwarder {} accepts logic ref {}, which circuit-versions.json does not list",
-                            v1.address,
-                            hex(&v1.logic_ref)
+                            "{chain}: the legacy ERC20 forwarder {} accepts logic ref {}, which circuit-versions.json does not list",
+                            legacy.address,
+                            hex(&legacy.logic_ref)
                         )
                     })?;
                     entries.push(member(
                         circuit,
-                        kind::erc20_label_ref(&v1.address, &token.address),
+                        kind::erc20_label_ref(&legacy.address, &token.address),
                         &point,
                         Some(active_kind),
-                        erc20(v1.address),
+                        erc20(legacy.address),
                     ));
                 }
             }
