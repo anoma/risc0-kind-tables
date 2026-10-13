@@ -1134,19 +1134,6 @@ dependencies = [
 [[package]]
 name = "anoma-pa-solana-client"
 version = "0.4.0"
-source = "git+https://github.com/anoma/anoma-pa-solana-client?rev=5b2df9475d08f61566a96b68fecb92088276d398#5b2df9475d08f61566a96b68fecb92088276d398"
-dependencies = [
- "base64 0.22.1",
- "bincode",
- "hkdf",
- "hmac 0.12.1",
- "serde",
- "sha2 0.10.9",
-]
-
-[[package]]
-name = "anoma-pa-solana-client"
-version = "0.4.0"
 source = "git+https://github.com/anoma/anoma-pa-solana-client?rev=da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59#da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59"
 dependencies = [
  "base64 0.22.1",
@@ -1191,7 +1178,7 @@ dependencies = [
  "anoma-generic-call-forwarder-bindings",
  "anoma-generic-call-library",
  "anoma-pa-evm-bindings 3.0.0-rc.16 (registry+https://github.com/rust-lang/crates.io-index)",
- "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59)",
+ "anoma-pa-solana-client",
  "anoma-risc0-kind-tables",
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings 3.0.0-rc.13 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1205,7 +1192,6 @@ dependencies = [
  "serde_json",
  "solana-cluster-type",
  "thiserror 2.0.21",
- "transfer_library 2.0.0-rc.1",
  "transfer_library 3.0.0-rc.3",
 ]
 
@@ -1218,7 +1204,7 @@ dependencies = [
  "anoma-generic-call-forwarder-bindings",
  "anoma-pa-evm-bindings 3.0.0-rc.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "anoma-pa-evm-integration-test",
- "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59)",
+ "anoma-pa-solana-client",
  "anoma-pa-testkit",
  "anoma-risc0-kind-tables",
  "anoma-rm-risc0",
@@ -9049,20 +9035,6 @@ dependencies = [
 
 [[package]]
 name = "transfer_library"
-version = "2.0.0-rc.1"
-source = "git+https://github.com/anoma/anomapay-solana-resource?rev=f550cacad7dc176211db9e2990074c9e5df2e021#f550cacad7dc176211db9e2990074c9e5df2e021"
-dependencies = [
- "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=5b2df9475d08f61566a96b68fecb92088276d398)",
- "anoma-rm-risc0",
- "anoma-rm-risc0-gadgets",
- "hex-literal",
- "k256",
- "serde",
- "transfer_witness 2.0.0-rc.1",
-]
-
-[[package]]
-name = "transfer_library"
 version = "3.0.0-rc.2"
 source = "git+https://github.com/anoma/anomapay-erc20-resource?tag=v3.0.0-rc.2#0de229d7e7419e10d8ff7c491c0f34bb60e68f33"
 dependencies = [
@@ -9088,19 +9060,6 @@ dependencies = [
  "lazy_static",
  "serde",
  "transfer_witness 3.0.0-rc.3",
-]
-
-[[package]]
-name = "transfer_witness"
-version = "2.0.0-rc.1"
-source = "git+https://github.com/anoma/anomapay-solana-resource?rev=f550cacad7dc176211db9e2990074c9e5df2e021#f550cacad7dc176211db9e2990074c9e5df2e021"
-dependencies = [
- "anoma-pa-solana-client 0.4.0 (git+https://github.com/anoma/anoma-pa-solana-client?rev=5b2df9475d08f61566a96b68fecb92088276d398)",
- "anoma-rm-risc0",
- "anoma-rm-risc0-gadgets",
- "bincode",
- "k256",
- "serde",
 ]
 
 [[package]]
