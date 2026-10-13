@@ -106,11 +106,13 @@ fn version(
         .find(|circuit| circuit.logic_ref == *logic_ref)
 }
 
-/// Checks a list: every version and logic ref once, and exactly one active version, the last listed. A list is in
-/// release order, whatever its version numbers, so the active version is the latest release.
-pub fn check(versions: &[CircuitVersion]) -> Result<(), String> {
+/// Checks the list: every version and logic ref once, exactly one active version, and the active version is
+/// the highest listed. The last rule rules out making an old version active again, which is never the plan: the
+/// protocol adapter denies the logic ref of a broken release, and a higher release replaces it.
+fn check(versions: &[CircuitVersion]) -> Result<(), String> {
     let mut seen_versions = std::collections::BTreeSet::new();
     let mut seen_refs = std::collections::BTreeSet::new();
+    let mut parsed = Vec::new();
     for circuit in versions {
         if !seen_versions.insert(&circuit.version) {
             return Err(format!("{} is listed twice", circuit.version));
@@ -121,27 +123,26 @@ pub fn check(versions: &[CircuitVersion]) -> Result<(), String> {
                 circuit.version
             ));
         }
-        semver::Version::parse(&circuit.version)
+        let version = semver::Version::parse(&circuit.version)
             .map_err(|error| format!("{} is not a version: {error}", circuit.version))?;
+        parsed.push((version, circuit));
     }
-    let mut actives = versions
-        .iter()
-        .filter(|circuit| circuit.status == Status::Active);
-    let active = actives
+    let mut actives = parsed.iter().filter(|(_, c)| c.status == Status::Active);
+    let (active_version, active) = actives
         .next()
         .ok_or_else(|| "no version is active".to_string())?;
-    if let Some(other) = actives.next() {
+    if let Some((_, other)) = actives.next() {
         return Err(format!(
             "{} and {} are both active; exactly one version is",
             active.version, other.version
         ));
     }
-    if let Some(last) = versions.last()
-        && last != active
+    if let Some((highest, _)) = parsed.iter().max_by(|a, b| a.0.cmp(&b.0))
+        && highest > active_version
     {
         return Err(format!(
-            "{} is active, but {} is listed after it; the active version is the last listed",
-            active.version, last.version
+            "{} is active, but {highest} is listed and higher; an older version never becomes active again",
+            active.version
         ));
     }
     Ok(())
