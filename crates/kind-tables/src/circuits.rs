@@ -2,8 +2,9 @@
 //! ERC20 fungibility domain, so its resources are fungible with every other listed version's behind the same
 //! forwarder. Exactly one version is active: under the label of the environment's forwarder it keeps its own kind,
 //! which is the kind point of every ERC20 fungibility domain, and the backend creates its resources. Every other
-//! version is deprecated: an alias of the active one, which the backend consumes and converts. Nothing is removed. A
-//! version whose logic ref the protocol adapter denies stays listed as deprecated, with rows that nothing can use.
+//! version is deprecated: an alias of the active one, which the backend consumes and converts. A deprecated
+//! version leaves the list only when no resource of it exists under the label of a recorded forwarder. Until then it
+//! stays, even when the protocol adapter denies its logic ref, with rows that nothing can use.
 
 use crate::entry::hex_digest;
 use risc0_zkvm::Digest;

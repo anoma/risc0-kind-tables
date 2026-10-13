@@ -86,7 +86,7 @@ Members are never authored. A circuit release is one appended line in [`crates/k
 }
 ```
 
-The generator then writes one more member per token on every chain that has the token, so neither a token nor a chain can be left out, and checks every version whose crate is pinned against the logic ref that crate compiles to. Nothing is ever removed from the list: a version whose logic ref the protocol adapter denies stays listed, with rows that nothing can use (ADR-0008).
+The generator then writes one more member per token on every chain that has the token, so neither a token nor a chain can be left out, and checks every version whose crate is pinned against the logic ref that crate compiles to. A deprecated version leaves the list only when no resource of it exists under the label of a recorded forwarder. Until then it stays, even when the protocol adapter denies its logic ref, with rows that nothing can use (ADR-0008).
 
 ## Workflows
 
