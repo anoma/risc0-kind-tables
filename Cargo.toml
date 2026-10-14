@@ -3,7 +3,7 @@ resolver = "3"
 members = ["crates/kind-tables", "crates/integration-test"]
 
 [workspace.package]
-version = "1.0.0-rc.5"
+version = "1.0.0-rc.6"
 keywords = ["anoma", "kind-table", "protocol-adapter"]
 authors = ["Anoma Foundation"]
 license = "MIT"
@@ -44,12 +44,15 @@ tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros"] }
 anoma-pa-evm-integration-test = { git = "https://github.com/anoma/pa-evm", tag = "bindings/v3.0.0-rc.17" }
 anomapay-erc20-forwarder-integration-test = { git = "https://github.com/anoma/anomapay-erc20-forwarder", tag = "bindings/v3.0.0-rc.15" }
 
-# The Solana deployment record, pinned by commit.
-anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-client", rev = "da7fe5eb9a8156dc28f9265dadbc5bb7ca933b59" }
+# The Solana deployment record and the AnomaPay Solana resource, pinned by commit.
+anoma-pa-solana-client = { git = "https://github.com/anoma/anoma-pa-solana-client", rev = "f9f4a1df862586802135161c850aab554d2bf8e2" }
+anomapay-spl-token-forwarder-client = { git = "https://github.com/anoma/anomapay-spl-token-forwarder", rev = "dff0ed2024e779c7f80c37c554d88738a3ee5ec5" }
+anomapay-solana-transfer-library = { package = "transfer_library", git = "https://github.com/anoma/anomapay-solana-resource", rev = "d0ef5c094879d3513b9d2747624476f8a16c6d1d" }
 base64 = "0.22.1"
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
 solana-cluster-type = "2.2.1"
-solana-program = "2.1"
-spl-token = { version = "8.0", features = ["no-entrypoint"] }
+solana-program-pack = "3"
+solana-pubkey = "3"
+spl-token-interface = "3"
 
 anoma-risc0-kind-tables = { path = "crates/kind-tables" }
