@@ -52,19 +52,6 @@
     "_metadata": {
       "type": "ERC20Resource",
       "version": "2.0.0-rc.1",
-      "name": "EURC",
-      "token": "0x08210F9170F89Ab7658F0B5E3fF39b0E03C594D4",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
-      "status": "active"
-    },
-    "logic_ref": "51c2403f4e1de40c3c3ecef69385f8772ee99b4a610e88f1ad2b1b85b481a7f2",
-    "label_ref": "b25505bf5e36ea85b21fb54daa7eb39075998002f559cc38727a0cb559c7f42f",
-    "kind_point": "04868b785e748d6ba9e6d0f26df7f0a0697c1fea0facbee9158b05750383f1529a578589625d430164bfc9ee4aff5cace4c0975188e0f49a60aab3ccd2224b52fb"
-  },
-  {
-    "_metadata": {
-      "type": "ERC20Resource",
-      "version": "2.0.0-rc.1",
       "name": "WETH",
       "token": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
       "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
@@ -181,24 +168,6 @@
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
     "label_ref": "99d68be142843d7f277bbcddbc8b29841eecddc7d0a3ffc5ebefa4cae5bf037a",
     "kind_point": "046be7e737af327df18ee09080a3d870a4aa0b973a9e44694019a80093f0420598d7cfb35dff6e15af850b49b75886ab9c32ed22746a8acc84f6c926d2c89cde8f"
-  },
-  {
-    "_metadata": {
-      "type": "ERC20Resource",
-      "version": "1.0.0",
-      "name": "EURC",
-      "token": "0x08210F9170F89Ab7658F0B5E3fF39b0E03C594D4",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
-      "status": "deprecated",
-      "alias_of": {
-        "version": "2.0.0-rc.1",
-        "logic_ref": "51c2403f4e1de40c3c3ecef69385f8772ee99b4a610e88f1ad2b1b85b481a7f2",
-        "label_ref": "b25505bf5e36ea85b21fb54daa7eb39075998002f559cc38727a0cb559c7f42f"
-      }
-    },
-    "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
-    "label_ref": "b25505bf5e36ea85b21fb54daa7eb39075998002f559cc38727a0cb559c7f42f",
-    "kind_point": "04868b785e748d6ba9e6d0f26df7f0a0697c1fea0facbee9158b05750383f1529a578589625d430164bfc9ee4aff5cace4c0975188e0f49a60aab3ccd2224b52fb"
   },
   {
     "_metadata": {
