@@ -41,6 +41,7 @@ solana-pubkey = { workspace = true }
 spl-token-interface = { workspace = true }
 tokio = { workspace = true }
 anomapay_erc20_witness = { workspace = true }
+anomapay-solana-transfer-witness = { workspace = true }
 
 [dev-dependencies]
 rstest = { workspace = true }

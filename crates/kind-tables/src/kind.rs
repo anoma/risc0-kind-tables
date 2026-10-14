@@ -36,7 +36,8 @@ pub fn erc20_label_ref(forwarder: &Address, token: &Address) -> Digest {
 }
 
 /// The label of an SPL token resource: `sha256(forwarder program id ‖ mint)`, as the Solana transfer circuit
-/// computes it (`anomapay_erc20_witness::calculate_label_ref`), the ERC20 shape over 32-byte inputs.
+/// computes it (`transfer_witness::calculate_label_ref` in anomapay-solana-resource), the ERC20 shape over 32-byte
+/// inputs.
 pub fn spl_token_label_ref(forwarder: &SolanaAddress, mint: &SolanaAddress) -> Digest {
     label_ref(forwarder.as_bytes(), mint.as_bytes())
 }
