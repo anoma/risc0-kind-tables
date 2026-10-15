@@ -1157,7 +1157,7 @@ dependencies = [
 
 [[package]]
 name = "anoma-risc0-kind-tables"
-version = "1.0.0-rc.6"
+version = "1.0.0-rc.7"
 dependencies = [
  "alloy",
  "alloy-chains",
@@ -1186,7 +1186,7 @@ dependencies = [
 
 [[package]]
 name = "anoma-risc0-kind-tables-integration-test"
-version = "1.0.0-rc.6"
+version = "1.0.0-rc.7"
 dependencies = [
  "alloy",
  "alloy-chains",
