@@ -134,7 +134,7 @@ A member under the legacy forwarder's label lets a legacy-forwarder resource unw
 
 1. Merge into `next`.
 2. Read each chain's root from `crates/kind-tables/data/generated/<environment>/roots.json`.
-3. Install it with the protocol adapter repo's `contracts-*-kind-table-*` recipes, which call `setKindTableRoot`. On Solana, the adapter's owner calls `set_kind_table_root`, through the Solana protocol adapter repo's `dev.sh set-kind-table --cluster <cluster>` with `PA_KIND_TABLE_ROOT` set.
+3. Install it with the protocol adapter repo's `contracts-*-kind-table-*` recipes, which call `setKindTableRoot`. On Solana, the adapter's owner calls `set_kind_tree_root`, through the Solana protocol adapter repo's `dev.sh set-kind-table --cluster <cluster>` with `PA_KIND_TREE_ROOT` set.
 4. Open the promotion pull request into `staging` or `main`. It passes only when every protocol adapter of that environment already stores the root this source generates. The soft-migration gate also proves, on a fork of Sepolia, that a legacy-forwarder resource converts and leaves through the environment's forwarder, so the environment's forwarder must already hold the tokens moved from the legacy forwarder.
 
 ## Verifying

@@ -133,8 +133,8 @@ impl SolanaRpc {
         Ok(Some(Digest::from(config.logic_ref)))
     }
 
-    /// The kind-table root the protocol adapter stores, or `None` when it is not initialized.
-    pub async fn adapter_kind_table_root(&self, adapter: &SolanaAddress) -> Result<Option<Digest>> {
+    /// The kind tree root the protocol adapter stores, or `None` when it is not initialized.
+    pub async fn adapter_kind_tree_root(&self, adapter: &SolanaAddress) -> Result<Option<Digest>> {
         let adapter = pubkey(adapter);
         let (state, _) = anoma_pa_solana_client::derive_pa_state_pda(&adapter);
         let Some(data) = self
@@ -145,6 +145,6 @@ impl SolanaRpc {
         };
         let decoded = anoma_pa_solana_client::decode_pa_state(&data)
             .map_err(|error| anyhow::anyhow!("{state}: {error:?}"))?;
-        Ok(Some(Digest::from(decoded.kind_table_root)))
+        Ok(Some(Digest::from(decoded.kind_tree_root)))
     }
 }
