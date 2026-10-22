@@ -1050,9 +1050,8 @@ dependencies = [
 
 [[package]]
 name = "anoma-generic-call-library"
-version = "2.0.0-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "615b7d8b5cc26d0a891a8e3ab09f5fabbaf7c7e829bfe7adbac0a584c3a288ad"
+version = "2.0.0-rc.2"
+source = "git+https://github.com/anoma/generic-call-resource?tag=v2.0.0-rc.2#b17fe83be8ad3ac75c64e3346f4e6602f1121fc4"
 dependencies = [
  "anoma-generic-call-witness",
  "anoma-rm-risc0",
@@ -1063,9 +1062,8 @@ dependencies = [
 
 [[package]]
 name = "anoma-generic-call-witness"
-version = "2.0.0-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f92b1f629e0be2fa5381ee59a187c57f9630b7ab7d6d59c08ebe654e2366b40"
+version = "2.0.0-rc.2"
+source = "git+https://github.com/anoma/generic-call-resource?tag=v2.0.0-rc.2#b17fe83be8ad3ac75c64e3346f4e6602f1121fc4"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",

@@ -1,16 +1,6 @@
 [
   {
     "_metadata": {
-      "type": "GenericCallResource",
-      "version": "2.0.0-rc.1",
-      "forwarder": "0xF0e9d6b04426f09382C279239eB56Bc228E88aDB"
-    },
-    "logic_ref": "2f71f7400e151cfcda2e0335c8aac595237fbbd098e739659ef940bd1a5a9c02",
-    "label_ref": "beb6817eb7ae35581250c925f06a8347cce46c54f2761e6f253c7b40f2b81df8",
-    "kind_base": "04cdce7f3fdaa8435cb003e5f5a141e9a6d64ac0c605290cd5e85a23ada02ecc94c607ee7550e330518d75dfb7aba5748e81246b4025a6cfe37aaf1b1342610b62"
-  },
-  {
-    "_metadata": {
       "type": "ERC20Resource",
       "version": "2.0.0-rc.1",
       "name": "XAN",
@@ -191,5 +181,15 @@
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
     "label_ref": "d24d7efe2fa0fc769cc1694146290a5676add70df70528e97253fed7522e02cd",
     "kind_base": "04802341fa16977f86bef9bcd3ca5d7b4215e65779beaceacd8e5863d3b46304f2f0d2943725581a6c9bacb6eea615b3ef689417a5e6588f6721157bb187295493"
+  },
+  {
+    "_metadata": {
+      "type": "GenericCallResource",
+      "version": "2.0.0-rc.2",
+      "forwarder": "0xF0e9d6b04426f09382C279239eB56Bc228E88aDB"
+    },
+    "logic_ref": "dc64937e533f5eccf6041da5f49c905e6a28f76111ae2a5bc24160e67bd50dea",
+    "label_ref": "beb6817eb7ae35581250c925f06a8347cce46c54f2761e6f253c7b40f2b81df8",
+    "kind_base": "040c60b0be97f5c289075de3504ccbddf63b63bf7c510114b1a5997e1dd8ecc6ba23fc13acf2f3679cda8b83a976c8783a25c1bcf4790b1fce87b3870f5726e30a"
   }
 ]
