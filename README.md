@@ -117,7 +117,7 @@ The generator pins the crate of the active version and the crate of the legacy c
 
 Old resources leave through the new version once the forwarder accepts it, which is an upgrade in the forwarder repository. The promotion gate reads each chain's forwarder and requires that the logic ref it accepts is listed.
 
-An SPL token circuit release appends its version to `SPLTokenResource` in `circuit-versions.json` and moves the generator's pin of `anomapay-solana-resource`'s `transfer_library` (`anomapay-solana-transfer-library`) to the tag that ships it, so the generator checks the active version's logic ref. On Solana the forwarder accepts the new logic ref after its upgrade, whose `reinitialize` installs it; the promotion gate reads the forwarder's config account for it.
+An SPL token circuit release appends its version to `SPLTokenResource` in `circuit-versions.json`. The generator pins no SPL token circuit crate, so it checks this list by the list rules only, and no check compares the active version's logic ref with the circuit. On Solana the forwarder accepts the new logic ref after its upgrade, whose `reinitialize` installs it; the promotion gate reads the forwarder's config account for it.
 
 ### Alias the legacy ERC20 forwarder
 

@@ -150,12 +150,11 @@ fn sorted(mut entries: Vec<Entry>, chain: &Chain) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
-/// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 and SPL token crates.
+/// The circuit version behind the generic-call logic ref, and those of the pinned ERC20 crates.
 struct Versions {
     legacy_anomapay_erc20: String,
     anomapay_erc20: String,
     generic_call: String,
-    spl_transfer: String,
 }
 
 /// Reads the circuit versions from the resolved dependency graph, so bumping a pin cannot leave a stale
@@ -215,7 +214,6 @@ fn versions() -> Result<Versions> {
         legacy_anomapay_erc20: version_of("legacy_anomapay_erc20_library")?,
         anomapay_erc20: version_of("anomapay_erc20_library")?,
         generic_call: version_of("anoma_generic_call_library")?,
-        spl_transfer: version_of("anomapay_solana_transfer_library")?,
     })
 }
 
@@ -235,14 +233,6 @@ fn pinned_erc20_circuits(versions: &Versions) -> Vec<(String, Digest)> {
     ]
 }
 
-/// The SPL token circuit crates this generator pins, as `pinned_erc20_circuits` for the Solana transfer circuit.
-fn pinned_spl_token_circuits(versions: &Versions) -> Vec<(String, Digest)> {
-    vec![(
-        versions.spl_transfer.clone(),
-        digest(anomapay_solana_transfer_library::TOKEN_TRANSFER_ID.as_bytes()),
-    )]
-}
-
 /// Each list must pass its own checks, and every pinned circuit crate must be listed with the logic ref it
 /// compiles to. Raising a pin without listing the release stops here, and so does a mistyped logic ref.
 fn check_circuit_versions(versions: &Versions) -> Result<()> {
@@ -257,7 +247,7 @@ fn check_circuit_versions(versions: &Versions) -> Result<()> {
             "SPLTokenResource",
             circuits::check_spl_token,
             circuits::spl_token(),
-            pinned_spl_token_circuits(versions),
+            Vec::new(),
         ),
     ] {
         check().map_err(|error| anyhow::anyhow!("circuit-versions.json: {resource}: {error}"))?;

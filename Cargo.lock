@@ -1180,8 +1180,7 @@ dependencies = [
  "serde_json",
  "solana-cluster-type",
  "thiserror 2.0.21",
- "transfer_library 2.0.0-rc.9",
- "transfer_library 3.0.0-rc.2",
+ "transfer_library",
 ]
 
 [[package]]
@@ -1323,7 +1322,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "risc0-zkvm",
- "transfer_library 3.0.0-rc.2",
+ "transfer_library",
 ]
 
 [[package]]
@@ -8254,20 +8253,6 @@ dependencies = [
 
 [[package]]
 name = "transfer_library"
-version = "2.0.0-rc.9"
-source = "git+https://github.com/anoma/anomapay-solana-resource?tag=v2.0.0-rc.9#a5163281d53d8401c66c71f76ee45ca4965d9ba0"
-dependencies = [
- "anoma-rm-risc0",
- "anoma-rm-risc0-gadgets",
- "anomapay-spl-token-forwarder-client",
- "hex-literal",
- "k256",
- "serde",
- "transfer_witness 2.0.0-rc.9",
-]
-
-[[package]]
-name = "transfer_library"
 version = "3.0.0-rc.2"
 source = "git+https://github.com/anoma/anomapay-erc20-resource?tag=v3.0.0-rc.2#0de229d7e7419e10d8ff7c491c0f34bb60e68f33"
 dependencies = [
@@ -8277,22 +8262,7 @@ dependencies = [
  "k256",
  "lazy_static",
  "serde",
- "transfer_witness 3.0.0-rc.2",
-]
-
-[[package]]
-name = "transfer_witness"
-version = "2.0.0-rc.9"
-source = "git+https://github.com/anoma/anomapay-solana-resource?tag=v2.0.0-rc.9#a5163281d53d8401c66c71f76ee45ca4965d9ba0"
-dependencies = [
- "anoma-pa-solana-client",
- "anoma-rm-risc0",
- "anoma-rm-risc0-gadgets",
- "anomapay-spl-token-forwarder-client",
- "bincode",
- "k256",
- "serde",
- "serde_with",
+ "transfer_witness",
 ]
 
 [[package]]
