@@ -1153,7 +1153,7 @@ dependencies = [
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings",
  "anomapay-spl-token-forwarder-client",
- "anomapay_erc20_library 2.0.0-rc.1",
+ "anomapay_erc20_library",
  "anyhow",
  "bs58",
  "hex",
@@ -1183,7 +1183,7 @@ dependencies = [
  "anomapay-erc20-forwarder-bindings",
  "anomapay-erc20-forwarder-integration-test",
  "anomapay-spl-token-forwarder-client",
- "anomapay_erc20_witness 2.0.0-rc.1",
+ "anomapay_erc20_witness",
  "anyhow",
  "base64 0.22.1",
  "hex",
@@ -1284,8 +1284,8 @@ dependencies = [
  "anoma-rm-risc0",
  "anoma-rm-risc0-gadgets",
  "anomapay-erc20-forwarder-bindings",
- "anomapay_erc20_library 2.0.0-rc.2",
- "anomapay_erc20_witness 2.0.0-rc.2",
+ "anomapay_erc20_library",
+ "anomapay_erc20_witness",
  "anyhow",
  "bincode",
  "risc0-zkvm",
@@ -1311,46 +1311,15 @@ dependencies = [
 
 [[package]]
 name = "anomapay_erc20_library"
-version = "2.0.0-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3180ef8eb389415e362994cf4360362f6c94c0f8a372ed555e47b6835e6ab056"
-dependencies = [
- "anoma-rm-risc0",
- "anoma-rm-risc0-gadgets",
- "anomapay_erc20_witness 2.0.0-rc.1",
- "hex",
- "k256",
- "lazy_static",
- "serde",
-]
-
-[[package]]
-name = "anomapay_erc20_library"
 version = "2.0.0-rc.2"
 source = "git+https://github.com/anoma/anomapay-erc20-resource?tag=v2.0.0-rc.2#cf7752411b01b97decffa3e336e995074d3395b5"
 dependencies = [
  "anoma-rm-risc0",
  "anoma-rm-risc0-gadgets",
- "anomapay_erc20_witness 2.0.0-rc.2",
+ "anomapay_erc20_witness",
  "hex",
  "k256",
  "lazy_static",
- "serde",
-]
-
-[[package]]
-name = "anomapay_erc20_witness"
-version = "2.0.0-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33e9dfb25e15e77010b795c49717fa7cc0d07e7f026e4f7c7caf35c2728a9d71"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "anoma-rm-risc0",
- "anoma-rm-risc0-gadgets",
- "bincode",
- "k256",
- "rand 0.9.5",
  "serde",
 ]
 

@@ -10,6 +10,11 @@
     {
       "version": "2.0.0-rc.1",
       "logic_ref": "51c2403f4e1de40c3c3ecef69385f8772ee99b4a610e88f1ad2b1b85b481a7f2",
+      "status": "deprecated"
+    },
+    {
+      "version": "2.0.0-rc.2",
+      "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
       "status": "active"
     }
   ],

@@ -23,8 +23,8 @@ anoma-rm-risc0 = { git = "https://github.com/anoma/arm-risc0", tag = "v2.0.0-rc.
   "transaction",
 ] }
 anomapay-erc20-forwarder-bindings = { git = "https://github.com/anoma/anomapay-erc20-forwarder", rev = "bc00a6c8755b179d515d1a876cd8d3afb6309347" }
-anomapay_erc20_library = "=2.0.0-rc.1"
-anomapay_erc20_witness = "=2.0.0-rc.1"
+anomapay_erc20_library = { git = "https://github.com/anoma/anomapay-erc20-resource", tag = "v2.0.0-rc.2" }
+anomapay_erc20_witness = { git = "https://github.com/anoma/anomapay-erc20-resource", tag = "v2.0.0-rc.2" }
 anyhow = "1.0.104"
 bs58 = "0.5.1"
 dotenvy = "0.15.7"
