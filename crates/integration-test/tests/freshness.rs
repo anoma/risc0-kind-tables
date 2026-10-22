@@ -1,11 +1,11 @@
 //! The promotion gate: every protocol adapter of the promoted environment stores the root this source
 //! generates. Runs only on a pull request into `staging` or `main` (selected via `GITHUB_BASE_REF`, or
-//! `PROMOTION_TARGET` for a local run); a table change is deployed after merging into `next`, and the promotion
+//! `PROMOTION_TARGET` for a local run); a tree change is deployed after merging into `next`, and the promotion
 //! pull request turning green is the proof it happened.
 
 use anoma_pa_evm_bindings::addresses::Environment;
 use anoma_pa_evm_bindings::contract::protocol_adapter;
-use anoma_risc0_kind_trees::{Caip2ChainId, Chain, deployments, table};
+use anoma_risc0_kind_trees::{Caip2ChainId, Chain, deployments, tree};
 use anoma_risc0_kind_trees_integration_test::{provider, solana_rpc};
 use anyhow::{Context, Result, ensure};
 use risc0_zkvm::Digest;
@@ -24,8 +24,8 @@ fn promotion_target() -> Option<Environment> {
 
 fn roots(environment: Environment) -> &'static BTreeMap<Caip2ChainId, Digest> {
     match environment {
-        Environment::Staging => table::staging::roots(),
-        Environment::Production => table::production::roots(),
+        Environment::Staging => tree::staging::roots(),
+        Environment::Production => tree::production::roots(),
     }
 }
 

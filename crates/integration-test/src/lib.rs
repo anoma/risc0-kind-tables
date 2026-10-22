@@ -1,4 +1,4 @@
-//! Test-support helpers for the kind tables integration tests.
+//! Test-support helpers for the kind trees integration tests.
 
 use alloy::providers::{DynProvider, Provider, ProviderBuilder};
 use alloy_chains::NamedChain;

@@ -3,7 +3,7 @@
 //! gives every other listed version an exit by conversion. Runs only on a pull request into `staging` or
 //! `main`, selected as the freshness gate is; elsewhere it skips.
 
-use anoma_risc0_kind_trees::{Chain, circuits, deployments, table};
+use anoma_risc0_kind_trees::{Chain, circuits, deployments, tree};
 use anoma_risc0_kind_trees_integration_test::{provider, solana_rpc};
 use anomapay_erc20_forwarder_bindings::addresses::{Environment, erc20_forwarder_address};
 use anomapay_erc20_forwarder_bindings::contract::erc20_forwarder;
@@ -28,8 +28,8 @@ async fn the_promoted_forwarders_accept_a_listed_circuit_version() -> Result<()>
         return Ok(());
     };
     let chains = match environment {
-        Environment::Staging => table::staging::chains(),
-        Environment::Production => table::production::chains(),
+        Environment::Staging => tree::staging::chains(),
+        Environment::Production => tree::production::chains(),
     };
 
     for chain in chains {

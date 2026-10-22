@@ -2,7 +2,7 @@
 
 Changes accumulate on `next` and are promoted through `staging` to `main`, matching the protocol adapter's environments: `staging` describes the staging deployments, `main` the production deployments.
 
-## Changing a table on `next`
+## Changing a tree on `next`
 
 1. Edit `data/tokens.json` or `data/circuit-versions.json`, or bump a forwarder or protocol adapter record. Never raise a circuit pin without listing the release: the generator stops. See *Add a circuit version* in the [README](README.md#add-a-circuit-version).
 2. Run `just generate` and commit the inputs together with the generated diff.

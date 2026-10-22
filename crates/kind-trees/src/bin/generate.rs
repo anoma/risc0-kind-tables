@@ -21,7 +21,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-/// One row of `roots.json`: the chain it belongs to, named for review, and the table root.
+/// One entry of `roots.json`: the chain it belongs to, named for review, and the tree root.
 #[derive(Serialize)]
 struct ChainRoot {
     #[serde(rename = "_comment")]
@@ -138,7 +138,7 @@ fn domain(
     Ok((point, active_kind))
 }
 
-/// A table's entries in table order, sorted by kind, with no kind listed twice.
+/// A tree's entries in tree order, sorted by kind, with no kind listed twice.
 fn sorted(mut entries: Vec<Entry>, chain: &Chain) -> Result<Vec<Entry>> {
     entries.sort_by_key(Entry::key);
     if entries
@@ -262,7 +262,7 @@ fn check_circuit_versions(versions: &Versions) -> Result<()> {
     Ok(())
 }
 
-/// The Solana cluster an environment's table is built for: devnet is staging, mainnet-beta is production.
+/// The Solana cluster an environment's tree is built for: devnet is staging, mainnet-beta is production.
 fn solana_cluster(environment: Environment) -> SolanaCluster {
     match environment {
         Environment::Staging => SolanaCluster::Devnet,
@@ -301,7 +301,7 @@ fn chain_entries(
     versions: &Versions,
 ) -> Result<Vec<Entry>> {
     // The padding kind is not listed: its resources never convert and need no precomputed kind point, and its logic
-    // ref would tie every table to the arm-risc0 release.
+    // ref would tie every tree to the arm-risc0 release.
     let mut entries = Vec::new();
 
     if let Some(forwarder) =
@@ -323,7 +323,7 @@ fn chain_entries(
     // One fungibility domain per token, assigned the kind of the active version under the label of the environment's
     // forwarder: every deprecated circuit version under that label and, for a token the list marks for soft migration,
     // the legacy ERC20 forwarder's logic ref under its own label, as aliases. The active version keeps its own kind,
-    // which the circuit computes without the table, so it gets a row only if the token asks for a precomputed kind
+    // which the circuit computes without the tree, so it gets an entry only if the token asks for a precomputed kind
     // point.
     let supported = tokens::on(chain);
     match anomapay_erc20_forwarder_bindings::addresses::erc20_forwarder_address(
@@ -388,7 +388,7 @@ fn main() -> Result<()> {
     check_circuit_versions(&versions)?;
 
     // Everything is generated before anything is written: a rejected input must not leave the tree without
-    // the tables the crate embeds.
+    // the trees the crate embeds.
     let mut generated = Vec::new();
     for (environment, name) in [
         (Environment::Staging, "staging"),
@@ -399,16 +399,16 @@ fn main() -> Result<()> {
             .collect();
         chains.sort();
 
-        let mut tables = Vec::new();
+        let mut trees = Vec::new();
         for chain in chains {
-            tables.push((
+            trees.push((
                 Chain::Evm(chain),
                 chain_entries(environment, chain, &versions)?,
             ));
         }
         let cluster = solana_cluster(environment);
         match deployments::solana_deployment(cluster) {
-            Some(deployment) => tables.push((
+            Some(deployment) => trees.push((
                 Chain::Solana(cluster),
                 solana_entries(cluster, deployment.forwarder)?,
             )),
@@ -422,7 +422,7 @@ fn main() -> Result<()> {
 
         let mut files = Vec::new();
         let mut roots = BTreeMap::new();
-        for (chain, entries) in tables {
+        for (chain, entries) in trees {
             let entries = sorted(entries, &chain)?;
             let id = Caip2ChainId::from(chain);
             files.push((

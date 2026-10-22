@@ -1,13 +1,13 @@
-//! The kind table root — the Merkle root that arm-risc0 builds over a table. Its leaves are
+//! The kind tree root — the Merkle root that arm-risc0 builds over a tree. Its leaves are
 //! `sha256(logic_ref ‖ label_ref ‖ kind_point)` in `(logic_ref, label_ref)` byte order, padded to a power of two with
-//! `sha256("EMPTY")`, and each node hashes its two children. The value `setKindTableRoot` installs and every
-//! compliance proof that takes a kind from the table reproduces.
+//! `sha256("EMPTY")`, and each node hashes its two children. The value `setKindTreeRoot` installs and every
+//! compliance proof that takes a kind from the tree reproduces.
 
 use crate::entry::Entry;
 use risc0_zkvm::Digest;
 use risc0_zkvm::sha::{Impl, Sha256};
 
-/// Computes the root of a table given as its entries, in any order.
+/// Computes the root of a tree given as its entries, in any order.
 pub fn of(entries: &[Entry]) -> Digest {
     let mut sorted: Vec<&Entry> = entries.iter().collect();
     sorted.sort_by(|a, b| {

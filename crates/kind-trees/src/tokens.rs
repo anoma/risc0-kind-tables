@@ -1,4 +1,4 @@
-//! The supported tokens — the authored identity list the token entries of every chain table are built from.
+//! The supported tokens — the authored identity list the token entries of every chain tree are built from.
 //! Being supported is a standing commitment: a chain may list tokens before anything is deployed to it. An EVM
 //! chain lists ERC20 tokens by address; a Solana cluster lists SPL token mints.
 
@@ -22,7 +22,7 @@ pub struct Token {
     /// through the environment's forwarder. Every token states it; a token set to `false` keeps its legacy-forwarder
     /// resources where they are.
     pub soft_migrate_from_legacy_forwarder: bool,
-    /// Whether the table lists the token's active kind with its own kind point, so the compliance circuit reads the
+    /// Whether the tree lists the token's active kind with its own kind point, so the compliance circuit reads the
     /// point instead of computing it by hash to curve. Every token states it; its aliases are listed either way.
     pub precompute_kind_point: bool,
 }
@@ -35,7 +35,7 @@ pub struct SplToken {
     pub name: String,
     pub decimals: u8,
     pub mint: SolanaAddress,
-    /// Whether the table lists the mint's active kind with its own kind point, so the compliance circuit reads the
+    /// Whether the tree lists the mint's active kind with its own kind point, so the compliance circuit reads the
     /// point instead of computing it by hash to curve. Every mint states it; its aliases are listed either way.
     pub precompute_kind_point: bool,
 }

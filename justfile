@@ -21,15 +21,15 @@ default:
 generate:
     cargo run --package anoma-risc0-kind-trees --features generate --bin generate
 
-# Verify the committed generated tables match a regeneration
+# Verify the committed generated trees match a regeneration
 generate-check: generate
     #!/usr/bin/env bash
     set -euo pipefail
     if ! git diff --exit-code -- crates/kind-trees/data/generated; then
-        printf '{{RED}}The generated tables are stale. Run `just generate` and commit the diff.{{NORMAL}}\n'
+        printf '{{RED}}The generated trees are stale. Run `just generate` and commit the diff.{{NORMAL}}\n'
         exit 1
     fi
-    printf '{{GREEN}}The generated tables match the source.{{NORMAL}}\n'
+    printf '{{GREEN}}The generated trees match the source.{{NORMAL}}\n'
 
 # --- Crates ---
 

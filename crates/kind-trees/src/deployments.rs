@@ -1,4 +1,4 @@
-//! The Solana deployment record: the protocol adapter each recorded cluster's table is installed on, and the SPL
+//! The Solana deployment record: the protocol adapter each recorded cluster's tree is installed on, and the SPL
 //! token forwarder program whose label the SPL token members carry. The client crates record the devnet
 //! deployment as their program ids (anoma-pa-solana-client the adapter's, anomapay-spl-token-forwarder-client the
 //! forwarder's); a mainnet-beta record appears there when V2 deploys to it, and this reads it then.

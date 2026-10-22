@@ -1,9 +1,9 @@
-//! Every ERC20 member of a generated table balances the active member of its fungibility domain in a compliance unit,
-//! whether the table lists the active member or the circuit computes its kind point by hash to curve.
+//! Every ERC20 member of a generated tree balances the active member of its fungibility domain in a compliance unit,
+//! whether the tree lists the active member or the circuit computes its kind point by hash to curve.
 //! The resources take their labels from the transfer circuit's derivation, and the compliance constraints take their
-//! kinds from the table, so the generated keys and kind points are checked against both circuits. It needs no chain.
+//! kinds from the tree, so the generated keys and kind points are checked against both circuits. It needs no chain.
 
-use anoma_risc0_kind_trees::table::{production, staging};
+use anoma_risc0_kind_trees::tree::{production, staging};
 use anoma_risc0_kind_trees::{Entry, Metadata};
 use anoma_rm_risc0::Digest;
 use anoma_rm_risc0::compliance::{self, KindTreeEntry};
@@ -39,7 +39,7 @@ fn active_kind(entry: &Entry) -> Kind {
 
 /// The delta of a unit that consumes one unit of `consumed` and creates one unit of `created`. `rcv` is fixed to 1, so
 /// two deltas differ only in the kind points the unit looks up.
-fn delta(consumed: Kind, created: Kind, table: &[KindTreeEntry]) -> ([u32; 8], [u32; 8]) {
+fn delta(consumed: Kind, created: Kind, tree: &[KindTreeEntry]) -> ([u32; 8], [u32; 8]) {
     let nf_key = NullifierKey::from_bytes([1; 32]);
     let nk_commitment = nf_key.commit();
     let resource = |(logic_ref, label_ref): Kind, nonce| Resource {
@@ -59,7 +59,7 @@ fn delta(consumed: Kind, created: Kind, table: &[KindTreeEntry]) -> ([u32; 8], [
     let mut witness = compliance::from_resources(
         vec![ConsumedResourceWitness::from_resource(consumed, nf_key)],
         vec![created],
-        &KindTree::from_entries(table.to_vec()).expect("arm-risc0 accepts the table"),
+        &KindTree::from_entries(tree.to_vec()).expect("arm-risc0 accepts the tree"),
     );
     let mut rcv = [0; 32];
     rcv[31] = 1;
@@ -71,12 +71,12 @@ fn delta(consumed: Kind, created: Kind, table: &[KindTreeEntry]) -> ([u32; 8], [
 #[test]
 fn every_erc20_member_balances_its_active_member() {
     let mut aliases = 0;
-    for (module, tables) in [
-        ("staging", staging::tables()),
-        ("production", production::tables()),
+    for (module, trees) in [
+        ("staging", staging::trees()),
+        ("production", production::trees()),
     ] {
-        for (chain, table) in tables {
-            let entries: Vec<KindTreeEntry> = table
+        for (chain, tree) in trees {
+            let entries: Vec<KindTreeEntry> = tree
                 .entries
                 .iter()
                 .map(|entry| KindTreeEntry {
@@ -85,7 +85,7 @@ fn every_erc20_member_balances_its_active_member() {
                     kind_base: entry.kind_point.clone(),
                 })
                 .collect();
-            for entry in &table.entries {
+            for entry in &tree.entries {
                 let Some(member) = resource_kind(entry) else {
                     continue;
                 };
@@ -104,26 +104,26 @@ fn every_erc20_member_balances_its_active_member() {
                 );
                 if entry.is_alias() {
                     aliases += 1;
-                    let without_active_row: Vec<KindTreeEntry> = entries
+                    let without_active_entry: Vec<KindTreeEntry> = entries
                         .iter()
-                        .filter(|row| (row.logic_ref, row.label_ref) != active)
+                        .filter(|listed| (listed.logic_ref, listed.label_ref) != active)
                         .cloned()
                         .collect();
                     assert_eq!(
-                        delta(member, active, &without_active_row),
-                        delta(active, active, &without_active_row),
-                        "{module} {chain}: {} does not balance its active member when the table has no row for it",
+                        delta(member, active, &without_active_entry),
+                        delta(active, active, &without_active_entry),
+                        "{module} {chain}: {} does not balance its active member when the tree has no entry for it",
                         entry.label_ref
                     );
                     assert_ne!(
                         delta(member, active, &[]),
                         delta(active, active, &[]),
-                        "{module} {chain}: {} balances its active member without the table",
+                        "{module} {chain}: {} balances its active member without the tree",
                         entry.label_ref
                     );
                 }
             }
         }
     }
-    assert!(aliases > 0, "the tables carry an alias");
+    assert!(aliases > 0, "the trees carry an alias");
 }

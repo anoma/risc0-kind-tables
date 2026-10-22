@@ -11,14 +11,14 @@ pub enum Error {
     },
     #[error("invalid hex digest: {0}")]
     InvalidDigest(String),
-    #[error("invalid table JSON: {0}")]
-    InvalidTableJson(#[from] serde_json::Error),
-    #[error("cannot read the table file: {0}")]
+    #[error("invalid tree JSON: {0}")]
+    InvalidTreeJson(#[from] serde_json::Error),
+    #[error("cannot read the tree file: {0}")]
     Io(#[from] std::io::Error),
     #[error("invalid CAIP-2 chain ID {value:?}: {reason}")]
     InvalidCaip2ChainId { value: String, reason: &'static str },
     #[error("no chain known for {0}")]
     UnknownChain(Caip2ChainId),
-    #[error("no table recorded for {0}")]
+    #[error("no tree recorded for {0}")]
     UnrecordedChain(Caip2ChainId),
 }

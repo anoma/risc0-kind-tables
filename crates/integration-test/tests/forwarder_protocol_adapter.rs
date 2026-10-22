@@ -1,6 +1,6 @@
 //! The recorded forwarders serve the recorded protocol adapters. On every chain the protocol adapter bindings record a
 //! proxy for, the ERC20 and generic call forwarders recorded for the same environment must accept calls from that
-//! proxy. A table built from a forwarder of another protocol adapter carries labels that no transaction on this one
+//! proxy. A tree built from a forwarder of another protocol adapter carries labels that no transaction on this one
 //! can use. Nothing here has to be installed for it to hold, so it runs on every pull request and push.
 
 use alloy::primitives::Address;

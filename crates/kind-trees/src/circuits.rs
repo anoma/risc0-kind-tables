@@ -4,7 +4,7 @@
 //! which is the kind point of every ERC20 fungibility domain, and the backend creates its resources. Every other
 //! version is deprecated: an alias of the active one, which the backend consumes and converts. A deprecated
 //! version leaves the list only when no resource of it exists under the label of a recorded forwarder. Until then it
-//! stays, even when the protocol adapter denies its logic ref, with rows that nothing can use.
+//! stays, even when the protocol adapter denies its logic ref, with entries that nothing can use.
 
 use crate::entry::hex_digest;
 use risc0_zkvm::Digest;

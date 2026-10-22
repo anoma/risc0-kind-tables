@@ -1,7 +1,7 @@
 [package]
 name = "anoma-risc0-kind-trees"
 version.workspace = true
-description = "The kind tables the Anoma protocol adapters are committed to, and the supported-token list they are built from."
+description = "The kind trees the Anoma protocol adapters are committed to, and the supported-token list they are built from."
 keywords.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -10,7 +10,7 @@ homepage.workspace = true
 edition.workspace = true
 
 [features]
-# Converts an entry into the resource machine's kind table entry, for a consumer that loads a table to prove.
+# Converts an entry into the resource machine's kind tree entry, for a consumer that loads a tree to prove.
 arm = ["dep:anoma-rm-risc0"]
 # The Solana deployment record of each recorded cluster, read from the programs' client crates.
 solana-deployments = ["dep:anoma-pa-solana-client", "dep:anomapay-spl-token-forwarder-client"]
@@ -53,7 +53,7 @@ thiserror = { workspace = true }
 [dev-dependencies]
 # The tests read the Solana deployment record, which only this feature compiles.
 anoma-risc0-kind-trees = { path = ".", features = ["solana-deployments"] }
-# The EVM deployment record the offline table test reads the environments' forwarders from.
+# The EVM deployment record the offline tree test reads the environments' forwarders from.
 anomapay-erc20-forwarder-bindings = { workspace = true }
 
 [[bin]]

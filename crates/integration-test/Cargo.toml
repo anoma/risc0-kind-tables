@@ -1,7 +1,7 @@
 [package]
 name = "anoma-risc0-kind-trees-integration-test"
 version.workspace = true
-description = "Integration tests for the Anoma kind tables: on-chain token identity, forwarder records, root freshness and soft migration."
+description = "Integration tests for the Anoma kind trees: on-chain token identity, forwarder records, root freshness and soft migration."
 publish = false
 keywords.workspace = true
 authors.workspace = true
