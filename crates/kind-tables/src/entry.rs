@@ -1,5 +1,5 @@
-//! One row of a kind table. The JSON representation is `anoma-rm-risc0`'s kind table schema extended with the
-//! kind point, so the upstream loader reads a generated table unchanged.
+//! One row of a kind table. The JSON representation is `anoma-rm-risc0`'s kind tree schema, which names the kind
+//! point `kind_base`, plus a `_metadata` object, so the upstream loader reads a generated table unchanged.
 
 use crate::circuits::Status;
 use crate::kind;
@@ -19,7 +19,7 @@ pub struct Entry {
     #[serde(with = "hex_digest")]
     pub label_ref: Digest,
     /// The assigned kind point, SEC1-encoded and uncompressed (65 bytes).
-    #[serde(with = "hex_bytes")]
+    #[serde(rename = "kind_base", with = "hex_bytes")]
     pub kind_point: Vec<u8>,
 }
 
@@ -108,12 +108,12 @@ impl Entry {
 
 /// The entry as the resource machine loads it, without the metadata the root does not cover.
 #[cfg(feature = "arm")]
-impl From<&Entry> for anoma_rm_risc0::compliance::KindTableEntry {
+impl From<&Entry> for anoma_rm_risc0::compliance::KindTreeEntry {
     fn from(entry: &Entry) -> Self {
         Self {
             logic_ref: entry.logic_ref,
             label_ref: entry.label_ref,
-            kind_point: entry.kind_point.clone(),
+            kind_base: entry.kind_point.clone(),
         }
     }
 }

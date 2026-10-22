@@ -6,9 +6,9 @@ use alloy_chains::NamedChain;
 use anoma_risc0_kind_tables::table::{production, staging};
 use anoma_risc0_kind_tables::{Caip2ChainId, Table};
 use anoma_rm_risc0::Digest;
-use anoma_rm_risc0::compliance::{self, KindTableEntry};
-use anoma_rm_risc0::constants::{init_kind_table_from_file, kind_table_root};
-use anoma_rm_risc0::kind_table::KindTable;
+use anoma_rm_risc0::compliance::{self, KindTreeEntry};
+use anoma_rm_risc0::constants::{init_kind_tree_from_file, kind_tree_root};
+use anoma_rm_risc0::kind_tree::KindTree;
 use anoma_rm_risc0::nullifier_key::NullifierKey;
 use anoma_rm_risc0::resource::{ConsumedResourceWitness, Resource};
 use std::path::PathBuf;
@@ -22,7 +22,7 @@ fn staging_table(chain: &Caip2ChainId) -> PathBuf {
 /// The kind table root a compliance unit reproduces for `table`. The unit consumes one ephemeral resource of the
 /// table's first kind and creates one of the same kind: a unit that takes no kind from its table commits to the empty
 /// table instead.
-fn unit_root(table: &KindTable) -> Digest {
+fn unit_root(table: &KindTree) -> Digest {
     let kind = table.entries().first().expect("the table lists a kind");
     let nf_key = NullifierKey::from_bytes([1; 32]);
     let consumed = Resource {
@@ -47,7 +47,7 @@ fn unit_root(table: &KindTable) -> Digest {
     );
     compliance::constrain(&witness)
         .expect("the unit is compliant")
-        .kind_table_root
+        .kind_tree_root
 }
 
 #[test]
@@ -55,9 +55,9 @@ fn the_local_root_matches_the_circuit_loader() {
     let path = staging_table(&NamedChain::Sepolia.into());
     let table = Table::load(&path).expect("the staging sepolia table exists");
 
-    init_kind_table_from_file(&path).expect("the upstream loader accepts the generated table");
+    init_kind_tree_from_file(&path).expect("the upstream loader accepts the generated table");
     assert_eq!(
-        kind_table_root().expect("the loader installed the table"),
+        kind_tree_root().expect("the loader installed the table"),
         table.root(),
     );
 }
@@ -69,9 +69,9 @@ fn every_converted_table_commits_to_its_recorded_root() {
         ("production", production::roots(), production::tables()),
     ] {
         for (chain, table) in tables {
-            let entries = table.entries.iter().map(KindTableEntry::from).collect();
+            let entries = table.entries.iter().map(KindTreeEntry::from).collect();
             let converted =
-                KindTable::from_entries(entries).expect("arm-risc0 accepts the converted table");
+                KindTree::from_entries(entries).expect("arm-risc0 accepts the converted table");
             assert_eq!(
                 unit_root(&converted),
                 roots[chain],
