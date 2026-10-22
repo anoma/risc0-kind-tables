@@ -53,7 +53,7 @@ The conversion of the legacy-forwarder resources and of the deprecated versions'
 _Avoid_: migration (on its own: the forwarder repository moves the tokens, and the protocol adapter copies the state)
 
 **Precomputed kind point**:
-An entry that assigns a kind its own kind point, so that the compliance circuit reads the point instead of computing it by hash to curve. Every compliance proof hashes every entry, so the tree carries one only where proofs gain from it: the generic call kind, and the active kind of each supported token that `data/tokens.json` marks with `precompute_kind_point`. Any other kind that is not an alias has no entry, and the circuit computes its kind point.
+An entry that assigns a kind its own kind point, so that the compliance circuit checks a Merkle path to the point instead of computing it by hash to curve. Each time the entry count passes a power of two, the tree gains a level, and every Merkle path a proof checks gets one more hash. So the tree carries one only where proofs gain from it: the generic call kind, and the active kind of each supported token that `data/tokens.json` marks with `precompute_kind_point`. Any other kind that is not an alias has no entry, and the circuit computes its kind point.
 _Avoid_: cached kind, fast kind, supported kind (a token without an entry is still supported)
 
 **Circuit version**:
