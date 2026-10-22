@@ -15,7 +15,7 @@ use anoma_pa_evm_integration_test::state::chains::chain_id;
 use anoma_pa_testkit::environment::{CommitmentTree, Environment, ProtocolAdapter};
 use anoma_pa_testkit::fixtures::identities;
 use anoma_pa_testkit::{execute_tx, prove_actions};
-use anoma_risc0_kind_tables::{Caip2ChainId, table};
+use anoma_risc0_kind_trees::{Caip2ChainId, table};
 use anoma_rm_risc0::Digest;
 use anoma_rm_risc0::compliance::KindTreeEntry;
 use anoma_rm_risc0::constants::{init_kind_tree_from_entries, kind_tree_root};

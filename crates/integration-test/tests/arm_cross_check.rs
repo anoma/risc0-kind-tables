@@ -3,8 +3,8 @@
 //! reads one file. A compliance unit takes its table as an argument, so the conversion test covers every recorded table.
 
 use alloy_chains::NamedChain;
-use anoma_risc0_kind_tables::table::{production, staging};
-use anoma_risc0_kind_tables::{Caip2ChainId, Table};
+use anoma_risc0_kind_trees::table::{production, staging};
+use anoma_risc0_kind_trees::{Caip2ChainId, Table};
 use anoma_rm_risc0::Digest;
 use anoma_rm_risc0::compliance::{self, KindTreeEntry};
 use anoma_rm_risc0::constants::{init_kind_tree_from_file, kind_tree_root};
@@ -15,7 +15,7 @@ use std::path::PathBuf;
 
 fn staging_table(chain: &Caip2ChainId) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../kind-tables/data/generated/staging")
+        .join("../kind-trees/data/generated/staging")
         .join(chain.file_name())
 }
 

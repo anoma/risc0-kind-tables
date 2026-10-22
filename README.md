@@ -1,8 +1,8 @@
 # Anoma Kind Tables
 
-[![Crates](https://github.com/anoma/risc0-kind-tables/actions/workflows/crates.yml/badge.svg)](https://github.com/anoma/risc0-kind-tables/actions/workflows/crates.yml)
+[![Crates](https://github.com/anoma/risc0-kind-trees/actions/workflows/crates.yml/badge.svg)](https://github.com/anoma/risc0-kind-trees/actions/workflows/crates.yml)
 
-The kind tables the Anoma protocol adapters are committed to — one per chain per environment — and the supported-token list they are built from. The `anoma-risc0-kind-tables` crate computes the roots the way the compliance circuit does, so one source answers what every protocol adapter must store.
+The kind tables the Anoma protocol adapters are committed to — one per chain per environment — and the supported-token list they are built from. The `anoma-risc0-kind-trees` crate computes the roots the way the compliance circuit does, so one source answers what every protocol adapter must store.
 
 ## How it fits together
 
@@ -13,7 +13,7 @@ A Solana cluster's table is built the same way from different records. Each supp
 ## Layout
 
 ```
-crates/kind-tables/            the library and the generator
+crates/kind-trees/            the library and the generator
 ├── data/
 │   ├── tokens.json            authored: the supported tokens, per chain
 │   ├── circuit-versions.json  authored: the ERC20 and SPL token circuit versions, once for every chain
@@ -75,7 +75,7 @@ An alias also says what it is a second name for. Its `alias_of` names the kind i
 }
 ```
 
-Members are never authored. A circuit release is one appended line in [`crates/kind-tables/data/circuit-versions.json`](crates/kind-tables/data/circuit-versions.json):
+Members are never authored. A circuit release is one appended line in [`crates/kind-trees/data/circuit-versions.json`](crates/kind-trees/data/circuit-versions.json):
 
 ```json
 {
@@ -94,7 +94,7 @@ Adding a token, listing a circuit version and recording a V1 forwarder all chang
 
 ### Add a token
 
-1. Add the token to [`crates/kind-tables/data/tokens.json`](crates/kind-tables/data/tokens.json), under the CAIP-2 chain ID of the chain it lives on. An ERC20 token records `address` and `soft_migrate_from_legacy_forwarder`; an SPL token records `mint` (base58) and has no such flag. Every token records `precompute_kind_point`: `true` gives its active kind a row, so proofs of its resources skip hash to curve, and every proof hashes one more row. Set it for the tokens that most transactions carry.
+1. Add the token to [`crates/kind-trees/data/tokens.json`](crates/kind-trees/data/tokens.json), under the CAIP-2 chain ID of the chain it lives on. An ERC20 token records `address` and `soft_migrate_from_legacy_forwarder`; an SPL token records `mint` (base58) and has no such flag. Every token records `precompute_kind_point`: `true` gives its active kind a row, so proofs of its resources skip hash to curve, and every proof hashes one more row. Set it for the tokens that most transactions carry.
 2. Run `just generate`.
 3. Commit the edited file together with the regenerated tables.
 
@@ -110,8 +110,8 @@ The generator pins the crate of the active version and the crate of the legacy c
    ```toml
    anomapay_erc20_library = "=2.0.0-rc.1"
    ```
-2. If the release has a new crate name, use it in [`crates/kind-tables/Cargo.toml`](crates/kind-tables/Cargo.toml), as the optional dependency and in the `generate` feature list, and in `versions()` and `pinned_erc20_circuits` in [`crates/kind-tables/src/bin/generate.rs`](crates/kind-tables/src/bin/generate.rs).
-3. In [`crates/kind-tables/data/circuit-versions.json`](crates/kind-tables/data/circuit-versions.json), append the version with `"status": "active"` and set the previous active version to `"deprecated"`.
+2. If the release has a new crate name, use it in [`crates/kind-trees/Cargo.toml`](crates/kind-trees/Cargo.toml), as the optional dependency and in the `generate` feature list, and in `versions()` and `pinned_erc20_circuits` in [`crates/kind-trees/src/bin/generate.rs`](crates/kind-trees/src/bin/generate.rs).
+3. In [`crates/kind-trees/data/circuit-versions.json`](crates/kind-trees/data/circuit-versions.json), append the version with `"status": "active"` and set the previous active version to `"deprecated"`.
 4. Run `just generate`. Read the diff: one new row per token on every chain, and every older version's rows now alias the new one.
 5. Commit the edited files together with the regenerated tables.
 
@@ -124,7 +124,7 @@ An SPL token circuit release appends its version to `SPLTokenResource` in `circu
 On a chain that ran a legacy protocol adapter, the ERC20 forwarder changes once: the legacy ERC20 forwarder is immutable, and the environment's forwarder is a proxy at a new address. Both accept the same logic ref, so a legacy-forwarder resource differs from a resource of the environment's forwarder only in the forwarder inside its label. On every chain that records both forwarders, the generator writes one member under the legacy forwarder's label for each token the list marks for soft migration, an alias of the active version under the label of the environment's forwarder.
 
 1. Record the legacy ERC20 forwarder, with the logic ref it accepts, in the `legacy` array of the forwarder repository's `deployments.json`, and release the forwarder bindings.
-2. In [`crates/kind-tables/data/tokens.json`](crates/kind-tables/data/tokens.json), set `soft_migrate_from_legacy_forwarder` to `true` for every token whose legacy-forwarder resources must be fungible with those of the environment's forwarder, and to `false` for the rest. A token set to `false`, or missing from the list, gets no member under the legacy forwarder's label, so its legacy-forwarder resources stay in the legacy forwarder. Nothing checks this.
+2. In [`crates/kind-trees/data/tokens.json`](crates/kind-trees/data/tokens.json), set `soft_migrate_from_legacy_forwarder` to `true` for every token whose legacy-forwarder resources must be fungible with those of the environment's forwarder, and to `false` for the rest. A token set to `false`, or missing from the list, gets no member under the legacy forwarder's label, so its legacy-forwarder resources stay in the legacy forwarder. Nothing checks this.
 3. Pin the new bindings and run `just generate`. Read the diff: one member under the legacy forwarder's label per marked token on every chain that records both forwarders.
 4. Commit the edited file together with the regenerated tables.
 
@@ -133,7 +133,7 @@ A member under the legacy forwarder's label lets a legacy-forwarder resource unw
 ### Update the deployed roots
 
 1. Merge into `next`.
-2. Read each chain's root from `crates/kind-tables/data/generated/<environment>/roots.json`.
+2. Read each chain's root from `crates/kind-trees/data/generated/<environment>/roots.json`.
 3. Install it with the protocol adapter repo's `contracts-*-kind-table-*` recipes, which call `setKindTreeRoot`. On Solana, the adapter's owner calls `set_kind_tree_root`, through the Solana protocol adapter repo's `dev.sh set-kind-table --cluster <cluster>` with `PA_KIND_TREE_ROOT` set.
 4. Open the promotion pull request into `staging` or `main`. It passes only when every protocol adapter of that environment already stores the root this source generates. The soft-migration gate also proves, on a fork of Sepolia, that a legacy-forwarder resource converts and leaves through the environment's forwarder, so the environment's forwarder must already hold the tokens moved from the legacy forwarder.
 

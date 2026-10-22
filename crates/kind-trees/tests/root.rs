@@ -1,6 +1,6 @@
-use anoma_risc0_kind_tables::Entry;
-use anoma_risc0_kind_tables::kind;
-use anoma_risc0_kind_tables::root::*;
+use anoma_risc0_kind_trees::Entry;
+use anoma_risc0_kind_trees::kind;
+use anoma_risc0_kind_trees::root::*;
 use risc0_zkvm::Digest;
 use risc0_zkvm::sha::{Impl, Sha256};
 

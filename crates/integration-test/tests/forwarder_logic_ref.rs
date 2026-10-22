@@ -3,8 +3,8 @@
 //! gives every other listed version an exit by conversion. Runs only on a pull request into `staging` or
 //! `main`, selected as the freshness gate is; elsewhere it skips.
 
-use anoma_risc0_kind_tables::{Chain, circuits, deployments, table};
-use anoma_risc0_kind_tables_integration_test::{provider, solana_rpc};
+use anoma_risc0_kind_trees::{Chain, circuits, deployments, table};
+use anoma_risc0_kind_trees_integration_test::{provider, solana_rpc};
 use anomapay_erc20_forwarder_bindings::addresses::{Environment, erc20_forwarder_address};
 use anomapay_erc20_forwarder_bindings::contract::erc20_forwarder;
 use anyhow::{Context, Result, ensure};

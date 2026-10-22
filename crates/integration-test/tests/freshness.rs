@@ -5,8 +5,8 @@
 
 use anoma_pa_evm_bindings::addresses::Environment;
 use anoma_pa_evm_bindings::contract::protocol_adapter;
-use anoma_risc0_kind_tables::{Caip2ChainId, Chain, deployments, table};
-use anoma_risc0_kind_tables_integration_test::{provider, solana_rpc};
+use anoma_risc0_kind_trees::{Caip2ChainId, Chain, deployments, table};
+use anoma_risc0_kind_trees_integration_test::{provider, solana_rpc};
 use anyhow::{Context, Result, ensure};
 use risc0_zkvm::Digest;
 use std::collections::BTreeMap;

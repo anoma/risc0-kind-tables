@@ -1,11 +1,11 @@
 use alloy_chains::NamedChain;
-use anoma_risc0_kind_tables::chain::{Chain, SolanaCluster};
-use anoma_risc0_kind_tables::circuits::{self, CircuitVersion, Status};
-use anoma_risc0_kind_tables::deployments::solana_deployment;
-use anoma_risc0_kind_tables::entry::Metadata;
-use anoma_risc0_kind_tables::kind;
-use anoma_risc0_kind_tables::table::*;
-use anoma_risc0_kind_tables::{Caip2ChainId, Entry, Error};
+use anoma_risc0_kind_trees::chain::{Chain, SolanaCluster};
+use anoma_risc0_kind_trees::circuits::{self, CircuitVersion, Status};
+use anoma_risc0_kind_trees::deployments::solana_deployment;
+use anoma_risc0_kind_trees::entry::Metadata;
+use anoma_risc0_kind_trees::kind;
+use anoma_risc0_kind_trees::table::*;
+use anoma_risc0_kind_trees::{Caip2ChainId, Entry, Error};
 use anomapay_erc20_forwarder_bindings::addresses::{Environment, erc20_forwarder_address};
 use risc0_zkvm::Digest;
 
@@ -139,7 +139,7 @@ fn a_token_has_an_active_row_if_and_only_if_it_asks_for_a_precomputed_kind_point
             // (symbol, active kind, whether the token asks for a precomputed kind point)
             let tokens: Vec<(&str, (Digest, Digest), bool)> = match known {
                 Chain::Evm(named) => match erc20_forwarder_address(environment, &named) {
-                    Some(forwarder) => anoma_risc0_kind_tables::tokens::on(named)
+                    Some(forwarder) => anoma_risc0_kind_trees::tokens::on(named)
                         .iter()
                         .map(|token| {
                             let label_ref = kind::erc20_label_ref(&forwarder, &token.address);
@@ -150,7 +150,7 @@ fn a_token_has_an_active_row_if_and_only_if_it_asks_for_a_precomputed_kind_point
                     None => Vec::new(),
                 },
                 Chain::Solana(cluster) => match solana_deployment(cluster) {
-                    Some(deployment) => anoma_risc0_kind_tables::tokens::spl_on(cluster)
+                    Some(deployment) => anoma_risc0_kind_trees::tokens::spl_on(cluster)
                         .iter()
                         .map(|token| {
                             let label_ref =

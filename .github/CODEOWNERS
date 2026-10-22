@@ -1,5 +1,5 @@
 # The authored files decide every kind in the generated tables. Deleting a token or a circuit version
 # changes the kind a key names, and then no one can consume the resources already created under it. No test
 # catches a deleted entry today, so a named person must approve these files. Use a team handle if one exists.
-/crates/kind-tables/data/ @heueristik
-/crates/kind-tables/data/ @XuyangSong
+/crates/kind-trees/data/ @heueristik
+/crates/kind-trees/data/ @XuyangSong

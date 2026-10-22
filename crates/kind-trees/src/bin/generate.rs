@@ -6,7 +6,7 @@ use alloy::primitives::Address;
 use alloy_chains::NamedChain;
 use anoma_generic_call_forwarder_bindings::addresses::Environment as GenericCallEnvironment;
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
-use anoma_risc0_kind_tables::{
+use anoma_risc0_kind_trees::{
     AliasOf, Caip2ChainId, Chain, CircuitVersion, Entry, Metadata, SolanaAddress, SolanaCluster,
     Status, circuits, deployments, kind, root, tokens,
 };

@@ -2,8 +2,8 @@
 //! anoma-pa-solana-client and the SPL token forwarder's config through anomapay-spl-token-forwarder-client. The
 //! promotion gates read both; this runs on every pull request and push, so a layout change on chain fails here first.
 
-use anoma_risc0_kind_tables::{SolanaCluster, deployments};
-use anoma_risc0_kind_tables_integration_test::solana_rpc;
+use anoma_risc0_kind_trees::{SolanaCluster, deployments};
+use anoma_risc0_kind_trees_integration_test::solana_rpc;
 use anyhow::{Context, Result};
 
 #[tokio::test]

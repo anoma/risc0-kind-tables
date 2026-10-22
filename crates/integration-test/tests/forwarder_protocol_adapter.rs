@@ -10,8 +10,8 @@ use anoma_generic_call_forwarder_bindings::addresses::{
     Environment as GenericCallEnvironment, generic_call_forwarder_address,
 };
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
-use anoma_risc0_kind_tables::Caip2ChainId;
-use anoma_risc0_kind_tables_integration_test::provider;
+use anoma_risc0_kind_trees::Caip2ChainId;
+use anoma_risc0_kind_trees_integration_test::provider;
 use anomapay_erc20_forwarder_bindings::addresses::{
     Environment as Erc20Environment, erc20_forwarder_address,
 };

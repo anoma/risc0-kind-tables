@@ -19,13 +19,13 @@ default:
 
 # Regenerate `data/generated/` from the authored inputs and the pinned dependencies
 generate:
-    cargo run --package anoma-risc0-kind-tables --features generate --bin generate
+    cargo run --package anoma-risc0-kind-trees --features generate --bin generate
 
 # Verify the committed generated tables match a regeneration
 generate-check: generate
     #!/usr/bin/env bash
     set -euo pipefail
-    if ! git diff --exit-code -- crates/kind-tables/data/generated; then
+    if ! git diff --exit-code -- crates/kind-trees/data/generated; then
         printf '{{RED}}The generated tables are stale. Run `just generate` and commit the diff.{{NORMAL}}\n'
         exit 1
     fi
@@ -50,9 +50,9 @@ crates-test *args:
 crates-test-e2e *args:
     RUST_TEST_THREADS=1 cargo test --features e2e e2e_test {{ args }}
 
-# Publish anoma-risc0-kind-tables to crates.io
+# Publish anoma-risc0-kind-trees to crates.io
 crates-publish *args:
-    cargo publish --package anoma-risc0-kind-tables {{ args }}
+    cargo publish --package anoma-risc0-kind-trees {{ args }}
 
 # Lint all crates (clippy)
 crates-lint:

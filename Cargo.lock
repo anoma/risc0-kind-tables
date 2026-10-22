@@ -1138,7 +1138,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "anoma-risc0-kind-tables"
+name = "anoma-risc0-kind-trees"
 version = "1.0.0-rc.7"
 dependencies = [
  "alloy",
@@ -1147,7 +1147,7 @@ dependencies = [
  "anoma-generic-call-library",
  "anoma-pa-evm-bindings",
  "anoma-pa-solana-client",
- "anoma-risc0-kind-tables",
+ "anoma-risc0-kind-trees",
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings 3.0.0-rc.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "anomapay-spl-token-forwarder-client",
@@ -1166,7 +1166,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "anoma-risc0-kind-tables-integration-test"
+name = "anoma-risc0-kind-trees-integration-test"
 version = "1.0.0-rc.7"
 dependencies = [
  "alloy",
@@ -1176,7 +1176,7 @@ dependencies = [
  "anoma-pa-evm-integration-test",
  "anoma-pa-solana-client",
  "anoma-pa-testkit",
- "anoma-risc0-kind-tables",
+ "anoma-risc0-kind-trees",
  "anoma-rm-risc0",
  "anomapay-erc20-forwarder-bindings 3.0.0-rc.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "anomapay-erc20-forwarder-integration-test",

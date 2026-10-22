@@ -1,4 +1,4 @@
-use anoma_risc0_kind_tables::circuits::*;
+use anoma_risc0_kind_trees::circuits::*;
 
 #[test]
 fn the_embedded_list_passes_its_own_checks() {

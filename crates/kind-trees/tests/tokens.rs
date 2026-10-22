@@ -1,5 +1,5 @@
-use anoma_risc0_kind_tables::SolanaCluster;
-use anoma_risc0_kind_tables::tokens::*;
+use anoma_risc0_kind_trees::SolanaCluster;
+use anoma_risc0_kind_trees::tokens::*;
 
 #[test]
 fn the_embedded_list_carries_the_devnet_test_mint_under_its_caip2_key() {

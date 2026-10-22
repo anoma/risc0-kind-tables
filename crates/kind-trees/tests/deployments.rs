@@ -1,5 +1,5 @@
-use anoma_risc0_kind_tables::SolanaCluster;
-use anoma_risc0_kind_tables::deployments::*;
+use anoma_risc0_kind_trees::SolanaCluster;
+use anoma_risc0_kind_trees::deployments::*;
 
 #[test]
 fn devnet_records_the_v2_programs_and_mainnet_beta_none() {

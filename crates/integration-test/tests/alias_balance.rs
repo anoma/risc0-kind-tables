@@ -3,8 +3,8 @@
 //! The resources take their labels from the transfer circuit's derivation, and the compliance constraints take their
 //! kinds from the table, so the generated keys and kind points are checked against both circuits. It needs no chain.
 
-use anoma_risc0_kind_tables::table::{production, staging};
-use anoma_risc0_kind_tables::{Entry, Metadata};
+use anoma_risc0_kind_trees::table::{production, staging};
+use anoma_risc0_kind_trees::{Entry, Metadata};
 use anoma_rm_risc0::Digest;
 use anoma_rm_risc0::compliance::{self, KindTreeEntry};
 use anoma_rm_risc0::kind_tree::KindTree;
