@@ -1123,7 +1123,7 @@ dependencies = [
 [[package]]
 name = "anoma-pa-solana-client"
 version = "0.7.0"
-source = "git+https://github.com/anoma/anoma-pa-solana-client?rev=a028b7960372a838dda90dc6e54e44a94dc1ab54#a028b7960372a838dda90dc6e54e44a94dc1ab54"
+source = "git+https://github.com/anoma/anoma-pa-solana-client?rev=7ed4f3ee29ec4f8840fd20599e28f2e50a79fb37#7ed4f3ee29ec4f8840fd20599e28f2e50a79fb37"
 dependencies = [
  "bincode",
  "serde",
@@ -1180,7 +1180,7 @@ dependencies = [
  "serde_json",
  "solana-cluster-type",
  "thiserror 2.0.21",
- "transfer_library 2.0.0-rc.8",
+ "transfer_library 2.0.0-rc.9",
  "transfer_library 3.0.0-rc.2",
 ]
 
@@ -1329,7 +1329,7 @@ dependencies = [
 [[package]]
 name = "anomapay-spl-token-forwarder-client"
 version = "0.4.0"
-source = "git+https://github.com/anoma/anomapay-spl-token-forwarder?rev=54122150955fbb0a537079265c5cd3ff080343af#54122150955fbb0a537079265c5cd3ff080343af"
+source = "git+https://github.com/anoma/anomapay-spl-token-forwarder?rev=e122e5106298bad753af89286705424b851fbba2#e122e5106298bad753af89286705424b851fbba2"
 dependencies = [
  "anoma-pa-solana-client",
  "base64 0.22.1",
@@ -8254,8 +8254,8 @@ dependencies = [
 
 [[package]]
 name = "transfer_library"
-version = "2.0.0-rc.8"
-source = "git+https://github.com/anoma/anomapay-solana-resource?tag=v2.0.0-rc.8#b37d4bf895db304ba96dfba036c76476a69cd8be"
+version = "2.0.0-rc.9"
+source = "git+https://github.com/anoma/anomapay-solana-resource?tag=v2.0.0-rc.9#a5163281d53d8401c66c71f76ee45ca4965d9ba0"
 dependencies = [
  "anoma-rm-risc0",
  "anoma-rm-risc0-gadgets",
@@ -8263,7 +8263,7 @@ dependencies = [
  "hex-literal",
  "k256",
  "serde",
- "transfer_witness 2.0.0-rc.8",
+ "transfer_witness 2.0.0-rc.9",
 ]
 
 [[package]]
@@ -8282,8 +8282,8 @@ dependencies = [
 
 [[package]]
 name = "transfer_witness"
-version = "2.0.0-rc.8"
-source = "git+https://github.com/anoma/anomapay-solana-resource?tag=v2.0.0-rc.8#b37d4bf895db304ba96dfba036c76476a69cd8be"
+version = "2.0.0-rc.9"
+source = "git+https://github.com/anoma/anomapay-solana-resource?tag=v2.0.0-rc.9#a5163281d53d8401c66c71f76ee45ca4965d9ba0"
 dependencies = [
  "anoma-pa-solana-client",
  "anoma-rm-risc0",
