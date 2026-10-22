@@ -1,11 +1,11 @@
 {
   "eip155:11155111": {
     "_comment": "sepolia",
-    "root": "2ddbf5bdceb02ebeb5a38798670518610ce18f9349fc15af273bfe62ba9a242e"
+    "root": "e946ddaa721675b83dfb41555d9b156aca7f3026087c02a46cb437d51d8b2e9e"
   },
   "eip155:84532": {
     "_comment": "base-sepolia",
-    "root": "ce2d453100c4ab797a0dd2f239335f70e045bfc0c74248a0d20d47975b60ceb5"
+    "root": "0cb8f7dff73ffd2c031a7f6dfccde1bb5a582877aef4b511ca5c4083ae436157"
   },
   "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1": {
     "_comment": "solana-devnet",

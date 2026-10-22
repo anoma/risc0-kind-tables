@@ -5,17 +5,17 @@
       "version": "2.0.0-rc.1",
       "name": "XAN",
       "token": "0xCEDbEA37C8872c4171259Cdfd5255CB8923Cf8e7",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
+      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
       "status": "deprecated",
       "alias_of": {
         "version": "2.0.0-rc.2",
         "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "5c99181b411e6c99af669d78ef64a0252ba9565ee4f7108a4b5e34e73aed666f"
+        "label_ref": "464d0cc1bbb5907557597111fc283fe2fa3ab6359c682179e019287384e6a506"
       }
     },
     "logic_ref": "51c2403f4e1de40c3c3ecef69385f8772ee99b4a610e88f1ad2b1b85b481a7f2",
-    "label_ref": "5c99181b411e6c99af669d78ef64a0252ba9565ee4f7108a4b5e34e73aed666f",
-    "kind_base": "0464945dcc6007c588110752ccb13041e518a0438ee499ca32524feaaf6d2dcd72050b1c68e11b07b7f0d274b0d6eefa0c2d1cd5110fdf6ed6de1b8346a1c60a7a"
+    "label_ref": "464d0cc1bbb5907557597111fc283fe2fa3ab6359c682179e019287384e6a506",
+    "kind_base": "041e9e72ffbd480788f7e17412ec6c972ca30ab6ed93398ec46694b03dfbbf4283440b16f6d7f1c3844ae1ef99e4dfc58c1ba00953853acbac5cbafe2af19751f3"
   },
   {
     "_metadata": {
@@ -23,17 +23,17 @@
       "version": "2.0.0-rc.1",
       "name": "USDC",
       "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
+      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
       "status": "deprecated",
       "alias_of": {
         "version": "2.0.0-rc.2",
         "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "99d68be142843d7f277bbcddbc8b29841eecddc7d0a3ffc5ebefa4cae5bf037a"
+        "label_ref": "c60fa405732c07a9cdd2b4227a8e9395cdcf6d42ec8ba29e20c0653e97a45c2a"
       }
     },
     "logic_ref": "51c2403f4e1de40c3c3ecef69385f8772ee99b4a610e88f1ad2b1b85b481a7f2",
-    "label_ref": "99d68be142843d7f277bbcddbc8b29841eecddc7d0a3ffc5ebefa4cae5bf037a",
-    "kind_base": "046852d7903fa635eb4f0bd54ba1860b9652feb960c2e9943746c425f8bd1ff29007e299aa74b14e08ef936b0331051682ce544cc6fcd93cf1f33b003dbb676476"
+    "label_ref": "c60fa405732c07a9cdd2b4227a8e9395cdcf6d42ec8ba29e20c0653e97a45c2a",
+    "kind_base": "0474c8c9b1dcbb5393f53584ed70363a2d382cd92ad0a25791095f5e24b7b23672f671941d30f2fd461bfd879e8a32f75e738f270a5fc286a02589735ab9eb7dc3"
   },
   {
     "_metadata": {
@@ -41,17 +41,17 @@
       "version": "2.0.0-rc.1",
       "name": "WETH",
       "token": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
+      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
       "status": "deprecated",
       "alias_of": {
         "version": "2.0.0-rc.2",
         "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "d24d7efe2fa0fc769cc1694146290a5676add70df70528e97253fed7522e02cd"
+        "label_ref": "f5db7a56f4e605dddfe60bc4ebb0316bff7c6d09494591a0bf75fae2a37bebfc"
       }
     },
     "logic_ref": "51c2403f4e1de40c3c3ecef69385f8772ee99b4a610e88f1ad2b1b85b481a7f2",
-    "label_ref": "d24d7efe2fa0fc769cc1694146290a5676add70df70528e97253fed7522e02cd",
-    "kind_base": "04802341fa16977f86bef9bcd3ca5d7b4215e65779beaceacd8e5863d3b46304f2f0d2943725581a6c9bacb6eea615b3ef689417a5e6588f6721157bb187295493"
+    "label_ref": "f5db7a56f4e605dddfe60bc4ebb0316bff7c6d09494591a0bf75fae2a37bebfc",
+    "kind_base": "041cb9c4d02ffc840994bdb27e94d51f15a0efdeb670c818344cef4ccaf36c512d8054094cabc8c9daf2f682c6adaf41b9eb40107670f8be7c780f3b71282c239b"
   },
   {
     "_metadata": {
@@ -59,12 +59,12 @@
       "version": "2.0.0-rc.2",
       "name": "XAN",
       "token": "0xCEDbEA37C8872c4171259Cdfd5255CB8923Cf8e7",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
+      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
       "status": "active"
     },
     "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-    "label_ref": "5c99181b411e6c99af669d78ef64a0252ba9565ee4f7108a4b5e34e73aed666f",
-    "kind_base": "0464945dcc6007c588110752ccb13041e518a0438ee499ca32524feaaf6d2dcd72050b1c68e11b07b7f0d274b0d6eefa0c2d1cd5110fdf6ed6de1b8346a1c60a7a"
+    "label_ref": "464d0cc1bbb5907557597111fc283fe2fa3ab6359c682179e019287384e6a506",
+    "kind_base": "041e9e72ffbd480788f7e17412ec6c972ca30ab6ed93398ec46694b03dfbbf4283440b16f6d7f1c3844ae1ef99e4dfc58c1ba00953853acbac5cbafe2af19751f3"
   },
   {
     "_metadata": {
@@ -72,12 +72,12 @@
       "version": "2.0.0-rc.2",
       "name": "USDC",
       "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
+      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
       "status": "active"
     },
     "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-    "label_ref": "99d68be142843d7f277bbcddbc8b29841eecddc7d0a3ffc5ebefa4cae5bf037a",
-    "kind_base": "046852d7903fa635eb4f0bd54ba1860b9652feb960c2e9943746c425f8bd1ff29007e299aa74b14e08ef936b0331051682ce544cc6fcd93cf1f33b003dbb676476"
+    "label_ref": "c60fa405732c07a9cdd2b4227a8e9395cdcf6d42ec8ba29e20c0653e97a45c2a",
+    "kind_base": "0474c8c9b1dcbb5393f53584ed70363a2d382cd92ad0a25791095f5e24b7b23672f671941d30f2fd461bfd879e8a32f75e738f270a5fc286a02589735ab9eb7dc3"
   },
   {
     "_metadata": {
@@ -85,12 +85,12 @@
       "version": "2.0.0-rc.2",
       "name": "WETH",
       "token": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
+      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
       "status": "active"
     },
     "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-    "label_ref": "d24d7efe2fa0fc769cc1694146290a5676add70df70528e97253fed7522e02cd",
-    "kind_base": "04802341fa16977f86bef9bcd3ca5d7b4215e65779beaceacd8e5863d3b46304f2f0d2943725581a6c9bacb6eea615b3ef689417a5e6588f6721157bb187295493"
+    "label_ref": "f5db7a56f4e605dddfe60bc4ebb0316bff7c6d09494591a0bf75fae2a37bebfc",
+    "kind_base": "041cb9c4d02ffc840994bdb27e94d51f15a0efdeb670c818344cef4ccaf36c512d8054094cabc8c9daf2f682c6adaf41b9eb40107670f8be7c780f3b71282c239b"
   },
   {
     "_metadata": {
@@ -103,12 +103,12 @@
       "alias_of": {
         "version": "2.0.0-rc.2",
         "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "99d68be142843d7f277bbcddbc8b29841eecddc7d0a3ffc5ebefa4cae5bf037a"
+        "label_ref": "c60fa405732c07a9cdd2b4227a8e9395cdcf6d42ec8ba29e20c0653e97a45c2a"
       }
     },
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
     "label_ref": "315ddff478baf56718c36581038b5408bfbbcdc4283ece5dd8de5a02014a4bae",
-    "kind_base": "046852d7903fa635eb4f0bd54ba1860b9652feb960c2e9943746c425f8bd1ff29007e299aa74b14e08ef936b0331051682ce544cc6fcd93cf1f33b003dbb676476"
+    "kind_base": "0474c8c9b1dcbb5393f53584ed70363a2d382cd92ad0a25791095f5e24b7b23672f671941d30f2fd461bfd879e8a32f75e738f270a5fc286a02589735ab9eb7dc3"
   },
   {
     "_metadata": {
@@ -116,17 +116,17 @@
       "version": "1.0.0",
       "name": "XAN",
       "token": "0xCEDbEA37C8872c4171259Cdfd5255CB8923Cf8e7",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
+      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
       "status": "deprecated",
       "alias_of": {
         "version": "2.0.0-rc.2",
         "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "5c99181b411e6c99af669d78ef64a0252ba9565ee4f7108a4b5e34e73aed666f"
+        "label_ref": "464d0cc1bbb5907557597111fc283fe2fa3ab6359c682179e019287384e6a506"
       }
     },
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
-    "label_ref": "5c99181b411e6c99af669d78ef64a0252ba9565ee4f7108a4b5e34e73aed666f",
-    "kind_base": "0464945dcc6007c588110752ccb13041e518a0438ee499ca32524feaaf6d2dcd72050b1c68e11b07b7f0d274b0d6eefa0c2d1cd5110fdf6ed6de1b8346a1c60a7a"
+    "label_ref": "464d0cc1bbb5907557597111fc283fe2fa3ab6359c682179e019287384e6a506",
+    "kind_base": "041e9e72ffbd480788f7e17412ec6c972ca30ab6ed93398ec46694b03dfbbf4283440b16f6d7f1c3844ae1ef99e4dfc58c1ba00953853acbac5cbafe2af19751f3"
   },
   {
     "_metadata": {
@@ -139,12 +139,12 @@
       "alias_of": {
         "version": "2.0.0-rc.2",
         "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "d24d7efe2fa0fc769cc1694146290a5676add70df70528e97253fed7522e02cd"
+        "label_ref": "f5db7a56f4e605dddfe60bc4ebb0316bff7c6d09494591a0bf75fae2a37bebfc"
       }
     },
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
     "label_ref": "7312e4294367a92749115de32b9caecb003fa7a3efe2f7e6cc9a1b40ce198a10",
-    "kind_base": "04802341fa16977f86bef9bcd3ca5d7b4215e65779beaceacd8e5863d3b46304f2f0d2943725581a6c9bacb6eea615b3ef689417a5e6588f6721157bb187295493"
+    "kind_base": "041cb9c4d02ffc840994bdb27e94d51f15a0efdeb670c818344cef4ccaf36c512d8054094cabc8c9daf2f682c6adaf41b9eb40107670f8be7c780f3b71282c239b"
   },
   {
     "_metadata": {
@@ -152,17 +152,17 @@
       "version": "1.0.0",
       "name": "USDC",
       "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
+      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
       "status": "deprecated",
       "alias_of": {
         "version": "2.0.0-rc.2",
         "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "99d68be142843d7f277bbcddbc8b29841eecddc7d0a3ffc5ebefa4cae5bf037a"
+        "label_ref": "c60fa405732c07a9cdd2b4227a8e9395cdcf6d42ec8ba29e20c0653e97a45c2a"
       }
     },
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
-    "label_ref": "99d68be142843d7f277bbcddbc8b29841eecddc7d0a3ffc5ebefa4cae5bf037a",
-    "kind_base": "046852d7903fa635eb4f0bd54ba1860b9652feb960c2e9943746c425f8bd1ff29007e299aa74b14e08ef936b0331051682ce544cc6fcd93cf1f33b003dbb676476"
+    "label_ref": "c60fa405732c07a9cdd2b4227a8e9395cdcf6d42ec8ba29e20c0653e97a45c2a",
+    "kind_base": "0474c8c9b1dcbb5393f53584ed70363a2d382cd92ad0a25791095f5e24b7b23672f671941d30f2fd461bfd879e8a32f75e738f270a5fc286a02589735ab9eb7dc3"
   },
   {
     "_metadata": {
@@ -170,26 +170,26 @@
       "version": "1.0.0",
       "name": "WETH",
       "token": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
-      "forwarder": "0x0281E89De2c6A0e878df550Af0F705C4B7920b0D",
+      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
       "status": "deprecated",
       "alias_of": {
         "version": "2.0.0-rc.2",
         "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "d24d7efe2fa0fc769cc1694146290a5676add70df70528e97253fed7522e02cd"
+        "label_ref": "f5db7a56f4e605dddfe60bc4ebb0316bff7c6d09494591a0bf75fae2a37bebfc"
       }
     },
     "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
-    "label_ref": "d24d7efe2fa0fc769cc1694146290a5676add70df70528e97253fed7522e02cd",
-    "kind_base": "04802341fa16977f86bef9bcd3ca5d7b4215e65779beaceacd8e5863d3b46304f2f0d2943725581a6c9bacb6eea615b3ef689417a5e6588f6721157bb187295493"
+    "label_ref": "f5db7a56f4e605dddfe60bc4ebb0316bff7c6d09494591a0bf75fae2a37bebfc",
+    "kind_base": "041cb9c4d02ffc840994bdb27e94d51f15a0efdeb670c818344cef4ccaf36c512d8054094cabc8c9daf2f682c6adaf41b9eb40107670f8be7c780f3b71282c239b"
   },
   {
     "_metadata": {
       "type": "GenericCallResource",
       "version": "2.0.0-rc.2",
-      "forwarder": "0xF0e9d6b04426f09382C279239eB56Bc228E88aDB"
+      "forwarder": "0x91E39e284665FcF4ffE319cdccCb9715Ebf6FCf5"
     },
     "logic_ref": "dc64937e533f5eccf6041da5f49c905e6a28f76111ae2a5bc24160e67bd50dea",
-    "label_ref": "beb6817eb7ae35581250c925f06a8347cce46c54f2761e6f253c7b40f2b81df8",
-    "kind_base": "040c60b0be97f5c289075de3504ccbddf63b63bf7c510114b1a5997e1dd8ecc6ba23fc13acf2f3679cda8b83a976c8783a25c1bcf4790b1fce87b3870f5726e30a"
+    "label_ref": "ad0186444bff289863abc3c38f221f1e1c2fff1c0476a465368b8f4aa9a90ef5",
+    "kind_base": "041aac02ca54023ba757b9dd0491afd423422b810c2b42b26f7c54f1a45917fbfd18e28b82a0f6f12f1801ee5a72207b58565ec861f8922f638d8c898e491a0c70"
   }
 ]
