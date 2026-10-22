@@ -1,6 +1,6 @@
-//! Every ERC20 member of a generated table balances the active member of its fungibility domain in a compliance unit,
-//! whether the table lists the active member or the circuit computes its kind point by hash to curve.
-//! The resources take their labels from the transfer circuit's derivation, and the compliance constraints take their
+//! Every ERC20 and SPL token member of a generated table balances the active member of its fungibility domain in a
+//! compliance unit, whether the table lists the active member or the circuit computes its kind point by hash to curve.
+//! The resources take their labels from their transfer circuit's derivation, and the compliance constraints take their
 //! kinds from the table, so the generated keys and kind points are checked against both circuits. It needs no chain.
 
 use anoma_risc0_kind_tables::table::{production, staging};
@@ -10,23 +10,25 @@ use anoma_rm_risc0::compliance::{self, KindTableEntry};
 use anoma_rm_risc0::kind_table::KindTable;
 use anoma_rm_risc0::nullifier_key::NullifierKey;
 use anoma_rm_risc0::resource::{ConsumedResourceWitness, Resource};
-use anomapay_erc20_witness::calculate_label_ref;
 
 /// A resource kind, written as its `(logic_ref, label_ref)`.
 type Kind = (Digest, Digest);
 
-/// The kind of this member's resources: its logic, and the label the transfer circuit derives for its token.
+/// The kind of this member's resources: its logic, and the label its transfer circuit derives for its token.
 fn resource_kind(entry: &Entry) -> Option<Kind> {
-    let Some(Metadata::Erc20 {
-        token, forwarder, ..
-    }) = &entry.metadata
-    else {
-        return None;
+    let label_ref = match entry.metadata.as_ref()? {
+        Metadata::Erc20 {
+            token, forwarder, ..
+        } => anomapay_erc20_witness::calculate_label_ref(forwarder.as_slice(), token.as_slice()),
+        Metadata::SplToken {
+            mint, forwarder, ..
+        } => anomapay_solana_transfer_witness::calculate_label_ref(
+            forwarder.as_bytes(),
+            mint.as_bytes(),
+        ),
+        Metadata::GenericCall { .. } => return None,
     };
-    Some((
-        entry.logic_ref,
-        calculate_label_ref(forwarder.as_slice(), token.as_slice()),
-    ))
+    Some((entry.logic_ref, label_ref))
 }
 
 /// The kind this entry takes its kind point from: the kind its `alias_of` names, or its own.
@@ -69,7 +71,7 @@ fn delta(consumed: Kind, created: Kind, table: &[KindTableEntry]) -> ([u32; 8], 
 }
 
 #[test]
-fn every_erc20_member_balances_its_active_member() {
+fn every_token_member_balances_its_active_member() {
     let mut aliases = 0;
     for (module, tables) in [
         ("staging", staging::tables()),
