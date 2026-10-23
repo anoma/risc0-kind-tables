@@ -6,8 +6,8 @@
 use anoma_risc0_kind_tables::table::{production, staging};
 use anoma_risc0_kind_tables::{Entry, Metadata};
 use anoma_rm_risc0::Digest;
-use anoma_rm_risc0::compliance::{self, KindTableEntry};
-use anoma_rm_risc0::kind_table::KindTable;
+use anoma_rm_risc0::compliance::{self, KindTreeEntry};
+use anoma_rm_risc0::kind_tree::KindTree;
 use anoma_rm_risc0::nullifier_key::NullifierKey;
 use anoma_rm_risc0::resource::{ConsumedResourceWitness, Resource};
 use anomapay_erc20_witness::calculate_label_ref;
@@ -39,7 +39,7 @@ fn active_kind(entry: &Entry) -> Kind {
 
 /// The delta of a unit that consumes one unit of `consumed` and creates one unit of `created`. `rcv` is fixed to 1, so
 /// two deltas differ only in the kind points the unit looks up.
-fn delta(consumed: Kind, created: Kind, table: &[KindTableEntry]) -> ([u32; 8], [u32; 8]) {
+fn delta(consumed: Kind, created: Kind, table: &[KindTreeEntry]) -> ([u32; 8], [u32; 8]) {
     let nf_key = NullifierKey::from_bytes([1; 32]);
     let nk_commitment = nf_key.commit();
     let resource = |(logic_ref, label_ref): Kind, nonce| Resource {
@@ -59,7 +59,7 @@ fn delta(consumed: Kind, created: Kind, table: &[KindTableEntry]) -> ([u32; 8], 
     let mut witness = compliance::from_resources(
         vec![ConsumedResourceWitness::from_resource(consumed, nf_key)],
         vec![created],
-        &KindTable::from_entries(table.to_vec()).expect("arm-risc0 accepts the table"),
+        &KindTree::from_entries(table.to_vec()).expect("arm-risc0 accepts the table"),
     );
     let mut rcv = [0; 32];
     rcv[31] = 1;
@@ -76,13 +76,13 @@ fn every_erc20_member_balances_its_active_member() {
         ("production", production::tables()),
     ] {
         for (chain, table) in tables {
-            let entries: Vec<KindTableEntry> = table
+            let entries: Vec<KindTreeEntry> = table
                 .entries
                 .iter()
-                .map(|entry| KindTableEntry {
+                .map(|entry| KindTreeEntry {
                     logic_ref: entry.logic_ref,
                     label_ref: entry.label_ref,
-                    kind_point: entry.kind_point.clone(),
+                    kind_base: entry.kind_point.clone(),
                 })
                 .collect();
             for entry in &table.entries {
@@ -104,7 +104,7 @@ fn every_erc20_member_balances_its_active_member() {
                 );
                 if entry.is_alias() {
                     aliases += 1;
-                    let without_active_row: Vec<KindTableEntry> = entries
+                    let without_active_row: Vec<KindTreeEntry> = entries
                         .iter()
                         .filter(|row| (row.logic_ref, row.label_ref) != active)
                         .cloned()

@@ -46,7 +46,7 @@ async fn the_promoted_environment_stores_the_generated_roots() -> Result<()> {
                         format!("no {environment:?} protocol adapter recorded on {chain}")
                     })?;
                 let stored = adapter
-                    .getKindTableRoot()
+                    .getKindTreeRoot()
                     .call()
                     .await
                     .with_context(|| chain.to_string())?;

@@ -17,8 +17,8 @@ use anoma_pa_testkit::fixtures::identities;
 use anoma_pa_testkit::{execute_tx, prove_actions};
 use anoma_risc0_kind_tables::{Caip2ChainId, table};
 use anoma_rm_risc0::Digest;
-use anoma_rm_risc0::compliance::KindTableEntry;
-use anoma_rm_risc0::constants::{init_kind_table_from_entries, kind_table_root};
+use anoma_rm_risc0::compliance::KindTreeEntry;
+use anoma_rm_risc0::constants::{init_kind_tree_from_entries, kind_tree_root};
 use anoma_rm_risc0::merkle_path::MerklePath;
 use anoma_rm_risc0::resource::Resource;
 use anomapay_erc20_forwarder_bindings::addresses::Environment as ForwarderEnvironment;
@@ -128,13 +128,13 @@ async fn load_the_generated_table(env: &EvmE2eEnv) -> anyhow::Result<()> {
     let chain = Caip2ChainId::eip155(chain_id(env)?);
     let table = table::staging::table(chain.clone())
         .with_context(|| format!("{chain}: no staging table"))?;
-    init_kind_table_from_entries(table.entries.iter().map(KindTableEntry::from).collect())
+    init_kind_tree_from_entries(table.entries.iter().map(KindTreeEntry::from).collect())
         .context("failed to load the kind table")?;
-    let loaded = kind_table_root().context("no kind table loaded")?;
+    let loaded = kind_tree_root().context("no kind table loaded")?;
     let stored = env
         .protocol_adapter
         .pa
-        .getKindTableRoot()
+        .getKindTreeRoot()
         .call()
         .await
         .context("failed to query the kind table root")?;

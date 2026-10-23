@@ -29,11 +29,11 @@ Every chain-keyed file — `tokens.json`, `roots.json` — is keyed by the chain
 
 The `solana-deployments` feature exposes the recorded Solana deployment of each cluster (the protocol adapter and SPL token forwarder programs), read from `anoma-pa-solana-client` and `anomapay-spl-token-forwarder-client`. The generator and the integration tests use it; a consumer that only reads tables does not need it.
 
-The `arm` feature converts an `Entry` into `anoma-rm-risc0`'s `KindTableEntry`, so a prover loads a recorded table with `init_kind_table_from_entries`, without a file.
+The `arm` feature converts an `Entry` into `anoma-rm-risc0`'s `KindTreeEntry`, so a prover loads a recorded table with `init_kind_tree_from_entries`, without a file.
 
 ## Entries
 
-An entry carries its kind, the kind point it is assigned, and a `_metadata` object naming what the kind belongs to. The root covers `logic_ref`, `label_ref` and `kind_point` only, so `_metadata` is free to carry whatever a reviewer needs and never moves the root. `version` is the version of the circuit crate that owns `logic_ref`, read from the resolved dependency graph, so bumping a pin cannot leave a stale version behind. `type` names the resource the kind belongs to: `ERC20Resource`, `SPLTokenResource`, or `GenericCallResource`. An `SPLTokenResource` row carries `mint` and `forwarder` as base58 addresses where an ERC20 row carries `token` and `forwarder`.
+An entry carries its kind, the kind point it is assigned, and a `_metadata` object naming what the kind belongs to. The root covers `logic_ref`, `label_ref` and `kind_base` only, so `_metadata` is free to carry whatever a reviewer needs and never moves the root. `version` is the version of the circuit crate that owns `logic_ref`, read from the resolved dependency graph, so bumping a pin cannot leave a stale version behind. `type` names the resource the kind belongs to: `ERC20Resource`, `SPLTokenResource`, or `GenericCallResource`. An `SPLTokenResource` row carries `mint` and `forwarder` as base58 addresses where an ERC20 row carries `token` and `forwarder`.
 
 ```json
 {
@@ -46,11 +46,11 @@ An entry carries its kind, the kind point it is assigned, and a `_metadata` obje
   },
   "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
   "label_ref": "55008fad9bfccef776960bfca715e365cfba843cfb947190fafc69e4d9fac674",
-  "kind_point": "047494d66fd5abf01f4eb01d204f9c288db95873e6696cc0c5e143855d2a36000fa2c0ba7484f59110ffdfdd546e064c595d0ab979f09c48c26285f3aba5dc2471"
+  "kind_base": "047494d66fd5abf01f4eb01d204f9c288db95873e6696cc0c5e143855d2a36000fa2c0ba7484f59110ffdfdd546e064c595d0ab979f09c48c26285f3aba5dc2471"
 }
 ```
 
-That row is the active member of the WETH fungibility domain on Base Sepolia. A fungibility domain is one forwarder holding one token, and every listed circuit version has a member under that forwarder's label, all carrying the same `kind_point`. The kind point is the kind of the active version under that label, so every deprecated version's row is an alias of it; a version outside the fungibility domain is fungible with nothing. The active version's row assigns its own kind, which the circuit computes anyway, so it is listed only because WETH sets `precompute_kind_point`. Generic call has no fungibility domain, and its row assigns its own kind for the same reason: the circuit reads its kind point instead of computing it.
+That row is the active member of the WETH fungibility domain on Base Sepolia. A fungibility domain is one forwarder holding one token, and every listed circuit version has a member under that forwarder's label, all carrying the same `kind_base`. The kind point is the kind of the active version under that label, so every deprecated version's row is an alias of it; a version outside the fungibility domain is fungible with nothing. The active version's row assigns its own kind, which the circuit computes anyway, so it is listed only because WETH sets `precompute_kind_point`. Generic call has no fungibility domain, and its row assigns its own kind for the same reason: the circuit reads its kind point instead of computing it.
 
 An alias also says what it is a second name for. Its `alias_of` names the kind it takes its kind point from, so a reviewer reads it without recomputing anything, and its `status` is `deprecated`: a member is `active` if and only if it has no `alias_of`. When version 3.0.0 becomes active, 2.0.0 becomes deprecated, every kind point moves to 3.0.0's kind, and the WETH row for 2.0.0 becomes this:
 
@@ -71,7 +71,7 @@ An alias also says what it is a second name for. Its `alias_of` names the kind i
   },
   "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
   "label_ref": "55008fad9bfccef776960bfca715e365cfba843cfb947190fafc69e4d9fac674",
-  "kind_point": "<3.0.0's kind under this label, the same as the new 3.0.0 row's>"
+  "kind_base": "<3.0.0's kind under this label, the same as the new 3.0.0 row's>"
 }
 ```
 
@@ -117,7 +117,7 @@ The generator pins the crate of the active version and the crate of the legacy c
 
 Old resources leave through the new version once the forwarder accepts it, which is an upgrade in the forwarder repository. The promotion gate reads each chain's forwarder and requires that the logic ref it accepts is listed.
 
-An SPL token circuit release appends its version to `SPLTokenResource` in `circuit-versions.json` and moves the generator's pin of `anomapay-solana-resource`'s `transfer_library` (`anomapay-solana-transfer-library`) to the tag that ships it, so the generator checks the active version's logic ref. On Solana the forwarder accepts the new logic ref after its upgrade, whose `reinitialize` installs it; the promotion gate reads the forwarder's config account for it.
+An SPL token circuit release appends its version to `SPLTokenResource` in `circuit-versions.json`. The generator pins no SPL token circuit crate, so it checks this list by the list rules only, and no check compares the active version's logic ref with the circuit. On Solana the forwarder accepts the new logic ref after its upgrade, whose `reinitialize` installs it; the promotion gate reads the forwarder's config account for it.
 
 ### Alias the legacy ERC20 forwarder
 
