@@ -14,7 +14,7 @@ async fn the_recorded_solana_deployments_accounts_decode() -> Result<()> {
         };
         let rpc = solana_rpc(cluster);
         let root = rpc
-            .adapter_kind_table_root(&deployment.adapter)
+            .adapter_kind_tree_root(&deployment.adapter)
             .await?
             .with_context(|| {
                 format!(

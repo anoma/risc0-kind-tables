@@ -8,14 +8,14 @@
       "forwarder": "BsfuXpxw8oCmZXnYijyQkUYNcCnuskFZbYizmWLnpSU7",
       "status": "deprecated",
       "alias_of": {
-        "version": "2.0.0-rc.7",
-        "logic_ref": "cd2b9a7edfd4558b581fa25fd4d7c2064ae7f22905c9de774d912ad95625a0d1",
+        "version": "2.0.0-rc.9",
+        "logic_ref": "65328fb289d654b428903bec4d5e19a1e2f62093846abed3ee5e4081aa1a74fd",
         "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17"
       }
     },
     "logic_ref": "179ebea4903d61c69dbdaba15db26e9726f7d7fb39098a6a2c0f94be854295c6",
     "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
-    "kind_point": "045f81fbb5f3768d4d8904603b68125419feee91ba91cd1659e0b1f8e16306c000ce79efe674a63333ddb6290b80406c303bb3adae159f3e43a9e7fe1cde679fea"
+    "kind_point": "04a3c1a70d8a8c598b031853e5fc4750f64b262c550084e8504a2d25d0fee7af56865d0692ac597a543d22c79188d92efe99a076a77c24b9e25af2ec1a9922c779"
   },
   {
     "_metadata": {
@@ -26,14 +26,14 @@
       "forwarder": "BsfuXpxw8oCmZXnYijyQkUYNcCnuskFZbYizmWLnpSU7",
       "status": "deprecated",
       "alias_of": {
-        "version": "2.0.0-rc.7",
-        "logic_ref": "cd2b9a7edfd4558b581fa25fd4d7c2064ae7f22905c9de774d912ad95625a0d1",
+        "version": "2.0.0-rc.9",
+        "logic_ref": "65328fb289d654b428903bec4d5e19a1e2f62093846abed3ee5e4081aa1a74fd",
         "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17"
       }
     },
     "logic_ref": "1c7232d6d6bea7551eddbb2a3df9f8ace1037e27943985389f735100d7faf183",
     "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
-    "kind_point": "045f81fbb5f3768d4d8904603b68125419feee91ba91cd1659e0b1f8e16306c000ce79efe674a63333ddb6290b80406c303bb3adae159f3e43a9e7fe1cde679fea"
+    "kind_point": "04a3c1a70d8a8c598b031853e5fc4750f64b262c550084e8504a2d25d0fee7af56865d0692ac597a543d22c79188d92efe99a076a77c24b9e25af2ec1a9922c779"
   },
   {
     "_metadata": {
@@ -44,14 +44,45 @@
       "forwarder": "BsfuXpxw8oCmZXnYijyQkUYNcCnuskFZbYizmWLnpSU7",
       "status": "deprecated",
       "alias_of": {
-        "version": "2.0.0-rc.7",
-        "logic_ref": "cd2b9a7edfd4558b581fa25fd4d7c2064ae7f22905c9de774d912ad95625a0d1",
+        "version": "2.0.0-rc.9",
+        "logic_ref": "65328fb289d654b428903bec4d5e19a1e2f62093846abed3ee5e4081aa1a74fd",
         "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17"
       }
     },
     "logic_ref": "1f90852b23dab294cadc7384b6185160726f6d04c58881c0f02c9c8f64625290",
     "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
-    "kind_point": "045f81fbb5f3768d4d8904603b68125419feee91ba91cd1659e0b1f8e16306c000ce79efe674a63333ddb6290b80406c303bb3adae159f3e43a9e7fe1cde679fea"
+    "kind_point": "04a3c1a70d8a8c598b031853e5fc4750f64b262c550084e8504a2d25d0fee7af56865d0692ac597a543d22c79188d92efe99a076a77c24b9e25af2ec1a9922c779"
+  },
+  {
+    "_metadata": {
+      "type": "SPLTokenResource",
+      "version": "2.0.0-rc.8",
+      "name": "TEST",
+      "mint": "9EHEFzyuY7sZEzTVm7C3uMkNZFMgm5ZeWjGjirZ3MVfr",
+      "forwarder": "BsfuXpxw8oCmZXnYijyQkUYNcCnuskFZbYizmWLnpSU7",
+      "status": "deprecated",
+      "alias_of": {
+        "version": "2.0.0-rc.9",
+        "logic_ref": "65328fb289d654b428903bec4d5e19a1e2f62093846abed3ee5e4081aa1a74fd",
+        "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17"
+      }
+    },
+    "logic_ref": "49302424dfb8d0b9479008cfa4ae48bcc83e5b4c46132cf1c4978498a6cb5d94",
+    "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
+    "kind_point": "04a3c1a70d8a8c598b031853e5fc4750f64b262c550084e8504a2d25d0fee7af56865d0692ac597a543d22c79188d92efe99a076a77c24b9e25af2ec1a9922c779"
+  },
+  {
+    "_metadata": {
+      "type": "SPLTokenResource",
+      "version": "2.0.0-rc.9",
+      "name": "TEST",
+      "mint": "9EHEFzyuY7sZEzTVm7C3uMkNZFMgm5ZeWjGjirZ3MVfr",
+      "forwarder": "BsfuXpxw8oCmZXnYijyQkUYNcCnuskFZbYizmWLnpSU7",
+      "status": "active"
+    },
+    "logic_ref": "65328fb289d654b428903bec4d5e19a1e2f62093846abed3ee5e4081aa1a74fd",
+    "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
+    "kind_point": "04a3c1a70d8a8c598b031853e5fc4750f64b262c550084e8504a2d25d0fee7af56865d0692ac597a543d22c79188d92efe99a076a77c24b9e25af2ec1a9922c779"
   },
   {
     "_metadata": {
@@ -60,10 +91,15 @@
       "name": "TEST",
       "mint": "9EHEFzyuY7sZEzTVm7C3uMkNZFMgm5ZeWjGjirZ3MVfr",
       "forwarder": "BsfuXpxw8oCmZXnYijyQkUYNcCnuskFZbYizmWLnpSU7",
-      "status": "active"
+      "status": "deprecated",
+      "alias_of": {
+        "version": "2.0.0-rc.9",
+        "logic_ref": "65328fb289d654b428903bec4d5e19a1e2f62093846abed3ee5e4081aa1a74fd",
+        "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17"
+      }
     },
     "logic_ref": "cd2b9a7edfd4558b581fa25fd4d7c2064ae7f22905c9de774d912ad95625a0d1",
     "label_ref": "6b883f562948fd8812d0c3c26559b237088850f957283cb777c59130da1f7c17",
-    "kind_point": "045f81fbb5f3768d4d8904603b68125419feee91ba91cd1659e0b1f8e16306c000ce79efe674a63333ddb6290b80406c303bb3adae159f3e43a9e7fe1cde679fea"
+    "kind_point": "04a3c1a70d8a8c598b031853e5fc4750f64b262c550084e8504a2d25d0fee7af56865d0692ac597a543d22c79188d92efe99a076a77c24b9e25af2ec1a9922c779"
   }
 ]
