@@ -2,8 +2,8 @@
 //! anoma-pa-solana-client and the SPL token forwarder's config through anomapay-spl-token-forwarder-client. The
 //! promotion gates read both; this runs on every pull request and push, so a layout change on chain fails here first.
 
-use anoma_risc0_kind_tables::{SolanaCluster, deployments};
-use anoma_risc0_kind_tables_integration_test::solana_rpc;
+use anoma_risc0_kind_trees::{SolanaCluster, deployments};
+use anoma_risc0_kind_trees_integration_test::solana_rpc;
 use anyhow::{Context, Result};
 
 #[tokio::test]
@@ -14,7 +14,7 @@ async fn the_recorded_solana_deployments_accounts_decode() -> Result<()> {
         };
         let rpc = solana_rpc(cluster);
         let root = rpc
-            .adapter_kind_table_root(&deployment.adapter)
+            .adapter_kind_tree_root(&deployment.adapter)
             .await?
             .with_context(|| {
                 format!(

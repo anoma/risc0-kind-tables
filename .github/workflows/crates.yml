@@ -18,7 +18,9 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Install just
-        uses: extractions/setup-just@v3
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -40,7 +42,7 @@ jobs:
       - name: Lint
         run: just crates-lint
 
-      - name: Check the generated tables match the source
+      - name: Check the generated trees match the source
         run: just generate-check
 
       - name: Run Tests

@@ -1,12 +1,12 @@
 //! The promotion gate: every protocol adapter of the promoted environment stores the root this source
 //! generates. Runs only on a pull request into `staging` or `main` (selected via `GITHUB_BASE_REF`, or
-//! `PROMOTION_TARGET` for a local run); a table change is deployed after merging into `next`, and the promotion
+//! `PROMOTION_TARGET` for a local run); a tree change is deployed after merging into `next`, and the promotion
 //! pull request turning green is the proof it happened.
 
 use anoma_pa_evm_bindings::addresses::Environment;
 use anoma_pa_evm_bindings::contract::protocol_adapter;
-use anoma_risc0_kind_tables::{Caip2ChainId, Chain, deployments, table};
-use anoma_risc0_kind_tables_integration_test::{provider, solana_rpc};
+use anoma_risc0_kind_trees::{Caip2ChainId, Chain, deployments, tree};
+use anoma_risc0_kind_trees_integration_test::{provider, solana_rpc};
 use anyhow::{Context, Result, ensure};
 use risc0_zkvm::Digest;
 use std::collections::BTreeMap;
@@ -24,8 +24,8 @@ fn promotion_target() -> Option<Environment> {
 
 fn roots(environment: Environment) -> &'static BTreeMap<Caip2ChainId, Digest> {
     match environment {
-        Environment::Staging => table::staging::roots(),
-        Environment::Production => table::production::roots(),
+        Environment::Staging => tree::staging::roots(),
+        Environment::Production => tree::production::roots(),
     }
 }
 
@@ -46,7 +46,7 @@ async fn the_promoted_environment_stores_the_generated_roots() -> Result<()> {
                         format!("no {environment:?} protocol adapter recorded on {chain}")
                     })?;
                 let stored = adapter
-                    .getKindTableRoot()
+                    .getKindTreeRoot()
                     .call()
                     .await
                     .with_context(|| chain.to_string())?;
@@ -57,7 +57,7 @@ async fn the_promoted_environment_stores_the_generated_roots() -> Result<()> {
                     .with_context(|| format!("no protocol adapter recorded on {chain}"))?
                     .adapter;
                 solana_rpc(cluster)
-                    .adapter_kind_table_root(&adapter)
+                    .adapter_kind_tree_root(&adapter)
                     .await?
                     .with_context(|| format!("{chain}: the adapter {adapter} is not initialized"))?
             }

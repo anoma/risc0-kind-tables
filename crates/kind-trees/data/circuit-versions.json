@@ -1,0 +1,49 @@
+{
+  "_comment": "The ERC20 transfer circuit versions. Every listed version is a member of every ERC20 fungibility domain, so its resources are fungible with every other listed version's behind the same forwarder. Exactly one version is active: it keeps its own kind, and the backend creates its resources. Every other version is deprecated: an alias of the active one, which the backend consumes and converts. A release appends the new version as active and sets the previous one to deprecated. The active version is always the highest listed. A deprecated version leaves the list only when no resource of it exists under the label of a recorded forwarder; until then it stays, even when the protocol adapter denies its logic ref.",
+  "ERC20Resource": [
+    {
+      "_comment": "The circuit that the legacy forwarders accept. transfer_library ships it as 2.0.0 for arm-risc0 1 and as 3.0.0-rc.2 for arm-risc0 2.",
+      "version": "1.0.0",
+      "logic_ref": "bc12323668c37c3d381ca798f11116f35fb1639d12239b29da7810df3985e7ad",
+      "status": "deprecated"
+    },
+    {
+      "version": "2.0.0-rc.2",
+      "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
+      "status": "active"
+    }
+  ],
+  "_comment_spl_token": "The AnomaPay Solana transfer circuit versions, under the same rules. Its label is sha256(forwarder program id ‖ mint).",
+  "SPLTokenResource": [
+    {
+      "version": "2.0.0-rc.1",
+      "logic_ref": "179ebea4903d61c69dbdaba15db26e9726f7d7fb39098a6a2c0f94be854295c6",
+      "status": "deprecated"
+    },
+    {
+      "version": "2.0.0-rc.2",
+      "logic_ref": "1f90852b23dab294cadc7384b6185160726f6d04c58881c0f02c9c8f64625290",
+      "status": "deprecated"
+    },
+    {
+      "version": "2.0.0-rc.6",
+      "logic_ref": "1c7232d6d6bea7551eddbb2a3df9f8ace1037e27943985389f735100d7faf183",
+      "status": "deprecated"
+    },
+    {
+      "version": "2.0.0-rc.7",
+      "logic_ref": "cd2b9a7edfd4558b581fa25fd4d7c2064ae7f22905c9de774d912ad95625a0d1",
+      "status": "deprecated"
+    },
+    {
+      "version": "2.0.0-rc.8",
+      "logic_ref": "49302424dfb8d0b9479008cfa4ae48bcc83e5b4c46132cf1c4978498a6cb5d94",
+      "status": "deprecated"
+    },
+    {
+      "version": "2.0.0-rc.9",
+      "logic_ref": "65328fb289d654b428903bec4d5e19a1e2f62093846abed3ee5e4081aa1a74fd",
+      "status": "active"
+    }
+  ]
+}

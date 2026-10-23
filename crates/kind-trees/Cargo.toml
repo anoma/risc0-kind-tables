@@ -1,0 +1,61 @@
+[package]
+name = "anoma-risc0-kind-trees"
+version.workspace = true
+description = "The kind trees the Anoma protocol adapters are committed to, and the supported-token list they are built from."
+keywords.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+edition.workspace = true
+
+[features]
+# Converts an entry into the resource machine's kind tree entry, for a consumer that loads a tree to prove.
+arm = ["dep:anoma-rm-risc0"]
+# The Solana deployment record of each recorded cluster, read from the programs' client crates.
+solana-deployments = ["dep:anoma-pa-solana-client", "dep:anomapay-spl-token-forwarder-client"]
+# The generator reads the live circuit IDs and forwarder deployments, which the library's consumers don't need.
+generate = [
+  "solana-deployments",
+  "dep:anoma-generic-call-forwarder-bindings",
+  "dep:anoma-generic-call-library",
+  "dep:anoma-pa-evm-bindings",
+  "dep:anoma-rm-risc0",
+  "dep:anomapay-erc20-forwarder-bindings",
+  "dep:anomapay_erc20_library",
+  "dep:anyhow",
+  "dep:legacy-anomapay-erc20-library",
+]
+
+[dependencies]
+alloy = { workspace = true }
+alloy-chains = { workspace = true }
+anoma-generic-call-forwarder-bindings = { workspace = true, optional = true }
+anoma-generic-call-library = { workspace = true, optional = true }
+anoma-pa-evm-bindings = { workspace = true, optional = true }
+anoma-pa-solana-client = { workspace = true, optional = true }
+anomapay-spl-token-forwarder-client = { workspace = true, optional = true }
+anoma-rm-risc0 = { workspace = true, optional = true }
+anomapay-erc20-forwarder-bindings = { workspace = true, optional = true }
+anomapay_erc20_library = { workspace = true, optional = true }
+anyhow = { workspace = true, optional = true }
+legacy-anomapay-erc20-library = { workspace = true, optional = true }
+bs58 = { workspace = true }
+hex = { workspace = true }
+k256 = { workspace = true }
+risc0-zkvm = { workspace = true }
+semver = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+solana-cluster-type = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+# The tests read the Solana deployment record, which only this feature compiles.
+anoma-risc0-kind-trees = { path = ".", features = ["solana-deployments"] }
+# The EVM deployment record the offline tree test reads the environments' forwarders from.
+anomapay-erc20-forwarder-bindings = { workspace = true }
+
+[[bin]]
+name = "generate"
+required-features = ["generate"]
