@@ -1051,7 +1051,7 @@ dependencies = [
 [[package]]
 name = "anoma-generic-call-library"
 version = "2.0.0-rc.2"
-source = "git+https://github.com/anoma/generic-call-resource?tag=v2.0.0-rc.2#b17fe83be8ad3ac75c64e3346f4e6602f1121fc4"
+source = "git+https://github.com/anoma/generic-call-resource?rev=2cf15befc7f905cb0edff08b1140739f8c8b1b66#2cf15befc7f905cb0edff08b1140739f8c8b1b66"
 dependencies = [
  "anoma-generic-call-witness",
  "anoma-rm-risc0",
@@ -1063,7 +1063,7 @@ dependencies = [
 [[package]]
 name = "anoma-generic-call-witness"
 version = "2.0.0-rc.2"
-source = "git+https://github.com/anoma/generic-call-resource?tag=v2.0.0-rc.2#b17fe83be8ad3ac75c64e3346f4e6602f1121fc4"
+source = "git+https://github.com/anoma/generic-call-resource?rev=2cf15befc7f905cb0edff08b1140739f8c8b1b66#2cf15befc7f905cb0edff08b1140739f8c8b1b66"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -1075,7 +1075,7 @@ dependencies = [
 [[package]]
 name = "anoma-pa-evm-bindings"
 version = "3.0.0-rc.18"
-source = "git+https://github.com/anoma/pa-evm?tag=bindings%2Fv3.0.0-rc.18#d7b44b857299423dff1509658234682f7ef4e9ad"
+source = "git+https://github.com/anoma/pa-evm?rev=15b0dd16541f7fdc0c45b725a24b7b58963770a9#15b0dd16541f7fdc0c45b725a24b7b58963770a9"
 dependencies = [
  "alloy",
  "alloy-chains",
@@ -1089,7 +1089,7 @@ dependencies = [
 [[package]]
 name = "anoma-pa-evm-integration-test"
 version = "0.1.0"
-source = "git+https://github.com/anoma/pa-evm?tag=bindings%2Fv3.0.0-rc.18#d7b44b857299423dff1509658234682f7ef4e9ad"
+source = "git+https://github.com/anoma/pa-evm?rev=15b0dd16541f7fdc0c45b725a24b7b58963770a9#15b0dd16541f7fdc0c45b725a24b7b58963770a9"
 dependencies = [
  "alloy",
  "alloy-chains",
@@ -1120,7 +1120,7 @@ dependencies = [
 [[package]]
 name = "anoma-pa-testkit"
 version = "1.0.0-rc.3"
-source = "git+https://github.com/anoma/pa-testkit?tag=v1.0.0-rc.3#b75cc7b63b67fb07b84163dfb254757027d6600a"
+source = "git+https://github.com/anoma/pa-testkit?rev=8e124da1f640a29e7814a8c6fcdbf9419b6dfad6#8e124da1f640a29e7814a8c6fcdbf9419b6dfad6"
 dependencies = [
  "anoma-rm-risc0",
  "anoma-rm-risc0-gadgets",
@@ -1208,7 +1208,7 @@ dependencies = [
 [[package]]
 name = "anoma-rm-core"
 version = "2.0.0-rc.7.1"
-source = "git+https://github.com/anoma/arm-risc0?tag=v2.0.0-rc.7.1#8f5202fafc3b81d0ca74a37570f5bf840f98ff01"
+source = "git+https://github.com/anoma/arm-risc0?rev=aaac2d2dc795c45c50615b0bf0ed5f8bc06cff9e#aaac2d2dc795c45c50615b0bf0ed5f8bc06cff9e"
 dependencies = [
  "bincode",
  "bytemuck",
@@ -1221,7 +1221,7 @@ dependencies = [
 [[package]]
 name = "anoma-rm-risc0"
 version = "2.0.0-rc.7.1"
-source = "git+https://github.com/anoma/arm-risc0?tag=v2.0.0-rc.7.1#8f5202fafc3b81d0ca74a37570f5bf840f98ff01"
+source = "git+https://github.com/anoma/arm-risc0?rev=aaac2d2dc795c45c50615b0bf0ed5f8bc06cff9e#aaac2d2dc795c45c50615b0bf0ed5f8bc06cff9e"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -1243,7 +1243,7 @@ dependencies = [
 [[package]]
 name = "anoma-rm-risc0-gadgets"
 version = "2.0.0-rc.7.1"
-source = "git+https://github.com/anoma/arm-risc0?tag=v2.0.0-rc.7.1#8f5202fafc3b81d0ca74a37570f5bf840f98ff01"
+source = "git+https://github.com/anoma/arm-risc0?rev=aaac2d2dc795c45c50615b0bf0ed5f8bc06cff9e#aaac2d2dc795c45c50615b0bf0ed5f8bc06cff9e"
 dependencies = [
  "aes-gcm",
  "alloy-primitives",
@@ -1274,7 +1274,7 @@ dependencies = [
 [[package]]
 name = "anomapay-erc20-forwarder-bindings"
 version = "3.0.0-rc.18"
-source = "git+https://github.com/anoma/anomapay-erc20-forwarder?tag=bindings%2Fv3.0.0-rc.18#0b3630b359daa16e5233dd0c356c95d98b22098a"
+source = "git+https://github.com/anoma/anomapay-erc20-forwarder?rev=15d32a63bda385ba7a074e2a5b63984911745645#15d32a63bda385ba7a074e2a5b63984911745645"
 dependencies = [
  "alloy",
  "alloy-chains",
@@ -1287,7 +1287,7 @@ dependencies = [
 [[package]]
 name = "anomapay-erc20-forwarder-integration-test"
 version = "0.2.0"
-source = "git+https://github.com/anoma/anomapay-erc20-forwarder?tag=bindings%2Fv3.0.0-rc.18#0b3630b359daa16e5233dd0c356c95d98b22098a"
+source = "git+https://github.com/anoma/anomapay-erc20-forwarder?rev=15d32a63bda385ba7a074e2a5b63984911745645#15d32a63bda385ba7a074e2a5b63984911745645"
 dependencies = [
  "alloy",
  "alloy-chains",
@@ -1295,7 +1295,7 @@ dependencies = [
  "anoma-pa-testkit",
  "anoma-rm-risc0",
  "anoma-rm-risc0-gadgets",
- "anomapay-erc20-forwarder-bindings 3.0.0-rc.18 (git+https://github.com/anoma/anomapay-erc20-forwarder?tag=bindings%2Fv3.0.0-rc.18)",
+ "anomapay-erc20-forwarder-bindings 3.0.0-rc.18 (git+https://github.com/anoma/anomapay-erc20-forwarder?rev=15d32a63bda385ba7a074e2a5b63984911745645)",
  "anomapay_erc20_library",
  "anomapay_erc20_witness",
  "anyhow",
@@ -1324,7 +1324,7 @@ dependencies = [
 [[package]]
 name = "anomapay_erc20_library"
 version = "2.0.0-rc.2"
-source = "git+https://github.com/anoma/anomapay-erc20-resource?tag=v2.0.0-rc.2#cf7752411b01b97decffa3e336e995074d3395b5"
+source = "git+https://github.com/anoma/anomapay-erc20-resource?rev=1909a334ebbfaad85af74a8ccd98658980107d0c#1909a334ebbfaad85af74a8ccd98658980107d0c"
 dependencies = [
  "anoma-rm-risc0",
  "anoma-rm-risc0-gadgets",
@@ -1338,7 +1338,7 @@ dependencies = [
 [[package]]
 name = "anomapay_erc20_witness"
 version = "2.0.0-rc.2"
-source = "git+https://github.com/anoma/anomapay-erc20-resource?tag=v2.0.0-rc.2#cf7752411b01b97decffa3e336e995074d3395b5"
+source = "git+https://github.com/anoma/anomapay-erc20-resource?rev=1909a334ebbfaad85af74a8ccd98658980107d0c#1909a334ebbfaad85af74a8ccd98658980107d0c"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
