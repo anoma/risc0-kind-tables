@@ -4,8 +4,8 @@
 
 use alloy::providers::Provider;
 use alloy::sol;
-use anoma_risc0_kind_tables::tokens;
-use anoma_risc0_kind_tables_integration_test::{provider, solana_rpc};
+use anoma_risc0_kind_trees::tokens;
+use anoma_risc0_kind_trees_integration_test::{provider, solana_rpc};
 use anyhow::{Context, Result, ensure};
 
 sol! {

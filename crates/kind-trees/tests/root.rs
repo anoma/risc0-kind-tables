@@ -1,6 +1,6 @@
-use anoma_risc0_kind_tables::Entry;
-use anoma_risc0_kind_tables::kind;
-use anoma_risc0_kind_tables::root::*;
+use anoma_risc0_kind_trees::Entry;
+use anoma_risc0_kind_trees::kind;
+use anoma_risc0_kind_trees::root::*;
 use risc0_zkvm::Digest;
 use risc0_zkvm::sha::{Impl, Sha256};
 
@@ -22,7 +22,7 @@ fn of_is_independent_of_the_entry_order() {
 }
 
 #[test]
-fn of_gives_a_one_entry_table_its_leaf() {
+fn of_gives_a_one_entry_tree_its_leaf() {
     let a = entry(1);
     let leaf = [
         a.logic_ref.as_bytes(),
@@ -34,6 +34,6 @@ fn of_gives_a_one_entry_table_its_leaf() {
 }
 
 #[test]
-fn of_gives_the_empty_table_the_padding_leaf() {
+fn of_gives_the_empty_tree_the_padding_leaf() {
     assert_eq!(of(&[]), *Impl::hash_bytes(b"EMPTY"));
 }

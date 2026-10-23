@@ -1,13 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["crates/kind-tables", "crates/integration-test"]
+members = ["crates/kind-trees", "crates/integration-test"]
 
 [workspace.package]
 version = "1.0.0-rc.7"
-keywords = ["anoma", "kind-table", "protocol-adapter"]
+keywords = ["anoma", "kind-tree", "protocol-adapter"]
 authors = ["Anoma Foundation"]
 license = "MIT"
-repository = "https://github.com/anoma/risc0-kind-tables"
+repository = "https://github.com/anoma/risc0-kind-trees"
 homepage = "https://anoma.net/"
 edition = "2024"
 
@@ -54,7 +54,7 @@ solana-program-pack = "3"
 solana-pubkey = "3"
 spl-token-interface = "3"
 
-anoma-risc0-kind-tables = { path = "crates/kind-tables" }
+anoma-risc0-kind-trees = { path = "crates/kind-trees" }
 
 # The circuit crates on crates.io take arm-risc0 from crates.io; this resolves it to the tag the workspace pins.
 [patch.crates-io]

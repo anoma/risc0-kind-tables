@@ -1,6 +1,6 @@
 use alloy_chains::NamedChain;
-use anoma_risc0_kind_tables::chain::*;
-use anoma_risc0_kind_tables::{Error, Result};
+use anoma_risc0_kind_trees::chain::*;
+use anoma_risc0_kind_trees::{Error, Result};
 use std::collections::BTreeMap;
 
 const SOLANA_MAINNET: &str = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";

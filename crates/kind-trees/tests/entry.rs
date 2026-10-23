@@ -1,7 +1,7 @@
 use alloy::primitives::Address;
-use anoma_risc0_kind_tables::circuits::Status;
-use anoma_risc0_kind_tables::entry::*;
-use anoma_risc0_kind_tables::kind;
+use anoma_risc0_kind_trees::circuits::Status;
+use anoma_risc0_kind_trees::entry::*;
+use anoma_risc0_kind_trees::kind;
 use hex::FromHex;
 use risc0_zkvm::Digest;
 
@@ -56,8 +56,8 @@ fn the_metadata_stays_out_of_the_root_input() {
     let mut annotated = entry();
     annotated.metadata = Some(erc20_metadata());
     assert_eq!(
-        anoma_risc0_kind_tables::root::of(&[bare]),
-        anoma_risc0_kind_tables::root::of(&[annotated])
+        anoma_risc0_kind_trees::root::of(&[bare]),
+        anoma_risc0_kind_trees::root::of(&[annotated])
     );
 }
 

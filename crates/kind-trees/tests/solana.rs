@@ -1,4 +1,4 @@
-use anoma_risc0_kind_tables::solana::*;
+use anoma_risc0_kind_trees::solana::*;
 
 #[test]
 fn an_address_round_trips_through_base58() {

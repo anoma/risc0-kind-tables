@@ -1,4 +1,4 @@
-//! The chain a table belongs to, named by its CAIP-2 chain ID: a namespace and a reference joined by a colon, such as
+//! The chain a tree belongs to, named by its CAIP-2 chain ID: a namespace and a reference joined by a colon, such as
 //! `eip155:11155111` for Sepolia. It names a chain of any family, where an EIP-155 chain ID names an EVM chain only. A
 //! Solana cluster's reference is the first 32 characters of its base58 genesis hash, which every tool derives from the
 //! cluster the same way (https://github.com/ChainAgnostic/namespaces/blob/main/solana/caip2.md).
@@ -59,7 +59,7 @@ impl Caip2ChainId {
         Chain::try_from(self).ok().map(Chain::name)
     }
 
-    /// The file name of the chain's generated table. `cargo package` refuses a colon in a file name, so the colon
+    /// The file name of the chain's generated tree. `cargo package` refuses a colon in a file name, so the colon
     /// becomes `_`. No namespace contains `_`, so the first `_` separates the namespace from the reference.
     pub fn file_name(&self) -> String {
         format!("{}_{}.json", self.namespace, self.reference)

@@ -1,5 +1,5 @@
-//! One row of a kind table. The JSON representation is `anoma-rm-risc0`'s kind tree schema, which names the kind
-//! point `kind_base`, plus a `_metadata` object, so the upstream loader reads a generated table unchanged.
+//! One entry of a kind tree. The JSON representation is `anoma-rm-risc0`'s kind tree schema, which names the kind
+//! point `kind_base`, plus a `_metadata` object, so the upstream loader reads a generated tree unchanged.
 
 use crate::circuits::Status;
 use crate::kind;
@@ -98,7 +98,7 @@ impl Entry {
         key
     }
 
-    /// Whether the entry is assigned another kind as its kind point, not its own, so that the table is the only
+    /// Whether the entry is assigned another kind as its kind point, not its own, so that the tree is the only
     /// place it can come from. Generic call and the active version under the label of the environment's forwarder
     /// are not.
     pub fn is_alias(&self) -> bool {

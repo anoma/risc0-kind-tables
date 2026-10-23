@@ -1,6 +1,6 @@
 use alloy::primitives::Address;
-use anoma_risc0_kind_tables::SolanaAddress;
-use anoma_risc0_kind_tables::kind::*;
+use anoma_risc0_kind_trees::SolanaAddress;
+use anoma_risc0_kind_trees::kind::*;
 
 #[test]
 fn the_spl_token_label_is_sha256_over_the_program_id_and_the_mint() {

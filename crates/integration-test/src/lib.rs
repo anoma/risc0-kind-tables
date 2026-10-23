@@ -1,9 +1,9 @@
-//! Test-support helpers for the kind tables integration tests.
+//! Test-support helpers for the kind trees integration tests.
 
 use alloy::providers::{DynProvider, Provider, ProviderBuilder};
 use alloy_chains::NamedChain;
 use anoma_pa_evm_bindings::helpers::alchemy_url;
-use anoma_risc0_kind_tables::{Caip2ChainId, SolanaAddress, SolanaCluster};
+use anoma_risc0_kind_trees::{Caip2ChainId, SolanaAddress, SolanaCluster};
 use anyhow::{Context, Result, ensure};
 use base64::Engine;
 use risc0_zkvm::Digest;

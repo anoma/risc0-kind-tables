@@ -1,11 +1,11 @@
 use alloy_chains::NamedChain;
-use anoma_risc0_kind_tables::chain::{Chain, SolanaCluster};
-use anoma_risc0_kind_tables::circuits::{self, CircuitVersion, Status};
-use anoma_risc0_kind_tables::deployments::solana_deployment;
-use anoma_risc0_kind_tables::entry::Metadata;
-use anoma_risc0_kind_tables::kind;
-use anoma_risc0_kind_tables::table::*;
-use anoma_risc0_kind_tables::{Caip2ChainId, Entry, Error};
+use anoma_risc0_kind_trees::chain::{Chain, SolanaCluster};
+use anoma_risc0_kind_trees::circuits::{self, CircuitVersion, Status};
+use anoma_risc0_kind_trees::deployments::solana_deployment;
+use anoma_risc0_kind_trees::entry::Metadata;
+use anoma_risc0_kind_trees::kind;
+use anoma_risc0_kind_trees::tree::*;
+use anoma_risc0_kind_trees::{Caip2ChainId, Entry, Error};
 use anomapay_erc20_forwarder_bindings::addresses::{Environment, erc20_forwarder_address};
 use risc0_zkvm::Digest;
 
@@ -65,16 +65,16 @@ fn check_member(
 
 /// No kind point is authored. A token entry is assigned its fungibility domain's kind point — the kind of the
 /// active version under the label of the environment's forwarder on the chain — and every alias says so in
-/// `alias_of`. Every other entry is assigned its own kind. This reads the embedded tables only; the environment's
+/// `alias_of`. Every other entry is assigned its own kind. This reads the embedded trees only; the environment's
 /// forwarder comes from the deployment records (the ERC20 forwarder bindings, and the Solana deployment record),
-/// never from the entries themselves, so a table built for the wrong forwarder fails here.
+/// never from the entries themselves, so a tree built for the wrong forwarder fails here.
 #[test]
 fn token_entries_share_their_fungibility_domains_kind_point() {
-    for (module, environment, tables) in [
-        ("staging", Environment::Staging, staging::tables()),
-        ("production", Environment::Production, production::tables()),
+    for (module, environment, trees) in [
+        ("staging", Environment::Staging, staging::trees()),
+        ("production", Environment::Production, production::trees()),
     ] {
-        for (chain, table) in tables {
+        for (chain, tree) in trees {
             let context = format!("{module} {chain}");
             let known = Chain::try_from(chain).unwrap_or_else(|error| panic!("{context}: {error}"));
             let (erc20_forwarder, spl_forwarder) = match known {
@@ -84,7 +84,7 @@ fn token_entries_share_their_fungibility_domains_kind_point() {
                     solana_deployment(cluster).map(|deployment| deployment.forwarder),
                 ),
             };
-            for entry in &table.entries {
+            for entry in &tree.entries {
                 let (listed, active, active_label, status) = match &entry.metadata {
                     Some(Metadata::Erc20 { token, status, .. }) => {
                         let forwarder = erc20_forwarder.unwrap_or_else(|| {
@@ -124,22 +124,22 @@ fn token_entries_share_their_fungibility_domains_kind_point() {
     }
 }
 
-/// A token's active kind has a row if and only if the token asks for a precomputed kind point. Without the row, the
+/// A token's active kind has an entry if and only if the token asks for a precomputed kind point. Without the entry, the
 /// circuit computes the same kind point by hash to curve.
 #[test]
-fn a_token_has_an_active_row_if_and_only_if_it_asks_for_a_precomputed_kind_point() {
+fn a_token_has_an_active_entry_if_and_only_if_it_asks_for_a_precomputed_kind_point() {
     let mut checked = 0;
-    for (module, environment, tables) in [
-        ("staging", Environment::Staging, staging::tables()),
-        ("production", Environment::Production, production::tables()),
+    for (module, environment, trees) in [
+        ("staging", Environment::Staging, staging::trees()),
+        ("production", Environment::Production, production::trees()),
     ] {
-        for (chain, table) in tables {
+        for (chain, tree) in trees {
             let context = format!("{module} {chain}");
             let known = Chain::try_from(chain).unwrap_or_else(|error| panic!("{context}: {error}"));
             // (symbol, active kind, whether the token asks for a precomputed kind point)
             let tokens: Vec<(&str, (Digest, Digest), bool)> = match known {
                 Chain::Evm(named) => match erc20_forwarder_address(environment, &named) {
-                    Some(forwarder) => anoma_risc0_kind_tables::tokens::on(named)
+                    Some(forwarder) => anoma_risc0_kind_trees::tokens::on(named)
                         .iter()
                         .map(|token| {
                             let label_ref = kind::erc20_label_ref(&forwarder, &token.address);
@@ -150,7 +150,7 @@ fn a_token_has_an_active_row_if_and_only_if_it_asks_for_a_precomputed_kind_point
                     None => Vec::new(),
                 },
                 Chain::Solana(cluster) => match solana_deployment(cluster) {
-                    Some(deployment) => anoma_risc0_kind_tables::tokens::spl_on(cluster)
+                    Some(deployment) => anoma_risc0_kind_trees::tokens::spl_on(cluster)
                         .iter()
                         .map(|token| {
                             let label_ref =
@@ -163,56 +163,56 @@ fn a_token_has_an_active_row_if_and_only_if_it_asks_for_a_precomputed_kind_point
                 },
             };
             for (symbol, active, asks) in tokens {
-                let listed = table
+                let listed = tree
                     .entries
                     .iter()
                     .any(|entry| (entry.logic_ref, entry.label_ref) == active);
                 assert_eq!(
                     listed, asks,
-                    "{context}: {symbol} has an active row if and only if it asks for a precomputed kind point"
+                    "{context}: {symbol} has an active entry if and only if it asks for a precomputed kind point"
                 );
                 checked += 1;
             }
         }
     }
-    assert!(checked > 0, "the tables carry a token to check");
+    assert!(checked > 0, "the trees carry a token to check");
 }
 
 /// An EVM consumer passes the chain it already has, so the lookups accept a `NamedChain`.
 #[test]
-fn table_accepts_an_evm_chain() {
+fn tree_accepts_an_evm_chain() {
     let sepolia = Caip2ChainId::eip155(11_155_111);
 
     assert_eq!(
-        staging::table(NamedChain::Sepolia).unwrap(),
-        staging::table(sepolia.clone()).unwrap()
+        staging::tree(NamedChain::Sepolia).unwrap(),
+        staging::tree(sepolia.clone()).unwrap()
     );
     assert_eq!(
         staging::root(NamedChain::Sepolia).unwrap(),
         staging::root(sepolia).unwrap()
     );
     assert!(matches!(
-        staging::table(NamedChain::Mainnet),
+        staging::tree(NamedChain::Mainnet),
         Err(Error::UnrecordedChain(chain)) if chain == Caip2ChainId::eip155(1)
     ));
 }
 
-/// The staging environment records the solana-devnet table: the test mint's fungibility domain under the devnet
+/// The staging environment records the solana-devnet tree: the test mint's fungibility domain under the devnet
 /// forwarder's label, one member per listed SPL token circuit version, each deprecated version an alias of the active
 /// one, which keeps its own kind; and nothing else.
 #[test]
-fn staging_records_the_solana_devnet_table() {
+fn staging_records_the_solana_devnet_tree() {
     let devnet = SolanaCluster::Devnet;
-    let table = staging::table(devnet).expect("solana-devnet is recorded in staging");
+    let tree = staging::tree(devnet).expect("solana-devnet is recorded in staging");
     let listed = circuits::spl_token();
     assert_eq!(
-        table.entries.len(),
+        tree.entries.len(),
         listed.len(),
         "one member per listed SPL token circuit version"
     );
     let active = circuits::spl_token_active();
     for circuit in listed {
-        let member = table
+        let member = tree
             .entries
             .iter()
             .find(|entry| entry.logic_ref == circuit.logic_ref)
@@ -235,24 +235,24 @@ fn staging_records_the_solana_devnet_table() {
             circuit.version
         );
     }
-    assert_eq!(staging::root(devnet).unwrap(), table.root());
+    assert_eq!(staging::root(devnet).unwrap(), tree.root());
 }
 
-/// The macro invocation lists the table files by hand, so pin it to `roots.json`.
+/// The macro invocation lists the tree files by hand, so pin it to `roots.json`.
 #[test]
-fn embedded_tables_match_the_recorded_roots() {
-    for (module, roots, tables) in [
-        ("staging", staging::roots(), staging::tables()),
-        ("production", production::roots(), production::tables()),
+fn embedded_trees_match_the_recorded_roots() {
+    for (module, roots, trees) in [
+        ("staging", staging::roots(), staging::trees()),
+        ("production", production::roots(), production::trees()),
     ] {
         let recorded: Vec<&Caip2ChainId> = roots.keys().collect();
-        let embedded: Vec<&Caip2ChainId> = tables.keys().collect();
+        let embedded: Vec<&Caip2ChainId> = trees.keys().collect();
         assert_eq!(recorded, embedded, "{module}: chains out of sync");
         for (chain, root) in roots {
             assert_eq!(
-                tables[chain].root(),
+                trees[chain].root(),
                 *root,
-                "{module}: stale table for {chain}"
+                "{module}: stale tree for {chain}"
             );
         }
     }

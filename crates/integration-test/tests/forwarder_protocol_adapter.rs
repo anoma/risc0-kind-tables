@@ -1,6 +1,6 @@
 //! The recorded forwarders serve the recorded protocol adapters. On every chain the protocol adapter bindings record a
 //! proxy for, the ERC20 and generic call forwarders recorded for the same environment must accept calls from that
-//! proxy. A table built from a forwarder of another protocol adapter carries labels that no transaction on this one
+//! proxy. A tree built from a forwarder of another protocol adapter carries labels that no transaction on this one
 //! can use. Nothing here has to be installed for it to hold, so it runs on every pull request and push.
 
 use alloy::primitives::Address;
@@ -10,8 +10,8 @@ use anoma_generic_call_forwarder_bindings::addresses::{
     Environment as GenericCallEnvironment, generic_call_forwarder_address,
 };
 use anoma_pa_evm_bindings::addresses::{Environment, protocol_adapter_deployments_map};
-use anoma_risc0_kind_tables::Caip2ChainId;
-use anoma_risc0_kind_tables_integration_test::provider;
+use anoma_risc0_kind_trees::Caip2ChainId;
+use anoma_risc0_kind_trees_integration_test::provider;
 use anomapay_erc20_forwarder_bindings::addresses::{
     Environment as Erc20Environment, erc20_forwarder_address,
 };

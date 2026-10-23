@@ -5,4 +5,4 @@ The backend's chain registry computes the same `sha256(forwarder ‖ token)` lab
 ## Consequences
 
 - The backend's `TokenInfo` splits into consumed identity and resident policy — a real refactor of a live service, accepted knowingly.
-- Supported tokens are a standing commitment independent of deployments: `tokens.json` may list tokens on chains with no recorded deployment, and the generator emits tables only for chains that have both a protocol adapter and a forwarder recorded.
+- Supported tokens are a standing commitment independent of deployments: `tokens.json` may list tokens on chains with no recorded deployment, and the generator emits trees only for chains that have both a protocol adapter and a forwarder recorded.

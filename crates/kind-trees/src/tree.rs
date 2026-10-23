@@ -1,5 +1,5 @@
-//! Generated chain tables and their roots, one set per environment. A chain's table lives in
-//! `data/generated/<environment>/<namespace>_<reference>.json`, named for the chain's CAIP-2 chain ID; the tables and
+//! Generated chain trees and their roots, one set per environment. A chain's tree lives in
+//! `data/generated/<environment>/<namespace>_<reference>.json`, named for the chain's CAIP-2 chain ID; the trees and
 //! roots are embedded and looked up per chain.
 
 use crate::chain::Caip2ChainId;
@@ -11,21 +11,21 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::Path;
 
-/// The ordered entries of one chain's kind table.
+/// The ordered entries of one chain's kind tree.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Table {
+pub struct Tree {
     pub entries: Vec<Entry>,
 }
 
-impl Table {
-    /// Parses a table from its JSON representation: an array of entries.
+impl Tree {
+    /// Parses a tree from its JSON representation: an array of entries.
     pub fn from_json(json: &str) -> Result<Self> {
         Ok(Self {
             entries: serde_json::from_str(json)?,
         })
     }
 
-    /// Reads a table from a generated `<namespace>_<reference>.json` file.
+    /// Reads a tree from a generated `<namespace>_<reference>.json` file.
     pub fn load(path: impl AsRef<Path>) -> Result<Self> {
         Self::from_json(&std::fs::read_to_string(path)?)
     }
@@ -42,7 +42,7 @@ impl Table {
             .all(|pair| pair[0].key() < pair[1].key())
     }
 
-    /// The aliases: the entries assigned another kind as their kind point. Only the table can express them, and they
+    /// The aliases: the entries assigned another kind as their kind point. Only the tree can express them, and they
     /// are the review surface.
     pub fn aliases(&self) -> Vec<&Entry> {
         self.entries
@@ -73,8 +73,8 @@ fn parse_roots(json: &str) -> BTreeMap<Caip2ChainId, Digest> {
         .collect()
 }
 
-/// Embeds one environment's roots and tables. Each chain is listed as the namespace and reference of its CAIP-2
-/// chain ID, from which the macro builds both the ID and the table's file name.
+/// Embeds one environment's roots and trees. Each chain is listed as the namespace and reference of its CAIP-2
+/// chain ID, from which the macro builds both the ID and the tree's file name.
 macro_rules! environment_module {
     ($name:ident $(, ($namespace:literal, $reference:literal))*) => {
         pub mod $name {
@@ -89,12 +89,12 @@ macro_rules! environment_module {
                 )))
             });
 
-            static TABLES: LazyLock<BTreeMap<Caip2ChainId, Table>> = LazyLock::new(|| {
-                let tables: Vec<(Caip2ChainId, Table)> = vec![$((
+            static TREES: LazyLock<BTreeMap<Caip2ChainId, Tree>> = LazyLock::new(|| {
+                let trees: Vec<(Caip2ChainId, Tree)> = vec![$((
                     concat!($namespace, ":", $reference)
                         .parse()
                         .unwrap_or_else(|error| panic!("{error}")),
-                    Table::from_json(include_str!(concat!(
+                    Tree::from_json(include_str!(concat!(
                         "../data/generated/",
                         stringify!($name),
                         "/",
@@ -104,13 +104,13 @@ macro_rules! environment_module {
                         ".json"
                     )))
                     .unwrap_or_else(|error| {
-                        panic!("invalid table for {}: {error}", concat!($namespace, ":", $reference))
+                        panic!("invalid tree for {}: {error}", concat!($namespace, ":", $reference))
                     }),
                 )),*];
-                tables.into_iter().collect()
+                trees.into_iter().collect()
             });
 
-            /// The chains this environment records a table for.
+            /// The chains this environment records a tree for.
             pub fn chains() -> Vec<Caip2ChainId> {
                 ROOTS.keys().cloned().collect()
             }
@@ -129,15 +129,15 @@ macro_rules! environment_module {
                     .ok_or(Error::UnrecordedChain(chain))
             }
 
-            /// The tables of all recorded chains.
-            pub fn tables() -> &'static BTreeMap<Caip2ChainId, Table> {
-                &TABLES
+            /// The trees of all recorded chains.
+            pub fn trees() -> &'static BTreeMap<Caip2ChainId, Tree> {
+                &TREES
             }
 
-            /// The table recorded for the chain.
-            pub fn table(chain: impl Into<Caip2ChainId>) -> Result<&'static Table> {
+            /// The tree recorded for the chain.
+            pub fn tree(chain: impl Into<Caip2ChainId>) -> Result<&'static Tree> {
                 let chain = chain.into();
-                TABLES.get(&chain).ok_or(Error::UnrecordedChain(chain))
+                TREES.get(&chain).ok_or(Error::UnrecordedChain(chain))
             }
         }
     };
