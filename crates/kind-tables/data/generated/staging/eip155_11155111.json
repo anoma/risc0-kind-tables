@@ -2,60 +2,6 @@
   {
     "_metadata": {
       "type": "ERC20Resource",
-      "version": "2.0.0-rc.1",
-      "name": "XAN",
-      "token": "0xCEDbEA37C8872c4171259Cdfd5255CB8923Cf8e7",
-      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
-      "status": "deprecated",
-      "alias_of": {
-        "version": "2.0.0-rc.2",
-        "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "464d0cc1bbb5907557597111fc283fe2fa3ab6359c682179e019287384e6a506"
-      }
-    },
-    "logic_ref": "51c2403f4e1de40c3c3ecef69385f8772ee99b4a610e88f1ad2b1b85b481a7f2",
-    "label_ref": "464d0cc1bbb5907557597111fc283fe2fa3ab6359c682179e019287384e6a506",
-    "kind_base": "041e9e72ffbd480788f7e17412ec6c972ca30ab6ed93398ec46694b03dfbbf4283440b16f6d7f1c3844ae1ef99e4dfc58c1ba00953853acbac5cbafe2af19751f3"
-  },
-  {
-    "_metadata": {
-      "type": "ERC20Resource",
-      "version": "2.0.0-rc.1",
-      "name": "USDC",
-      "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
-      "status": "deprecated",
-      "alias_of": {
-        "version": "2.0.0-rc.2",
-        "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "c60fa405732c07a9cdd2b4227a8e9395cdcf6d42ec8ba29e20c0653e97a45c2a"
-      }
-    },
-    "logic_ref": "51c2403f4e1de40c3c3ecef69385f8772ee99b4a610e88f1ad2b1b85b481a7f2",
-    "label_ref": "c60fa405732c07a9cdd2b4227a8e9395cdcf6d42ec8ba29e20c0653e97a45c2a",
-    "kind_base": "0474c8c9b1dcbb5393f53584ed70363a2d382cd92ad0a25791095f5e24b7b23672f671941d30f2fd461bfd879e8a32f75e738f270a5fc286a02589735ab9eb7dc3"
-  },
-  {
-    "_metadata": {
-      "type": "ERC20Resource",
-      "version": "2.0.0-rc.1",
-      "name": "WETH",
-      "token": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
-      "forwarder": "0x75BC6c98aAEd80B3d14c4d1CF97D733D1bb0D4a3",
-      "status": "deprecated",
-      "alias_of": {
-        "version": "2.0.0-rc.2",
-        "logic_ref": "533868e294fc632d1809edb4875d6a084746817b230e95351845d175449f2404",
-        "label_ref": "f5db7a56f4e605dddfe60bc4ebb0316bff7c6d09494591a0bf75fae2a37bebfc"
-      }
-    },
-    "logic_ref": "51c2403f4e1de40c3c3ecef69385f8772ee99b4a610e88f1ad2b1b85b481a7f2",
-    "label_ref": "f5db7a56f4e605dddfe60bc4ebb0316bff7c6d09494591a0bf75fae2a37bebfc",
-    "kind_base": "041cb9c4d02ffc840994bdb27e94d51f15a0efdeb670c818344cef4ccaf36c512d8054094cabc8c9daf2f682c6adaf41b9eb40107670f8be7c780f3b71282c239b"
-  },
-  {
-    "_metadata": {
-      "type": "ERC20Resource",
       "version": "2.0.0-rc.2",
       "name": "XAN",
       "token": "0xCEDbEA37C8872c4171259Cdfd5255CB8923Cf8e7",
