@@ -9,7 +9,7 @@ use anoma_rm_risc0::Digest;
 use anoma_rm_risc0::compliance::{self, KindTreeEntry};
 use anoma_rm_risc0::kind_tree::KindTree;
 use anoma_rm_risc0::nullifier_key::NullifierKey;
-use anoma_rm_risc0::resource::{ConsumedResourceWitness, Resource};
+use anoma_rm_risc0::resource::{ConsumedResourceWitness, Resource, ResourceWitness};
 use anomapay_erc20_witness::calculate_label_ref;
 
 /// A resource kind, written as its `(logic_ref, label_ref)`.
@@ -57,8 +57,10 @@ fn delta(consumed: Kind, created: Kind, tree: &[KindTreeEntry]) -> ([u32; 8], [u
     let nonce = Resource::derive_nonce_from_nullifiers(0, &[nullifier]).expect("a nonce derives");
     let created = resource(created, nonce);
     let mut witness = compliance::from_resources(
-        vec![ConsumedResourceWitness::from_resource(consumed, nf_key)],
-        vec![created],
+        vec![
+            ResourceWitness::Consumed(ConsumedResourceWitness::from_resource(consumed, nf_key)),
+            ResourceWitness::Created(created),
+        ],
         &KindTree::from_entries(tree.to_vec()).expect("arm-risc0 accepts the tree"),
     );
     let mut rcv = [0; 32];
